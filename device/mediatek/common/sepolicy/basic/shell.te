@@ -1,0 +1,3 @@
+# ==============================================
+
+allow shell memsicp_exec:file rx_file_perms;

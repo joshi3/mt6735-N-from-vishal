@@ -1,0 +1,20 @@
+# ==============================================
+# MTK Policy Rule
+# ============
+
+# Date : WK16.33
+# Purpose: Allow to access ged for gralloc_extra functions
+allow appdomain proc_ged:file {open read write ioctl getattr};
+#Vanzo:zhangxinyu on:2016 11/15
+allow appdomain fpc_data_file:chr_file rw_file_perms;
+#end of Vanzo:zhangxinyu
+#bl229x
+allow appdomain bl229x_device:chr_file rw_file_perms;
+#blestech
+allow appdomain blestech_fp_device:chr_file rw_file_perms;
+allow appdomain teei_fp_device:chr_file rw_file_perms;
+# Goodix
+#allow access to gx_fpd fingerprintd
+allow system_app gx_fpd_data_file:dir create_dir_perms;
+allow system_app gx_fpd_data_file:file create_file_perms;
+binder_call(system_app, gx_fpd)

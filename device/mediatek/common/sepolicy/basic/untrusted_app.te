@@ -1,0 +1,28 @@
+# ==============================================
+# MTK Policy Rule
+# ==============================================
+
+# Date : 2014/09/09
+# Operation : Development GMO Feature "Move OAT to SD Card"
+# Purpose : for GMO ROM Size Slim
+#allow untrusted_app dalvikcache_data_file:lnk_file read;
+
+# Date: 2016/02/26
+# Operation: Migration
+# Purpose: Allow MTK modified ElephantStress and WhatsTemp to read thermal zone temperatures
+#					 from MTK kernel modules for thermal tests at OEM/ODM.
+
+# Vanzo:zhangweipeng on: Fri, 04 Nov 2016 18:45:32 +0800
+# modify for whatstemp apk
+#allow untrusted_app proc_mtktz:dir search;
+#allow untrusted_app proc_mtktz:file r_file_perms;
+#
+allow untrusted_app proc_mtktz:dir { search read open };
+allow untrusted_app proc_mtktz:file r_file_perms;
+allow untrusted_app sysfs:dir { read open };
+allow untrusted_app sysfs:file { read open getattr };
+#End of Vanzo:zhangweipeng
+
+# goodix.
+allow untrusted_app gx_fpd:dir { read getattr open search};
+allow untrusted_app gx_fpd:file { read getattr open };

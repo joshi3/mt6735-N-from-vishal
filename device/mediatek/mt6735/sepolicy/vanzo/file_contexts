@@ -1,0 +1,21 @@
+# ==============================================
+# MTK Policy Rule
+# ==============================================
+
+# smartwake
+/sys/devices/bus/11008000.i2c/i2c-1/1-0038/gesture u:object_r:sysfs_tp_gesture:s0
+/sys/devices/bus/11008000.i2c/i2c-1/1-005d/gesture u:object_r:sysfs_tp_gesture:s0
+/sys/devices/soc/11008000.i2c/i2c-1/1-005d/gesture u:object_r:sysfs_tp_gesture:s0
+/sys/devices/bus/11008000.i2c/i2c-1/1-0026/gesture u:object_r:sysfs_tp_gesture:s0
+
+/data/gf_calibration.so u:object_r:goodixfingerprintd_data_file:s0
+/data/gf_fdt_base.so u:object_r:goodixfingerprintd_data_file:s0
+/data/auth_token.so u:object_r:goodixfingerprintd_data_file:s0
+/data/gf_nav_base.so u:object_r:goodixfingerprintd_data_file:s0
+/data/gf_otp_info.so u:object_r:goodixfingerprintd_data_file:s0
+/data/gf_data(/.*)? u:object_r:goodixfingerprintd_data_file:s0
+/data/finger_[0-9]_[0-4].so u:object_r:goodixfingerprintd_data_file:s0
+/data/finger_[0-9]_[0-4]_bak.so u:object_r:goodixfingerprintd_data_file:s0
+
+#ATA
+/proc/sys/vm/drop_caches u:object_r:proc_drop_caches:s0

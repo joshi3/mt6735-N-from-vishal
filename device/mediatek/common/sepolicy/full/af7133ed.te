@@ -1,0 +1,25 @@
+# ==============================================
+# Policy File of /system/bin af7133ed Executable File 
+
+
+# ==============================================
+# Type Declaration
+# ==============================================
+
+type af7133ed_exec , exec_type, file_type;
+type af7133ed ,domain;
+
+# ==============================================
+# MTK Policy Rule
+# ==============================================
+
+init_daemon_domain(af7133ed)
+allow af7133ed msensor_device:chr_file { open ioctl read write };
+allow af7133ed gsensor_device:chr_file { open ioctl read write };
+allow af7133ed input_device:dir { search open read write };
+allow af7133ed input_device:file { open read };
+# Operate data partation directly, need modify later,e.g. use "data/misc/sensor".
+# for msensor daemon access "data/misc".
+file_type_auto_trans(af7133ed, system_data_file, msensor_data_file)
+allow af7133ed system_data_file:dir { create setattr };
+allow af7133ed msensor_data_file:file { open write read create setattr};

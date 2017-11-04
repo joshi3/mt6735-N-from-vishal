@@ -1,0 +1,30 @@
+# ==============================================
+# MTK Policy Rule
+# ==============================================
+
+# System Server Services
+
+# Other Services
+NvRAMAgent          u:object_r:nvram_agent_service:s0
+memory_dumper       u:object_r:mediaserver_service:s0
+mtk.codecservice    u:object_r:mtk_codec_service_service:s0
+# Vanzo:zhangqingzhan on: Wed, 26 Oct 2016 09:35:37 +0800
+# for goodix finger
+#
+# add for goodix chip
+goodix.fp                                 u:object_r:gx_fpd_service:s0
+goodix_fp                                 u:object_r:gx_fpd_service:s0
+# End of Vanzo: zhangqingzhan
+
+# Vanzo:yangbinbin on: Fri, 14 Oct 2016 16:19:24 +0800
+# add for sunwave_fingerprinter
+media.fp         u:object_r:fpserver_service:s0
+fingerManager         u:object_r:fpserver_service:s0
+# End of Vanzo: yangbinbin
+
+#add by fpsensor fingerprint
+com.fpsensor.fpSensorExtension u:object_r:fpsensor_test_service:s0
+com.fpsensor.ext.IFpExtSvc2    u:object_r:fp_ext_svc2_service:s0
+
+android.hardware.fingerprint.IGoodixFingerprintDaemon u:object_r:goodixfingerprintd_service:s0
+com.goodix.FingerprintService u:object_r:goodix_fingerprint_service:s0

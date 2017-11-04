@@ -1,0 +1,6 @@
+# ==============================================
+# MTK Policy Rule
+# ==============================================
+
+# smartwake
+allow system_app sysfs_tp_gesture:file {open getattr read write create};

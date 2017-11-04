@@ -1,0 +1,2 @@
+# smartwake
+allow system_server sysfs_tp_gesture:file {open getattr read write create};

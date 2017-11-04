@@ -1,0 +1,60 @@
+# add by blestech
+# Policy File of /:system/bin/fingerprintd Excutable File
+# type fingerprintd, domain;
+# type fingerprintd_exec, exec_type, file_type;
+
+binder_use(fingerprintd)
+binder_call(fingerprintd, binderservicedomain)
+binder_call(fingerprintd, appdomain)
+binder_service(fingerprintd)
+
+# need to find KeyStore and add self
+allow fingerprintd fingerprintd_service:service_manager { add find };
+
+# allow HAL module to read dir contents
+allow fingerprintd fingerprintd_data_file:file { create_file_perms };
+
+# allow HAL module to read/write/unlink contents of this dir
+allow fingerprintd fingerprintd_data_file:dir rw_dir_perms;
+
+# Need to add auth tokens to KeyStore
+use_keystore(fingerprintd)
+allow fingerprintd keystore:keystore_key { add_auth };
+
+# For permissions checking
+binder_call(fingerprintd, system_server);
+allow fingerprintd permission_service:service_manager find;
+allow fingerprintd fingerprint_service:service_manager find;
+allow fingerprintd default_android_service:service_manager find;
+allow fingerprintd fingerprintd:capability { dac_override dac_read_search };
+#bl229x
+allow fingerprintd bl229x_device:chr_file rw_file_perms;
+#blestech
+allow fingerprintd blestech_fp_device:chr_file rw_file_perms;
+allow fingerprintd teei_fp_device:chr_file rw_file_perms;
+#for netlink use
+allow fingerprintd self:netlink_socket { read bind create write getattr setopt };
+allow fingerprintd input_device:dir search;
+allow fingerprintd input_device:chr_file rw_file_perms;
+
+# For pipe file  
+allow fingerprintd fingerprintd_data_file:fifo_file { create open read write };
+
+allow fingerprintd servicemanager:binder call;
+allow fingerprintd servicemanager:binder transfer;
+#FPC
+allow fingerprintd fpc_data_file:chr_file rw_file_perms;
+allow fingerprintd fpc1020_device:chr_file rw_file_perms;
+allow fingerprintd sysfs:file rw_file_perms;
+allow fingerprintd uhid_device:chr_file rw_file_perms;
+# Goodix
+allow fingerprintd gx_fpd_service:service_manager find;
+binder_call(fingerprintd, gx_fpd);
+
+# Vanzo:wuchuanrong on: Thu, 16 Mar 2017 11:15:08 +0800
+# for microarray
+allow fingerprintd finger_device:chr_file {create_file_perms};
+allow ma_data_file labeledfs:filesystem associate;
+file_type_auto_trans(fingerprintd, system_data_file, ma_data_file);
+allow fingerprintd ma_data_file:file create_file_perms;
+# End of Vanzo: wuchuanrong

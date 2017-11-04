@@ -1,0 +1,7 @@
+# ==============================================
+# Vanzo Policy Rule
+# ==============================================
+
+# Date : 2017/12/15
+allow untrusted_app sysfs:lnk_file { read open getattr };
+allow untrusted_app system_data_file:file r_file_perms;

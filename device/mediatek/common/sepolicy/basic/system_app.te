@@ -1,0 +1,85 @@
+# ==============================================
+# MTK Policy Rule
+# ==============================================
+
+typeattribute system_app mlstrustedsubject;
+
+# Date : 2014/07/31
+# Stage: BaseUT
+# Purpose :[CdsInfo][CdsInfo uses net shell commands to get network information and write WI-FI MAC address by NVRAM]
+# Package Name: com.mediatek.connectivity
+allow system_app nvram_agent_binder:binder call;
+
+# Date : 2016/07/01
+# Purpose : Gain permission to system apps to create folder
+allow system_app media_rw_data_file:dir create;
+
+# Date : 2016/07/07
+# Purpose : Gain permission to system apps to append file for tool testing
+userdebug_or_eng(`
+allow system_app media_rw_data_file:file append;
+')
+
+# Date : 2016/07/12
+# Purpose : Issue submitter need creat folder on SD card
+allow system_app vfat:dir create;
+#add by blestech
+allow system_app bl229x_device:chr_file rw_file_perms;
+allow system_app blestech_fp_device:chr_file rw_file_perms;
+allow system_app teei_fp_device:chr_file rw_file_perms;
+allow system_app input_device:dir search;
+allow system_app fingerprint_prop:property_service set;
+# Vanzo:yujianpeng on: Thu, 10 Nov 2016 12:46:22 +0800
+allow system_app sysfs_brightness:file {open getattr read write create};
+allow system_app sysfs_breathlight:file {open getattr read write create};
+# End of Vanzo:yujianpeng
+# Vanzo:liuqiang on: Tue, 03 Jan 2017 14:21:37 +0800
+allow system_app sysfs_vkey:file {open getattr read write create};
+# End of Vanzo:liuqiang
+
+# Goodix
+allow system_app gx_fpd_device:chr_file { read write ioctl open };
+#FPC
+allow system_app fingerprint_service:service_manager add;
+#allow system_app system_data_file:sock_file write;
+allow system_app fingerprintd:unix_stream_socket { connectto read write };
+allow system_app fingerprintd:fd use;
+# add smartpa sepolicy
+allow system_app smartpa1_device:chr_file { read write ioctl open };
+
+#add for fpsensor fingerprint
+
+type fpsensor_fp_device, dev_type;
+type fpsensor_test_service,service_manager_type;
+type fpsensor_test_file, file_type, data_file_type;
+type fp_ext_svc2_service, service_manager_type;
+
+allow fingerprintd fpsensor_fp_device:chr_file {open read write ioctl};
+allow fingerprintd fuse:dir {search};
+allow fingerprintd mnt_user_file:dir {search};
+allow fingerprintd mnt_user_file:lnk_file {read};
+allow fingerprintd storage_file:lnk_file {read};
+allow fingerprintd uhid_device:chr_file {open ioctl write read};
+allow system_app fingerprintd:unix_stream_socket {connectto read write};
+allow system_app fingerprintd:fd {use};
+allow system_app fingerprint_service:service_manager {add find};
+
+allow system_app fpsensor_test_file:sock_file {create setattr unlink read write};
+allow system_app fpsensor_test_file:dir {search};
+allow fingerprintd fpsensor_test_file:dir {search add_name remove_name create open read write};
+allow fingerprintd fpsensor_test_file:sock_file {create setattr unlink};
+allow system_app fpsensor_test_service:service_manager { add find };
+allow untrusted_app fpsensor_test_service:service_manager { find };
+
+# for new extension apk
+allow fingerprintd  fp_ext_svc2_service:service_manager {add};
+allow untrusted_app fp_ext_svc2_service:service_manager {find};
+
+allow system_app system_data_file:dir {read add_name remove_name};
+allow system_app system_data_file:unix_stream_socket {connectto read write};
+
+#blestech add
+allow system_app blestech_fp_device:file { create_file_perms };
+allow system_app blestech_fp_device:chr_file { rw_file_perms setattr };
+allow system_app blestech_fp_device:chr_file { getattr open read ioctl lock append write };
+#blestech end

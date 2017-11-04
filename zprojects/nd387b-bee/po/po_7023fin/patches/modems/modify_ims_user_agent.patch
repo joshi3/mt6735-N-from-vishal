@@ -1,0 +1,22 @@
+diff --git a/lwtg/custom/modem/common/ps/custom_imc_config.c b/lwtg/custom/modem/common/ps/custom_imc_config.c
+index ac689fa..8f01ca4 100644
+--- a/lwtg/custom/modem/common/ps/custom_imc_config.c
++++ b/lwtg/custom/modem/common/ps/custom_imc_config.c
+@@ -2387,7 +2387,7 @@ kal_bool imc_nvram_customization(kal_uint16 op_id, sim_interface_enum sim_slot_i
+ 
+             set_conf_factory_uri_by_imsi(&nvram_ims_profile_ptr->ua_config.UA_conf_factory_uri[0], with_imsi_info, imsi_mnc_len, mccmnc, op_id);
+             strncpy ( (char*)nvram_ims_profile_ptr->ua_config.user_agent,  
+-                      "MTK_IMSUA_000_LW", 
++                      "Infocus_A3_109C_00IN_A01", 
+                       sizeof (nvram_ims_profile_ptr->ua_config.user_agent)-1
+                     );
+ 
+@@ -3247,7 +3247,7 @@ kal_bool imc_nvram_customization(kal_uint16 op_id, sim_interface_enum sim_slot_i
+             nvram_ims_profile_ptr->ua_config.UA_net_ipsec              = 0;
+             nvram_ims_profile_ptr->imc_config.ims_v4v6_preference      = 2;      //v4_prefer
+             strncpy ( (char*)nvram_ims_profile_ptr->ua_config.user_agent,  
+-                      "MTK IMS v1.0.1", 
++                      "Infocus_A3_109C_00IN_A01", 
+                       sizeof (nvram_ims_profile_ptr->ua_config.user_agent)-1
+                     );
+             set_conf_factory_uri_by_imsi(&nvram_ims_profile_ptr->ua_config.UA_conf_factory_uri[0], with_imsi_info, imsi_mnc_len, mccmnc, op_id);

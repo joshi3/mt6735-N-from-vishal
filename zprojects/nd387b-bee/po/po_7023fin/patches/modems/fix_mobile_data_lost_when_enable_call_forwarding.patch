@@ -1,0 +1,25 @@
+diff --git a/lwtg/interface/service/nvram/nvram_editor_data_item.h b/lwtg/interface/service/nvram/nvram_editor_data_item.h
+index c75f0b0..bcf70b7 100644
+--- a/lwtg/interface/service/nvram/nvram_editor_data_item.h
++++ b/lwtg/interface/service/nvram/nvram_editor_data_item.h
+@@ -3104,7 +3104,7 @@
+ 
+ #define NVRAM_EF_REGIONAL_PHONE_MODE_LID_VERNO "000"
+ 
+-#define NVRAM_EF_SBP_MODEM_CONFIG_LID_VERNO "076"
++#define NVRAM_EF_SBP_MODEM_CONFIG_LID_VERNO "077"
+ #define NVRAM_EF_SBP_MODEM_DATA_CONFIG_LID_VERNO "002"
+ 
+ #ifdef __VOLTE_SUPPORT__
+diff --git a/lwtg/make/custom_config/VZ6737M_65_I_N(LWG_DSDS)_EXT.mak b/lwtg/make/custom_config/VZ6737M_65_I_N(LWG_DSDS)_EXT.mak
+index 0381bf2..2a7cf6e 100755
+--- a/lwtg/make/custom_config/VZ6737M_65_I_N(LWG_DSDS)_EXT.mak
++++ b/lwtg/make/custom_config/VZ6737M_65_I_N(LWG_DSDS)_EXT.mak
+@@ -2913,6 +2913,7 @@ CUSTOM_OPTION += __SEARCH_NOT_PREFERRED_AVAILABLE_PLMN__
+ CUSTOM_OPTION += __MCC_ASSIST_FULLBAND_RAT_SELECTION__
+ CUSTOM_OPTION += __FAST_HPPLMN_SEARCH__
+ CUSTOM_OPTION += __BCSFB__
++CUSTOM_OPTION += __EARLY_REPORT_PS_REG_STATUS__
+ # ************************************************************************* 
+ # Component trace definition header files for custom release only 
+ # ************************************************************************* 

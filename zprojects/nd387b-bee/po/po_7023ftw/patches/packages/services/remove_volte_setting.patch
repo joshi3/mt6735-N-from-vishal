@@ -1,0 +1,29 @@
+diff --git a/Telephony/src/com/android/phone/MobileNetworkSettings.java b/Telephony/src/com/android/phone/MobileNetworkSettings.java
+index ca68ba9..54e0927 100644
+--- a/Telephony/src/com/android/phone/MobileNetworkSettings.java
++++ b/Telephony/src/com/android/phone/MobileNetworkSettings.java
+@@ -668,6 +668,7 @@ public class MobileNetworkSettings extends PreferenceActivity implements
+             prefSet.addPreference(mButtonPreferredNetworkMode);
+             prefSet.addPreference(mButtonEnabledNetworks);
+             prefSet.addPreference(mButton4glte);
++            prefSet.removePreference(mButton4glte);
+         }
+ 
+         int settingsNetworkMode = android.provider.Settings.Global.getInt(
+@@ -1992,7 +1993,7 @@ public class MobileNetworkSettings extends PreferenceActivity implements
+             }
+             mEnhancedButton4glte.setOnPreferenceChangeListener(this);
+             mEnhancedButton4glte.setOrder(order);
+-            //preferenceScreen.addPreference(mEnhancedButton4glte);
++            preferenceScreen.removePreference(mEnhancedButton4glte);
+         }
+     }
+ 
+@@ -2012,6 +2013,7 @@ public class MobileNetworkSettings extends PreferenceActivity implements
+                     getPreferenceScreen().removePreference(mEnhancedButton4glte);
+                 }
+             }
++            getPreferenceScreen().removePreference(mEnhancedButton4glte);
+             if (findPreference(BUTTON_4G_LTE_KEY) != null) {
+                 log("[updateEnhanced4GLteSwitchPreference] SubId = " + mPhone.getSubId());
+                 mEnhancedButton4glte.setSubId(mPhone.getSubId());

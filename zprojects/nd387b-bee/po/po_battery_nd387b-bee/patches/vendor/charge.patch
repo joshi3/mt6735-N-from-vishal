@@ -1,0 +1,97 @@
+diff --git a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/mt_battery.c b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/mt_battery.c
+index b32d600..1056759 100755
+--- a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/mt_battery.c
++++ b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/mt_battery.c
+@@ -9,6 +9,10 @@
+ #include <platform/upmu_hw.h>
+ #include <platform/upmu_common.h>
+ #include <platform/boot_mode.h>
++#include <platform/mt_disp_drv.h>
++#include <platform/disp_drv.h>
++#include <platform/mt_logo.h>
++#include <platform/mt_leds.h>
+ #include <platform/mt_gpt.h>
+ #include <platform/mt_rtc.h>
+ //#include <platform/mt_disp_drv.h>
+@@ -38,6 +42,7 @@
+  */
+ #ifdef MTK_BQ24158_SUPPORT
+ #include <platform/bq24158.h>
++#include <platform/ncp1854.h>
+ #endif
+ // End of Vanzo: zhangqingzhan
+ 
+@@ -164,9 +169,20 @@ void pchr_turn_on_charging(kal_bool bEnable)
+  *add for bq24158
+  */
+ #ifdef MTK_BQ24158_SUPPORT
+-    bq24158_hw_init();
+-    bq24158_turn_on_charging();
+-    bq24158_dump_register();
++        int vender_code = bq24158_get_vender_code();
++        printf("vender_code = 0x%x\n",vender_code);
++        if((vender_code == 0x2)||(vender_code == 0x4))
++        {
++            bq24158_hw_init();
++            bq24158_turn_on_charging();
++            bq24158_dump_register();
++        }
++        else
++        {
++            ncp1854_hw_init();
++            ncp1854_charging_enable(bEnable);
++            ncp1854_dump_register();
++        }
+ #endif
+ // End of Vanzo: zhangqingzhan
+ 
+@@ -203,6 +219,12 @@ void check_bat_protect_status()
+ 		mtk_wdt_restart();
+ 		if (upmu_is_chr_det() == KAL_FALSE) {
+ 			dprintf(CRITICAL, "[BATTERY] No Charger, Power OFF !\n");
++
++                        mt_disp_power(TRUE);
++                        mt_disp_show_power_on_low_battery();
++                        mt65xx_leds_brightness_set(6, 110);
++		        mdelay(1000);
++
+ 			mt6575_power_off();
+ 			while (1);
+ 		}
+@@ -309,6 +331,11 @@ void mt65xx_bat_init(void)
+ 
+ 		} else {
+ 			dprintf(CRITICAL, "[BATTERY] battery voltage(%dmV) <= CLV ! Can not Boot Linux Kernel !! \n\r",bat_vol);
++
++                        mt_disp_power(TRUE);
++                        mt_disp_show_power_on_low_battery();
++                        mt65xx_leds_brightness_set(6, 110);
++		        mdelay(1000);
+ #ifndef NO_POWER_OFF
+ 			mt6575_power_off();
+ #endif
+diff --git a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/ncp1854.c b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/ncp1854.c
+index 85e75a7..0feca71 100755
+--- a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/ncp1854.c
++++ b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/ncp1854.c
+@@ -559,7 +559,7 @@ void ncp1854_hw_init()
+         ncp1854_set_ctrl_vbat(0x1C); //VCHG = 4.0V
+ 	else
+ 	{
+-		ncp1854_set_ctrl_vbat(0x24); //VCHG = 4.2V
++		ncp1854_set_ctrl_vbat(0x2A); //VCHG = 4.35V
+ 
+ 		ncp1854_set_aicl_en(0x1); //enable AICL as PT team suggest
+ 
+diff --git a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/rules.mk b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/rules.mk
+index 56cf6a3..bae57e2 100755
+--- a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/rules.mk
++++ b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/rules.mk
+@@ -225,6 +225,7 @@ else
+     else
+         ifeq ($(MTK_BQ24158_SUPPORT),yes)
+             OBJS +=$(LOCAL_DIR)/bq24158.o
++            OBJS +=$(LOCAL_DIR)/ncp1854.o
+         else
+             ifeq ($(MTK_NCP1854_SUPPORT),yes)
+                 OBJS +=$(LOCAL_DIR)/ncp1854.o

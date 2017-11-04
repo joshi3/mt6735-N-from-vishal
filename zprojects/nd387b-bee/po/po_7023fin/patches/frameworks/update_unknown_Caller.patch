@@ -1,0 +1,13 @@
+diff --git a/opt/telephony/src/java/com/android/internal/telephony/imsphone/ImsPhoneConnection.java b/opt/telephony/src/java/com/android/internal/telephony/imsphone/ImsPhoneConnection.java
+index b9c4710..a603da6 100644
+--- a/opt/telephony/src/java/com/android/internal/telephony/imsphone/ImsPhoneConnection.java
++++ b/opt/telephony/src/java/com/android/internal/telephony/imsphone/ImsPhoneConnection.java
+@@ -826,7 +826,7 @@ public class ImsPhoneConnection extends Connection {
+             if(!equalsHandlesNulls(mAddress, address)) {
+                 Rlog.d(LOG_TAG, "update address = " + address + " isMpty = " + isMultiparty());
+                 // do not update the address if the call is mpty && the modified address is empty
+-                if (!isMultiparty() || !TextUtils.isEmpty(address)) {
++                if ((!isMultiparty() || !TextUtils.isEmpty(address)) && (TextUtils.isEmpty(mAddress))) {
+                     mAddress = address;
+                     changed = true;
+                 }

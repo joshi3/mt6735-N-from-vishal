@@ -1,0 +1,21 @@
+diff --git a/opt/net/wifi/service/java/com/android/server/wifi/WifiServiceImpl.java b/opt/net/wifi/service/java/com/android/server/wifi/WifiServiceImpl.java
+index e091a7e..06b279e 100644
+--- a/opt/net/wifi/service/java/com/android/server/wifi/WifiServiceImpl.java
++++ b/opt/net/wifi/service/java/com/android/server/wifi/WifiServiceImpl.java
+@@ -2709,7 +2709,16 @@ public class WifiServiceImpl extends IWifiManager.Stub {
+                 (reason == DISABLE_WIFI_SETTING ? "wifi setting" : "airplane mode on"));
+         Intent intent = new Intent(WifiManager.WIFI_OFF_NOTIFY);
+         intent.putExtra(WifiManager.EXTRA_WIFI_OFF_REASON, reason);
++/* Vanzo:tanglei on: Mon, 21 Aug 2017 18:23:46 +0800
+         mContext.sendBroadcast(intent);
++ */
++        long id = Binder.clearCallingIdentity();
++        try {
++            mContext.sendBroadcast(intent);
++        } finally {
++            Binder.restoreCallingIdentity(id);
++        }
++// End of Vanzo:tanglei
+     }
+     ///@}
+ }

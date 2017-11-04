@@ -1,0 +1,13 @@
+diff --git a/vanzo/nd387b/device.mk b/vanzo/nd387b/device.mk
+index 9f6465c..991a424 100644
+--- a/vanzo/nd387b/device.mk
++++ b/vanzo/nd387b/device.mk
+@@ -137,6 +137,8 @@ PRODUCT_COPY_FILES += frameworks/av/media/libeffects/data/audio_effects.conf:sys
+ PRODUCT_COPY_FILES += device/vanzo/nd387b/android.hardware.telephony.gsm.xml:system/etc/permissions/android.hardware.telephony.gsm.xml
+ 
+ 
++PRODUCT_COPY_FILES += frameworks/native/data/etc/android.software.sip.xml:system/etc/permissions/android.software.sip.xml
++PRODUCT_COPY_FILES += frameworks/native/data/etc/android.software.sip.voip.xml:system/etc/permissions/android.software.sip.voip.xml
+ 
+ # Set default USB interface
+ PRODUCT_DEFAULT_PROPERTY_OVERRIDES += persist.sys.usb.config=mtp

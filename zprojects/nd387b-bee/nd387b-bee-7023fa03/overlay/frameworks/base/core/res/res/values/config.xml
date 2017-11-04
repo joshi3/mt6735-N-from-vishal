@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <integer name="config_longPressOnHomeBehavior">2</integer>
+    <integer name="config_overrideHasPermanentMenuKey">2</integer>
+    <integer name="config_screenBrightnessSettingMaximum">210</integer>
+</resources>

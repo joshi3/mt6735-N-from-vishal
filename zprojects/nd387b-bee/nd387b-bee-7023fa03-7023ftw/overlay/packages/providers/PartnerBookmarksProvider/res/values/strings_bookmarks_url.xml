@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2012 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="bookmarks_folder_name" translatable="false">InFocus Bookmarks</string>
+    <string-array name="bookmarks">
+        <item>InFocus Phone</item>
+        <item>http://tw.infocusphone.com</item>
+        <item>InFocus Mobile Fan Page</item>
+        <item>http://www.facebook.com/InFocusMobile</item>
+        <item>Google</item>
+        <item>https://www.google.com</item>
+        <item>Weather Channel</item>
+        <item>http://m.weather.com</item>
+        <item>Picasa</item>
+        <item>https://picasa.google.com</item>
+        <item>Yahoo!</item>
+        <item>https://www.yahoo.com/</item>
+        <item>MSN</item>
+        <item>https://www.msn.com/</item>
+        <item>MySpace</item>
+        <item>https://myspace.com</item>
+        <item>Facebook</item>
+        <item>https://www.facebook.com/</item>
+        <item>Wikipedia</item>
+        <item>https://www.wikipedia.org/</item>
+        <item>eBay</item>
+        <item>https://m.ebay.com</item>
+        <item>CNN</item>
+        <item>http://www.cnn.com/</item>
+        <item>New York Times</item>
+        <item>http://www.nytimes.com/</item>
+        <item>ESPN</item>
+        <item>https://espn.go.com</item>
+        <item>Amazon</item>
+        <item>https://www.amazon.com/</item>
+        <item>BBC</item>
+        <item>https://www.bbc.co.uk/news/</item>
+    </string-array>
+</resources>

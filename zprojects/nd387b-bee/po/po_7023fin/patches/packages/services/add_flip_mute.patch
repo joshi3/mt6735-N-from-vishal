@@ -1,0 +1,130 @@
+diff --git a/Telephony/res/values-zh-rCN/strings.xml b/Telephony/res/values-zh-rCN/strings.xml
+index f013c7b..d0cbc50 100644
+--- a/Telephony/res/values-zh-rCN/strings.xml
++++ b/Telephony/res/values-zh-rCN/strings.xml
+@@ -557,4 +557,6 @@
+     <string name="message_decode_error" msgid="3456481534066924855">"对邮件解码时出错。"</string>
+     <string name="callFailed_cdma_activation" msgid="2307989779233262164">"SIM 卡已启用您的服务，并更新了您手机的漫游功能。"</string>
+     <string name="callFailed_cdma_call_limit" msgid="1556916577171457086">"进行中的通话过多。请结束现有通话或将其合并，然后再拨打新的电话。"</string>
++    <string name="flip_mute_title">来电翻转静音</string>
++    <string name="flip_mute_sum">当手机有来电时，翻转手机使屏幕向下，可使手机停止响铃处于静音状态</string>
+ </resources>
+diff --git a/Telephony/res/values/strings.xml b/Telephony/res/values/strings.xml
+index b30f8ce..e69f0ea 100644
+--- a/Telephony/res/values/strings.xml
++++ b/Telephony/res/values/strings.xml
+@@ -1325,5 +1325,6 @@
+     <string name="callFailed_cdma_call_limit">
+         There are too many active calls. Please end or merge existing calls before placing a new one.
+     </string>
+-
++    <string name="flip_mute_title">Flip mute</string>
++    <string name="flip_mute_sum">When the phone has an incoming call, flip the screen down, your phone will muted</string>
+ </resources>
+diff --git a/Telephony/res/xml/call_feature_setting.xml b/Telephony/res/xml/call_feature_setting.xml
+index ca3ab5e..6b37469 100644
+--- a/Telephony/res/xml/call_feature_setting.xml
++++ b/Telephony/res/xml/call_feature_setting.xml
+@@ -57,6 +57,12 @@
+         android:title="@string/auto_retry_mode_title"
+         android:persistent="false"
+         android:summary="@string/auto_retry_mode_summary"/>
++    
++    <!--lcn flip mute-->
++    <CheckBoxPreference
++        android:key="vanzo_flip_mute_key"
++        android:title="@string/flip_mute_title"
++        android:summary="@string/flip_mute_sum" />
+ 
+     <!-- M: Add for [IpPrefix] -->
+     <PreferenceScreen
+diff --git a/Telephony/src/com/android/phone/CallFeaturesSetting.java b/Telephony/src/com/android/phone/CallFeaturesSetting.java
+index 6c600f3..67ea9b8 100644
+--- a/Telephony/src/com/android/phone/CallFeaturesSetting.java
++++ b/Telephony/src/com/android/phone/CallFeaturesSetting.java
+@@ -84,7 +84,12 @@ import com.mediatek.settings.vtss.GsmUmtsVTCFOptions;
+ import java.lang.String;
+ import java.util.ArrayList;
+ import java.util.List;
+-
++/* Vanzo:lichengnan on: Fri, 28 Apr 2017 17:44:25 +0800
++ * TODO: replace this line with your comment
++  */
++import android.os.SystemProperties;
++import com.android.featureoption.FeatureOption;
++// End of Vanzo:* *lichengnan
+ /**
+  * Top level "Call settings" UI; see res/xml/call_feature_setting.xml
+  *
+@@ -105,6 +110,18 @@ import java.util.List;
+ public class CallFeaturesSetting extends PreferenceActivity
+         implements Preference.OnPreferenceChangeListener,
+                 SubInfoUpdateListener {
++/* Vanzo:lichengnan on: Fri, 28 Apr 2017 17:44:06 +0800
++ * TODO: replace this line with your comment
++  */
++    private static final String KEY_VANZO_FLIP_MUTE = "vanzo_flip_mute_key";
++
++    private static final String GESTURE_MUTE_FLAG = "persist.sys.gesture_mute";
++
++    private static final String MUTE_DEBUG_TAG = "flip.mute";
++
++    private CheckBoxPreference mFlipMute;
++
++// End of Vanzo:                    * *lichengnan
+     private static final String LOG_TAG = "CallFeaturesSetting";
+     private static final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
+ 
+@@ -179,7 +196,16 @@ public class CallFeaturesSetting extends PreferenceActivity
+     @Override
+     public boolean onPreferenceChange(Preference preference, Object objValue) {
+         if (DBG) log("onPreferenceChange: \"" + preference + "\" changed to \"" + objValue + "\"");
+-
++        
++/* Vanzo:lichengnan on: Fri, 28 Apr 2017 17:45:05 +0800
++ * TODO: replace this line with your comment
++  */
++        boolean isChecked = String.valueOf(objValue).contains("true");
++        if (preference == mFlipMute) {
++            SystemProperties.set(GESTURE_MUTE_FLAG, isChecked ? "1" : "0");
++            Log.d(MUTE_DEBUG_TAG, "onPreferenceChange() : GESTURE_MUTE_FLAG = " + SystemProperties.getInt(GESTURE_MUTE_FLAG , 0));
++        }
++// End of Vanzo:        * *lichengnan
+         if (preference == mEnableVideoCalling) {
+             if (ImsManager.isEnhanced4gLteModeSettingEnabledByUser(mPhone.getContext())) {
+                 PhoneGlobals.getInstance().phoneMgr.enableVideoCalling((boolean) objValue);
+@@ -237,8 +263,13 @@ public class CallFeaturesSetting extends PreferenceActivity
+             finish();
+             return;
+         }
++        initUi();
+     }
+-
++    
++    private void initUi () {
++    
++    }
++    
+     @Override
+     protected void onResume() {
+         super.onResume();
+@@ -356,7 +387,18 @@ public class CallFeaturesSetting extends PreferenceActivity
+ 
+         Preference wifiCallingSettings = findPreference(
+                 getResources().getString(R.string.wifi_calling_settings_key));
+-
++        
++/* Vanzo:lichengnan on: Fri, 28 Apr 2017 17:48:31 +0800
++ * TODO: replace this line with your comment
++ */
++        mFlipMute = (CheckBoxPreference) findPreference(KEY_VANZO_FLIP_MUTE);
++        if (FeatureOption.VANZO_FEATURE_CALL_FLIP_MUTE) {
++            mFlipMute.setOnPreferenceChangeListener(this);
++            mFlipMute.setChecked(SystemProperties.getInt(GESTURE_MUTE_FLAG , 0) == 1 ? true : false);
++        } else {
++            prefSet.removePreference(mFlipMute);
++        }
++// End of Vanzo:        * *lichengnan
+         final PhoneAccountHandle simCallManager = mTelecomManager.getSimCallManager();
+         if (simCallManager != null) {
+             Intent intent = PhoneAccountSettingsFragment.buildPhoneAccountConfigureIntent(

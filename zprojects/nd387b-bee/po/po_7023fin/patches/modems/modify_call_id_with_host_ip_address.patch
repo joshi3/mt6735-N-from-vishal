@@ -1,0 +1,13 @@
+diff --git a/lwtg/custom/modem/common/ps/custom_imc_config.c b/lwtg/custom/modem/common/ps/custom_imc_config.c
+index 8329f7c..ebf9785 100644
+--- a/lwtg/custom/modem/common/ps/custom_imc_config.c
++++ b/lwtg/custom/modem/common/ps/custom_imc_config.c
+@@ -2496,6 +2496,8 @@ kal_bool imc_nvram_customization(kal_uint16 op_id, sim_interface_enum sim_slot_i
+ 
+             /* IMCB, Reg/Stack, UA internal configurations */
+             /* Call */
++            nvram_ims_profile_ptr->ua_config.call_id_with_host_inReg            = 1;
++            nvram_ims_profile_ptr->ua_config.call_id_with_host_inCall           = 1;
+             nvram_ims_profile_ptr->ua_config.refer_dialog_to_server             = 1;
+             nvram_ims_profile_ptr->ua_config.merge_send_bye                     = 0;
+             nvram_ims_profile_ptr->ua_config.call_tcall_timer_timeout           = 20;

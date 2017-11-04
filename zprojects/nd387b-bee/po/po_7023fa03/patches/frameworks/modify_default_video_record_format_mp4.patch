@@ -1,0 +1,49 @@
+diff --git a/av/media/libmedia/MediaProfiles.cpp b/av/media/libmedia/MediaProfiles.cpp
+index 173c76d..d18918c 100644
+--- a/av/media/libmedia/MediaProfiles.cpp
++++ b/av/media/libmedia/MediaProfiles.cpp
+@@ -775,7 +775,7 @@ MediaProfiles::createDefaultCamcorderTimeLapseQcifProfile(camcorder_quality qual
+     AudioCodec *audioCodec = new AudioCodec(AUDIO_ENCODER_AMR_NB, 12200, 8000, 1);
+     CamcorderProfile *profile = new MediaProfiles::CamcorderProfile;
+     profile->mCameraId = 0;
+-    profile->mFileFormat = OUTPUT_FORMAT_THREE_GPP;
++    profile->mFileFormat = OUTPUT_FORMAT_MPEG_4;
+     profile->mQuality = quality;
+     profile->mDuration = 60;
+     profile->mVideoCodec = videoCodec;
+@@ -792,7 +792,7 @@ MediaProfiles::createDefaultCamcorderTimeLapse480pProfile(camcorder_quality qual
+     AudioCodec *audioCodec = new AudioCodec(AUDIO_ENCODER_AMR_NB, 12200, 8000, 1);
+     CamcorderProfile *profile = new MediaProfiles::CamcorderProfile;
+     profile->mCameraId = 0;
+-    profile->mFileFormat = OUTPUT_FORMAT_THREE_GPP;
++    profile->mFileFormat = OUTPUT_FORMAT_MPEG_4;
+     profile->mQuality = quality;
+     profile->mDuration = 60;
+     profile->mVideoCodec = videoCodec;
+@@ -831,7 +831,7 @@ MediaProfiles::createDefaultCamcorderQcifProfile(camcorder_quality quality)
+ 
+     MediaProfiles::CamcorderProfile *profile = new MediaProfiles::CamcorderProfile;
+     profile->mCameraId = 0;
+-    profile->mFileFormat = OUTPUT_FORMAT_THREE_GPP;
++    profile->mFileFormat = OUTPUT_FORMAT_MPEG_4;
+     profile->mQuality = quality;
+     profile->mDuration = 30;
+     profile->mVideoCodec = videoCodec;
+@@ -848,7 +848,7 @@ MediaProfiles::createDefaultCamcorderCifProfile(camcorder_quality quality)
+     AudioCodec *audioCodec = new AudioCodec(AUDIO_ENCODER_AMR_NB, 12200, 8000, 1);
+     CamcorderProfile *profile = new MediaProfiles::CamcorderProfile;
+     profile->mCameraId = 0;
+-    profile->mFileFormat = OUTPUT_FORMAT_THREE_GPP;
++    profile->mFileFormat = OUTPUT_FORMAT_MPEG_4;
+     profile->mQuality = quality;
+     profile->mDuration = 60;
+     profile->mVideoCodec = videoCodec;
+@@ -1995,7 +1995,7 @@ MediaProfiles::createMTKCamcorderProfile(camcorder_quality quality, camcorder_mo
+ 
+     CamcorderProfile *profile = new MediaProfiles::CamcorderProfile;
+     profile->mCameraId = CamId;
+-    profile->mFileFormat = OUTPUT_FORMAT_THREE_GPP;
++    profile->mFileFormat = OUTPUT_FORMAT_MPEG_4;
+     profile->mQuality = quality;
+     profile->mDuration = 30;
+     profile->mVideoCodec = videoCodec;

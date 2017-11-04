@@ -1,0 +1,14 @@
+diff --git a/base/services/core/java/com/android/server/policy/PhoneWindowManager.java b/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index a20358d..758f149 100644
+--- a/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -6061,6 +6061,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+  */
+         if(keyCode == KeyEvent.KEYCODE_HOME){
+            mPressHome = true;
++           if (down && event.getRepeatCount() == 0) {
++               useHapticFeedback = true;
++           }
+         }
+ 
+         if(SystemProperties.getInt("persist.sys.fp_switch", 1) == 1){

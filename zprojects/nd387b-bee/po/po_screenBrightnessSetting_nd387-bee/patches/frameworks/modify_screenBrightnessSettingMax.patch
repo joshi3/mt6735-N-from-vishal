@@ -1,0 +1,33 @@
+diff --git a/base/core/res/res/values/config.xml b/base/core/res/res/values/config.xml
+index 2aadbff..3930b07 100644
+--- a/base/core/res/res/values/config.xml
++++ b/base/core/res/res/values/config.xml
+@@ -1022,7 +1022,7 @@
+ 
+     <!-- Minimum screen brightness setting allowed by the power manager.
+          The user is forbidden from setting the brightness below this level. -->
+-    <integer name="config_screenBrightnessSettingMinimum">10</integer>
++    <integer name="config_screenBrightnessSettingMinimum">1</integer>
+ 
+     <!-- Maximum screen brightness allowed by the power manager.
+          The user is forbidden from setting the brightness above this level. -->
+@@ -1030,7 +1030,7 @@
+ Modify max screen brightness for power saving
+     <integer name="config_screenBrightnessSettingMaximum">255</integer>
+ -->
+-    <integer name="config_screenBrightnessSettingMaximum">230</integer>
++    <integer name="config_screenBrightnessSettingMaximum">210</integer>
+ <!-- End of Vanzo: yucheng -->
+ 
+     <!-- Default screen brightness setting.
+@@ -1050,8 +1050,8 @@ Modify max screen brightness for power saving
+          when adapting to brighter or darker environments.  This parameter controls how quickly
+          brightness changes occur in response to an observed change in light level that exceeds the
+          hysteresis threshold. -->
+-    <integer name="config_autoBrightnessBrighteningLightDebounce">4000</integer>
+-    <integer name="config_autoBrightnessDarkeningLightDebounce">8000</integer>
++    <integer name="config_autoBrightnessBrighteningLightDebounce">800</integer>
++    <integer name="config_autoBrightnessDarkeningLightDebounce">7000</integer>
+ 
+     <!-- Light sensor event rate in milliseconds for automatic brightness control. -->
+     <integer name="config_autoBrightnessLightSensorRate">250</integer>

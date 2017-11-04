@@ -1,0 +1,53 @@
+diff --git a/res/values/ids.xml b/res/values/ids.xml
+index f850327..187c2c5 100644
+--- a/res/values/ids.xml
++++ b/res/values/ids.xml
+@@ -22,4 +22,6 @@
+     <item type="id" name="context_menu_block_number" />
+     <item type="id" name="settings_header_sounds_and_vibration" />
+     <item type="id" name="block_id" />
++    <item type="id" name="context_menu_delete_to_clipboard" />
++    <item type="id" name="context_menu_delete_all_clipboard" />
+ </resources>
+diff --git a/src/com/android/dialer/calllog/CallLogListItemViewHolder.java b/src/com/android/dialer/calllog/CallLogListItemViewHolder.java
+index d1a7287..8c14f2f 100644
+--- a/src/com/android/dialer/calllog/CallLogListItemViewHolder.java
++++ b/src/com/android/dialer/calllog/CallLogListItemViewHolder.java
+@@ -64,6 +64,7 @@ import com.android.dialer.service.ExtendedBlockingButtonRenderer;
+ import com.android.dialer.util.DialerUtils;
+ import com.android.dialer.util.PhoneNumberUtil;
+ import com.android.dialer.voicemail.VoicemailPlaybackLayout;
++import com.mediatek.dialer.activities.CallLogMultipleDeleteActivity;
+ import com.android.dialer.voicemail.VoicemailPlaybackPresenter;
+ import com.android.dialerbind.ObjectFactory;
+ 
+@@ -338,6 +339,17 @@ public final class CallLogListItemViewHolder extends RecyclerView.ViewHolder
+         menu.add(ContextMenu.NONE, R.id.context_menu_copy_to_clipboard, ContextMenu.NONE,
+                 R.string.action_copy_number_text)
+                 .setOnMenuItemClickListener(this);
++/* Vanzo:zhangweigang on: Fri, 25 Aug 2017 11:15:21 +0800
++ * TODO: replace this line with your comment
++ */  
++        menu.add(ContextMenu.NONE, R.id.context_menu_delete_to_clipboard, ContextMenu.NONE,
++                R.string.recentCalls_delete)
++                .setOnMenuItemClickListener(this);
++        
++        menu.add(ContextMenu.NONE, R.id.context_menu_delete_all_clipboard, ContextMenu.NONE,
++                R.string.call_log_delete_all)
++                .setOnMenuItemClickListener(this);
++// End of Vanzo:zhangweigang
+ 
+         // The edit number before call does not show up if any of the conditions apply:
+         // 1) Number cannot be called
+@@ -401,6 +413,11 @@ public final class CallLogListItemViewHolder extends RecyclerView.ViewHolder
+         } else if (resId == R.id.context_menu_copy_to_clipboard) {
+             ClipboardUtils.copyText(mContext, null, number, true);
+             return true;
++        }else if (resId == R.id.context_menu_delete_to_clipboard){
++            final Intent delIntent = new Intent(mContext, CallLogMultipleDeleteActivity.class);
++            mContext.startActivity(delIntent);
++        }else if (resId == R.id.context_menu_delete_all_clipboard){
++            ClearCallLogDialog.show(((Activity) mContext).getFragmentManager()); 
+         } else if (resId == R.id.context_menu_copy_transcript_to_clipboard) {
+             ClipboardUtils.copyText(mContext, null,
+                     phoneCallDetailsViews.voicemailTranscriptionView.getText(), true);

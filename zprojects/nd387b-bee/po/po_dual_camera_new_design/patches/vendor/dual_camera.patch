@@ -1,0 +1,337 @@
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/include/mtkcam/hal/IHalSensor.h b/mediatek/proprietary/hardware/mtkcam/legacy/include/mtkcam/hal/IHalSensor.h
+index 65a26ed..8e7e16e 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/include/mtkcam/hal/IHalSensor.h
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/include/mtkcam/hal/IHalSensor.h
+@@ -223,13 +223,6 @@ enum
+     SENSOR_CMD_GET_SENSOR_PDAF_CAPACITY,                /*!<Command to get PDAF capacity by scenario ID. arg1:[input] scenario, arg2:support PDAF or not*/
+     SENSOR_CMD_GET_SENSOR_ROLLING_SHUTTER,                /*!<Command to get PDAF data from  sensor OTP. arg1:[input] offset, arg2:[input]pointer of buffer, arg3:[input]size*/
+     SENSOR_CMD_DEBUG_P1_DQ_SENINF_STATUS,			    /*!<Command to do debug task at p1 dequeue*/
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 22:01:01 +0800
+- * Modified for fake dual camera
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-    SENSOR_CMD_GET_YUV_SENSOR_BV,
+-#endif
+-// End of Vanzo: yucheng
+ #ifdef VANZO_FEATURE_GC_DUAL_CAMERA_BY_NAME
+     SENSOR_CMD_SET_SENSOR_SWITCH,
+ #endif
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr.cpp b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr.cpp
+index 260e93f..8da2f83 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr.cpp
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr.cpp
+@@ -272,13 +272,6 @@ AeMgr(ESensorDev_T eSensorDev)
+     , m_u4AEExitStableCnt(0)
+     , m_bIsVideoRecording(0)
+     , m_bIsEISon(0)
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 16:43:57 +0800
+- * Modify for fake dual camera
+- */
+-#ifdef VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME
+-    , m_pAECallBack(NULL)
+-#endif
+-// End of Vanzo: yucheng
+ {
+     memset(&m_AeMgrCCTConfig, 0, sizeof(AE_CCT_CFG_T));
+     memset(&m_eZoomWinInfo, 0, sizeof(EZOOM_WINDOW_T));
+@@ -4222,38 +4215,13 @@ MRESULT AeMgr::updatePreviewParamsByiVHDR(strAEOutput *sAEInfo)
+     return S_AE_OK;
+ }
+ 
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 16:44:44 +0800
+- * modify for fake dual camera
+- */
+-#ifdef VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME
+-MBOOL AeMgr::setCallbacks(I3ACallBack* cb)
+-{
+-    m_pAECallBack = cb;
+-    return TRUE;
+-}
+-#endif
+-// End of Vanzo: yucheng
+-
+ //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ //
+ //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ MRESULT AeMgr::getAESensorActiveCycle(MINT32* i4ActiveCycle)
+ {
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 16:45:40 +0800
+- * modify for fake dual camera
+- */
+-#ifdef VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME
+-    MUINT32 fake_yuv_bv = 0;
+-    IHalSensorList* const pIHalSensorList = IHalSensorList::get();
+-    IHalSensor* pIHalSensor = pIHalSensorList->createSensor("YUV_BV-ae_mgr", ESensorDev_MainSecond);
+-    pIHalSensor->sendCommand(ESensorDev_MainSecond,SENSOR_CMD_GET_YUV_SENSOR_BV, (MUINTPTR)&fake_yuv_bv, 0, 0);
+-    if(pIHalSensor) pIHalSensor->destroyInstance("YUV_BV-ae_mgr");
+-
+     * i4ActiveCycle = m_i4IspGainDelayFrames + 2;
+-    MY_LOG_IF(m_3ALogEnable,"[%s] i4SensorDev:%d Cycle:%d\n", __FUNCTION__, m_eSensorDev, *i4ActiveCycle);
+-    //m_pAECallBack->doNotifyCb(I3ACallBack::eID_NOTIFY_PREVIEW_BV, m_BVvalue+50, fake_yuv_bv, 0);
+-#endif
+-// End of Vanzo: yucheng
++    MY_LOG_IF(m_3ALogEnable, "[%s] i4SensorDev:%d Cycle:%d\n", __FUNCTION__, m_eSensorDev, *i4ActiveCycle);
+     return S_AE_OK;
+ }
+ 
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr.h b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr.h
+index 23a7d86..b6eff47 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr.h
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr.h
+@@ -191,13 +191,6 @@ public:
+     MRESULT getNvramData(MINT32 i4SensorDev, MINT32 isForce = 0);
+     MRESULT getAEBlockYvalues(MUINT8 *pYvalues, MUINT8 size);
+     MRESULT SetAETargetMode(eAETARGETMODE eAETargetMode);
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 22:04:03 +0800
+- * TODO: replace this line with your comment
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-    MBOOL   setCallbacks(I3ACallBack* cb);
+-#endif
+-// End of Vanzo: yucheng
+     MRESULT getAESensorActiveCycle(MINT32* i4ActiveCycle);
+     MRESULT setVideoDynamicFrameRate(MBOOL bVdoDynamicFps);
+     MRESULT modifyAEPlineTableLimitation(MBOOL bEnable, MBOOL bEquivalent, MUINT32 u4IncreaseISO_x100, MUINT32 u4IncreaseShutter_x100);
+@@ -408,13 +401,6 @@ private:
+     MBOOL m_bWillUpdateSensorbyI2C;
+     MBOOL m_bIsVideoRecording;
+     MBOOL m_bIsEISon;
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 22:04:22 +0800
+- * Modified for fake dual camera
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-    I3ACallBack*  m_pAECallBack;
+-#endif
+-// End of Vanzo: yucheng
+ };
+ 
+ };  //  namespace NS3A
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr_if.cpp b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr_if.cpp
+index 6a314f1..308881a 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr_if.cpp
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr_if.cpp
+@@ -1395,26 +1395,6 @@ MRESULT IAeMgr::setVideoDynamicFrameRate(MINT32 i4SensorDev, MBOOL bVdoDynamicFp
+ //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ //
+ //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 22:07:44 +0800
+- * Modified for fake dual camera
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-MBOOL IAeMgr::setCallbacks(MINT32 i4SensorDev, I3ACallBack* cb)
+-{
+-    if (i4SensorDev & ESensorDev_Main)
+-        return AeMgr::getInstance(ESensorDev_Main).setCallbacks(cb);
+-    if (i4SensorDev & ESensorDev_Sub)
+-        return AeMgr::getInstance(ESensorDev_Sub).setCallbacks(cb);
+-    if (i4SensorDev & ESensorDev_MainSecond)
+-        return AeMgr::getInstance(ESensorDev_MainSecond).setCallbacks(cb);
+-
+-return AeMgr::getInstance(ESensorDev_Main).setCallbacks(cb);
+-}
+-#endif
+-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-//
+-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-// End of Vanzo: yucheng
+ MRESULT IAeMgr::getAESensorActiveCycle(MINT32 i4SensorDev, MINT32* i4ActiveCycle)
+ {
+     if (i4SensorDev & ESensorDev_Main)
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr_if.h b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr_if.h
+index 791d4e5..91f0fb8 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr_if.h
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/featureio/pipe/aaa/ae_mgr/ae_mgr_if.h
+@@ -649,17 +649,6 @@ public:
+      * @param [in] strAOEInputParm input params
+     */
+     MRESULT SetAETargetMode(MINT32 i4SensorDev, eAETARGETMODE eAETargetMode);
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 22:06:40 +0800
+- * Modified for fake dual camera
+- */
+-     /**
+-     * @brief Set callback pointer to AE manger. When AE is doing or done, AE manger must report AE status. This pointer receives the reporting way.
+-     * @param [in] cb Callback function pointer.
+-     */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-    MBOOL setCallbacks(MINT32 i4SensorDev, I3ACallBack* cb);
+-#endif
+-// End of Vanzo: yucheng
+     /**
+      * @brief get AE sensor active cycle
+      * @param [out] i4ActiveCycle pointer cycle value
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/HalSensor.control.cpp b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/HalSensor.control.cpp
+index 59ae3fb..9ac7a72 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/HalSensor.control.cpp
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/HalSensor.control.cpp
+@@ -1595,16 +1595,6 @@ MINT HalSensor::sendCommand(
+         cmdId = CMD_SENSOR_GET_PDAF_DATA;
+         pSensorDrv->sendCommand((SENSOR_DEV_ENUM)sensorDevId,cmdId, arg1, arg2, arg3);
+         break;
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 22:09:10 +0800
+- * Modified for fake dual camera
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-    case SENSOR_CMD_GET_YUV_SENSOR_BV:
+-        cmdId = CMD_SENSOR_GET_YUV_SENSOR_BV;
+-        pSensorDrv->sendCommand((SENSOR_DEV_ENUM)sensorDevId,cmdId, arg1);
+-        break;
+-#endif
+-// End of Vanzo: yucheng
+     case SENSOR_CMD_GET_SENSOR_PDAF_CAPACITY:
+         cmdId = CMD_SENSOR_GET_SENSOR_PDAF_CAPACITY;
+         pSensorDrv->sendCommand((SENSOR_DEV_ENUM)sensorDevId,cmdId, arg1, arg2, arg3);
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/imgsensor_drv.cpp b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/imgsensor_drv.cpp
+index c258595..0088acd 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/imgsensor_drv.cpp
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/imgsensor_drv.cpp
+@@ -1675,18 +1675,6 @@ ImgSensorDrv::sendCommand(
+         LOG_MSG("[CMD_SENSOR_GET_PDAF_DATA] 22 0x%llu 0x%llu 0x%llu", FeaturePara[0], FeaturePara[1], FeaturePara[2]);
+         break;
+ 
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 22:11:31 +0800
+- * Modified for fake dual camera
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-     case CMD_SENSOR_GET_YUV_SENSOR_BV:
+-        FeatureId = SENSOR_FEATURE_GET_YUV_SENSOR_BV;
+-        FeatureParaLen = sizeof(MUINT64);
+-        pFeaturePara = (MUINT8*)FeaturePara;
+-        //LOG_MSG("[CMD_SENSOR_GET_YUV_SENSOR_BV] 22 0x%llu", FeaturePara[0]);
+-        break;
+-#endif
+-// End of Vanzo: yucheng
+      case CMD_SENSOR_GET_SENSOR_PDAF_CAPACITY:
+         FeatureId = SENSOR_FEATURE_GET_SENSOR_PDAF_CAPACITY;
+         FeaturePara[0] = *parg1;
+@@ -2034,13 +2022,6 @@ ImgSensorDrv::sendCommand(
+ 
+         case CMD_SENSOR_GET_FRAME_SYNC_PIXEL_LINE_NUM:
+         case CMD_SENSOR_GET_PIXEL_CLOCK_FREQ:
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 22:12:17 +0800
+- * Modified for fake dual camera
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-        case CMD_SENSOR_GET_YUV_SENSOR_BV:
+-#endif
+-// End of Vanzo: yucheng
+             *((MUINT32*)parg1)=FeaturePara[0];
+             break;
+ 
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/sensor_drv.h b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/sensor_drv.h
+index a70dc27..22b6807 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/sensor_drv.h
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/hal/sensor/sensor_drv.h
+@@ -111,13 +111,6 @@ typedef enum {
+     CMD_SENSOR_GET_PDAF_DATA,
+     CMD_SENSOR_GET_SENSOR_PDAF_CAPACITY,
+     CMD_SENSOR_GET_SENSOR_ROLLING_SHUTTER,
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 22:13:39 +0800
+- * Modified for fake dual camera
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-    CMD_SENSOR_GET_YUV_SENSOR_BV,
+-#endif
+-// End of Vanzo: yucheng
+     CMD_SENSOR_MAX                 = 0xFFFF
+ } CMD_SENSOR_ENUM;
+ 
+diff --git a/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/mode/gyfacebeauty/GyBokehMode.java b/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/mode/gyfacebeauty/GyBokehMode.java
+index 3e5ebe6..dfca8e8 100644
+--- a/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/mode/gyfacebeauty/GyBokehMode.java
++++ b/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/mode/gyfacebeauty/GyBokehMode.java
+@@ -873,43 +873,36 @@ public class GyBokehMode extends CameraMode implements ICameraAddition.Listener,
+     private boolean mPreviewBVStatus = false;
+     // width , high,x,y,radius,level,scope ,format,Rotation,isFont
+     private int gysize[] ={0,0,0,0,0,0,0,0,0,0,0};
++    private boolean misFakeCameraBlocked = false;
+     private final class PreviewBVCallback implements
+             android.hardware.Camera.PreviewBVCallback {
+         @Override
+         public void onPreviewBV(android.hardware.Camera camera, int arg1, int arg2) {
+-                boolean moving = (arg1 > 15 && arg2 < 5) | (arg1 > 55 && arg2 < 25) | (arg1 > 5 && arg2 ==0);
+-
+-                confirm_bv<<=1;
+-                confirm_bv&=0x000000FF;
+-                if (moving)
+-                    confirm_bv+=1;
+-
+-                if (confirm_bv == 0x000000FF)
+-                    moving = true;
+-                else if (confirm_bv == 0)
+-                    moving = false;
+-
+-                Log.i(TAG, "GYBokehModule onPreviewBV, moving:" + moving + ",arg1:" + arg1 + ", arg2:"+ arg2);
+-                if (moving != mPreviewBVStatus) {
+-                    if (moving) {
+-                        int size[] ={0,0,0,0,0,0,0,0,0,0,0};
+-                        mOldgylevel = mGyBokehHelper.getPower();
+-                        mGyBokehHelper.setGyBokehLevel(0);
+-                        //LibVGestureDetect.CurState(1,size);
+-                        //mParameters.set("gy-bokeh-enable",  0);
+-                        //Intent mIntent = new Intent(CAMERA_HIDE);
+-                        //mActivity.getApplicationContext().sendBroadcast(mIntent);
+-                        Toast toast = Toast.makeText(mActivity.getApplicationContext(), R.string.camera_hide , Toast.LENGTH_SHORT);
+-                        toast.setGravity(Gravity.TOP,0,0);
+-                        toast.show();
+-                        Log.d(TAG, "GYBokehModule onPreviewBV hide, mOldgylevel:" + mOldgylevel);
+-                    } else {
+-                        mGyBokehHelper.setGyBokehLevel(mOldgylevel);
+-                        //LibVGestureDetect.CurState(1,gysize);
+-                        //mParameters.set("gy-bokeh-enable",  1);
+-                        Log.d(TAG, "GYBokehModule onPreviewBV non hide, mOldgylevel:" + mOldgylevel);
+-                    }
+-                    mPreviewBVStatus = moving;
++                Log.i(TAG, "GYBokehModule onPreviewBV,arg1:" + arg1 + ", arg2:"+ arg2);
++                boolean isBlocked = android.hardware.Camera.isFakeCameraBlocked(arg1);
++                if (isBlocked == misFakeCameraBlocked) {
++                    return;
++                } else {
++                    misFakeCameraBlocked = isBlocked;
++                }
++
++                if (misFakeCameraBlocked) {
++                    int size[] ={0,0,0,0,0,0,0,0,0,0,0};
++                    mOldgylevel = mGyBokehHelper.getPower();
++                    mGyBokehHelper.setGyBokehLevel(0);
++                    //LibVGestureDetect.CurState(1,size);
++                    //mParameters.set("gy-bokeh-enable",  0);
++                    //Intent mIntent = new Intent(CAMERA_HIDE);
++                    //mActivity.getApplicationContext().sendBroadcast(mIntent);
++                    Toast toast = Toast.makeText(mActivity.getApplicationContext(), R.string.camera_hide , Toast.LENGTH_SHORT);
++                    toast.setGravity(Gravity.TOP,0,0);
++                 //   toast.show();
++                    Log.d(TAG, "GYBokehModule onPreviewBV hide, mOldgylevel:" + mOldgylevel);
++                } else {
++                    mGyBokehHelper.setGyBokehLevel(mOldgylevel);
++                    //LibVGestureDetect.CurState(1,gysize);
++                    //mParameters.set("gy-bokeh-enable",  1);
++                    Log.d(TAG, "GYBokehModule onPreviewBV non hide, mOldgylevel:" + mOldgylevel);
+                 }
+         }
+     }
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/drv/res_mgr/res_mgr_drv.cpp b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/drv/res_mgr/res_mgr_drv.cpp
+index 3cbb5e4..87d0c68 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/drv/res_mgr/res_mgr_drv.cpp
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/core/drv/res_mgr/res_mgr_drv.cpp
+@@ -533,7 +533,7 @@ triggerCtrl()
+         MMDVFS_SENSOR_FPS,          mBwcParams.sensorFps,
+         MMDVFS_PARAMETER_EOF);
+ 
+-    if(mBwcParams.sensorSize >= (3264*2448))
++    if(mBwcParams.sensorSize >= (640*480))
+     {
+         LOG_MSG("Phigh");
+         MBOOL ret=vencpllCtrl(RES_MGR_DRV_VECMPLL_CTRL_SET_HIGH);
+diff --git a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/v3/hwpipeline/ScenarioControl.cpp b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/v3/hwpipeline/ScenarioControl.cpp
+index 5809fae..ead75ba 100755
+--- a/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/v3/hwpipeline/ScenarioControl.cpp
++++ b/mediatek/proprietary/hardware/mtkcam/legacy/platform/mt6735m/v3/hwpipeline/ScenarioControl.cpp
+@@ -190,7 +190,7 @@ enterScenario(
+     // keep param
+     mCurParam = param;
+     //
+-    if( param.sensorSize.size() >= (3264*2448) ) {
++    if( param.sensorSize.size() >= (640*480) ) {
+         MERROR err = vencpllCtrl(MTRUE);
+         if( err != OK )
+             return err;

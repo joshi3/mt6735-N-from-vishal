@@ -1,0 +1,13 @@
+diff --git a/base/core/res/res/xml/power_profile.xml b/base/core/res/res/xml/power_profile.xml
+index 47e30f5..4ce8a31 100644
+--- a/base/core/res/res/xml/power_profile.xml
++++ b/base/core/res/res/xml/power_profile.xml
+@@ -100,7 +100,7 @@
+   <item name="cpu.idle">0.1</item>
+ 
+   <!-- This is the battery capacity in mAh (measured at nominal voltage) -->
+-  <item name="battery.capacity">1000</item>
++  <item name="battery.capacity">3000</item>
+ 
+   <!-- Wifi related values. -->
+   <!-- Idle Receive current for wifi radio in mA. 0 by default-->

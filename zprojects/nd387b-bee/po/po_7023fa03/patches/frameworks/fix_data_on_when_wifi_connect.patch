@@ -1,0 +1,13 @@
+diff --git a/base/services/core/java/com/android/server/connectivity/NetworkAgentInfo.java b/base/services/core/java/com/android/server/connectivity/NetworkAgentInfo.java
+index ac0ba96..d2e53b8 100644
+--- a/base/services/core/java/com/android/server/connectivity/NetworkAgentInfo.java
++++ b/base/services/core/java/com/android/server/connectivity/NetworkAgentInfo.java
+@@ -153,7 +153,7 @@ public class NetworkAgentInfo implements Comparable<NetworkAgentInfo> {
+     // This represents the last score received from the NetworkAgent.
+     private int currentScore;
+     // Penalty applied to scores of Networks that have not been validated.
+-    private static final int UNVALIDATED_SCORE_PENALTY = 40;
++    private static final int UNVALIDATED_SCORE_PENALTY = 0;
+ 
+     // Score for explicitly connected network.
+     //

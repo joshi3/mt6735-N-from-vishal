@@ -1,0 +1,20 @@
+diff --git a/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/manager/ModePicker.java b/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/manager/ModePicker.java
+index 4c419aa..21bca79 100755
+--- a/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/manager/ModePicker.java
++++ b/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/manager/ModePicker.java
+@@ -511,7 +511,14 @@ public class ModePicker extends ViewManager implements View.OnClickListener,
+             mModeMarginBottom = (mDisplayWidth - supportModes * mModeWidth) / (supportModes - 1);
+         }
+         Log.d(TAG, "mModeMarginBottom:" + mModeMarginBottom);
+-        mLayoutParams.setMargins(0, 0, 0, mModeMarginBottom);
++        int cameraID = getContext().getCameraId();
++        if(cameraID == 0){
++            mLayoutParams.setMargins(0, 0, 0, 100);
++            android.util.Log.i("zhangweigang", "mModeMarginBottom=:"+cameraID);
++        }else{
++            mLayoutParams.setMargins(0, 0, 0, 510);
++            android.util.Log.i("zhangweigang", "mModeMarginBottom=:"+cameraID);
++        }
+ 
+         int visibleCount = 0;
+         for (int i = 0; i < MODE_NUM_ALL; i++) {

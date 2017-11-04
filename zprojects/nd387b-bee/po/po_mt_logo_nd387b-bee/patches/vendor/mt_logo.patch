@@ -1,0 +1,48 @@
+diff --git a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/include/platform/mt_logo.h b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/include/platform/mt_logo.h
+index dd6624a..730af77 100644
+--- a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/include/platform/mt_logo.h
++++ b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/include/platform/mt_logo.h
+@@ -60,6 +60,7 @@ void mt_disp_show_battery_full(void);
+ void mt_disp_show_battery_capacity(UINT32 capacity);
+ void mt_disp_show_boot_logo(void);
+ void mt_disp_show_low_battery(void);
++void mt_disp_show_power_on_low_battery(void);
+ 
+ 
+ #ifdef __cplusplus
+diff --git a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/mt_logo.c b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/mt_logo.c
+index 621d73e..c4fd767 100644
+--- a/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/mt_logo.c
++++ b/mediatek/proprietary/bootable/bootloader/lk/platform/mt6735/mt_logo.c
+@@ -223,7 +223,7 @@ void init_fb_screen()
+ 	} else if (0 == strncmp(MTK_LCM_PHYSICAL_ROTATION, "180", 3) && (phical_screen.need180Adjust == 1)) {
+ 		phical_screen.rotation = 180;
+ 	} else {
+-		phical_screen.rotation = 0;
++		phical_screen.rotation = 180;
+ 	}
+ 
+ 	sync_anim_version();
+@@ -401,6 +401,22 @@ void mt_disp_show_low_battery(void)
+ 
+ 	return;
+ }
++void mt_disp_show_power_on_low_battery(void)
++{
++	dprintf(INFO, "[lk logo: %s %d]\n",__FUNCTION__,__LINE__);
++	mt_logo_get_custom_if();
++
++	if (logo_cust_if->show_boot_logo) {
++		logo_cust_if->show_boot_logo();
++	} else {
++		init_fb_screen();
++		//show_logo(2);
++		fill_animation_logo(29, mt_get_fb_addr(), mt_get_tempfb_addr(), logo_addr, phical_screen);
++		mt_disp_update(0, 0, CFG_DISPLAY_WIDTH, CFG_DISPLAY_HEIGHT);
++	}
++
++	return;
++}
+ 
+ 
+ /*

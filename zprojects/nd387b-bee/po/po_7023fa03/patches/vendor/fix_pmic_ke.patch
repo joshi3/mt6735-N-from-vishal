@@ -1,0 +1,13 @@
+diff --git a/mediatek/proprietary/bootable/bootloader/preloader/platform/mt6735/src/drivers/pmic_wrap_init.c b/mediatek/proprietary/bootable/bootloader/preloader/platform/mt6735/src/drivers/pmic_wrap_init.c
+index c05a6ff..3467122 100755
+--- a/mediatek/proprietary/bootable/bootloader/preloader/platform/mt6735/src/drivers/pmic_wrap_init.c
++++ b/mediatek/proprietary/bootable/bootloader/preloader/platform/mt6735/src/drivers/pmic_wrap_init.c
+@@ -1252,7 +1252,7 @@ S32 pwrap_init ( void )
+ 	WRAP_WR32(PMIC_WRAP_WDT_UNIT,0xf);
+ 	WRAP_WR32(PMIC_WRAP_WDT_SRC_EN,0xfffffbff);
+ 	WRAP_WR32(PMIC_WRAP_TIMER_EN,0x1);
+-	WRAP_WR32(PMIC_WRAP_INT_EN,0xfffffbfb); 
++	WRAP_WR32(PMIC_WRAP_INT_EN,0xfffffbf9); 
+ 	//PWRAPLOG("mt_pwrap_init---- debug12++ \n");
+ 	//no ok
+ 

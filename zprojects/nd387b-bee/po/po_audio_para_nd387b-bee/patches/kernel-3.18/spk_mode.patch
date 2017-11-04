@@ -1,0 +1,33 @@
+diff --git a/sound/soc/mediatek/mt_soc_audio_v3/mt_soc_codec_63xx.c b/sound/soc/mediatek/mt_soc_audio_v3/mt_soc_codec_63xx.c
+old mode 100755
+new mode 100644
+index e7f8da5..a9ec569
+--- a/sound/soc/mediatek/mt_soc_audio_v3/mt_soc_codec_63xx.c
++++ b/sound/soc/mediatek/mt_soc_audio_v3/mt_soc_codec_63xx.c
+@@ -2135,7 +2135,7 @@ static void Ext_Speaker_Amp_Change(bool enable)
+ 			mt_set_gpio_dir(pin_extspkamp_2, GPIO_DIR_OUT);	/* output */
+ 
+ #ifdef AW8736_MODE_CTRL
+-		AW8736_MODE3;
++        AW8736_MODE2;
+ #else
+ 		mt_set_gpio_out(pin_extspkamp, GPIO_OUT_ONE);	/* high enable */
+ #endif /*AW8736_MODE_CTRL*/
+@@ -2143,7 +2143,7 @@ static void Ext_Speaker_Amp_Change(bool enable)
+ 			mt_set_gpio_out(pin_extspkamp_2, GPIO_OUT_ONE);	/* high enable */
+ #else
+ #ifdef AW8736_MODE_CTRL
+-		AW8736_MODE3;
++        AW8736_MODE2;
+ #else
+ 		AudDrv_GPIO_EXTAMP_Select(true);
+ 		AudDrv_GPIO_EXTAMP2_Select(true);
+@@ -2332,7 +2332,7 @@ static void Ext_Speaker_Amp_Change(bool enable)
+ 		mt_set_gpio_dir(GPIO_EXT_SPKAMP_EN_PIN, GPIO_DIR_OUT);	/* output */
+ 
+ #ifdef AW8736_MODE_CTRL
+-		AW8736_MODE3();
++        AW8736_MODE2;
+ #else
+ 		mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN, GPIO_OUT_ONE);	/* high enable */
+ #endif

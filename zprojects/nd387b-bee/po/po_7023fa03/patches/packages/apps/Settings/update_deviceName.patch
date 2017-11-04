@@ -1,0 +1,15 @@
+diff --git a/src/com/mediatek/wifi/hotspot/TetherWifiSettings.java b/src/com/mediatek/wifi/hotspot/TetherWifiSettings.java
+index cfa6dc3..6fcc311 100755
+--- a/src/com/mediatek/wifi/hotspot/TetherWifiSettings.java
++++ b/src/com/mediatek/wifi/hotspot/TetherWifiSettings.java
+@@ -394,7 +394,9 @@ public class TetherWifiSettings extends SettingsPreferenceFragment implements
+             Log.d(TAG, "client number is " + mClientList.size());
+             for (HotspotClient client : mClientList) {
+                 ButtonPreference preference = new ButtonPreference(getActivity(), client, this);
+-                preference.setMacAddress(client.deviceAddress);
++                String deviceName = mWifiManager.getClientDeviceName(client.deviceAddress);
++                preference.setMacAddress(deviceName);
++                android.util.Log.i("zhangweigang", "deviceName=:"+deviceName+"   deviceAddress=:"+client.deviceAddress);
+                 if (client.isBlocked) {
+                     preference.setButtonText(getResources().getString(
+                             R.string.wifi_ap_client_unblock_title));

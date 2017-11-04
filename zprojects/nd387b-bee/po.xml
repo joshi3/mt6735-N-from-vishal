@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<poes>
+ <po name="poes_7023fa03">
+   <file src="po_7023fa03"/>
+ </po>
+ <po name="poes_mt_logo_nd387b_bee">
+   <file src="po_mt_logo_nd387b-bee"/>
+ </po>
+ <po name="po_apks_bee">
+   <file src="po_apks_bee"/>
+ </po>
+ <po name="po_7023fid">
+   <file src="po_7023fid"/>
+ </po>
+ <po name="po_7023fvn">
+   <file src="po_7023fvn"/>
+ </po>
+ <po name="po_7023ftw">
+   <file src="po_7023ftw"/>
+ </po>
+ <po name="po_7023fin">
+   <file src="po_7023fin"/>
+ </po>
+ <po name="po_gms">
+   <file src="po_gms"/>
+ </po>
+ <po name="po_custom_settings_icon">
+   <file src="po_custom_settings_icon"/>
+ </po>
+ <po name="poes_imgsensor_ar1335_mipi_raw_nd387b_bee">
+   <file src="po_imgsensor_ar1335_mipi_raw_nd387b-bee"/>
+ </po>
+ <po name="poes_imgsensor_imx135_mipi_raw_nd387b_bee">
+   <file src="po_imgsensor_imx135_mipi_raw_nd387b-bee"/>
+ </po>
+ <po name="poes_imgsensor_imx135_mipi_raw_nd387b_bee_tw">
+   <file src="po_imgsensor_imx135_mipi_raw_nd387b-bee-tw"/>
+ </po>
+ <po name="poes_imgsensor_imx278_mipi_raw_nd387b_bee">
+   <file src="po_imgsensor_imx278_mipi_raw_nd387b-bee"/>
+ </po>
+ <po name="poes_battery_nd387b_bee">
+   <file src="po_battery_nd387b-bee"/>
+ </po>
+ <po name="poes_imgsensor_ov8856_mipi_raw_nd387b_bee">
+   <file src="po_imgsensor_ov8856_mipi_raw_nd387b-bee"/>
+ </po>
+ <po name="poes_blestech_nd387b_bee">
+   <file src="po_blestech_nd387b-bee"/>
+ </po>
+ <po name="poes_lcm_eng_n388">
+   <file src="po_lcm_eng_n388"/>
+ </po>
+ <po name="poes_lcm_jd9365_ivo50_zgd_hd_nd387b_bee">
+   <file src="po_lcm_jd9365_ivo50_zgd_hd_nd387b-bee"/>
+   <file src="po_lcm_ili9881p_panda50_bld_hd"/>
+ </po>
+ <po name="poes_fingerprint_nd387b_bee">
+   <file src="po_fingerprint_nd387b-bee"/>
+ </po>
+ <po name="poes_tpd_nd387b_bee">
+   <file src="po_tpd_nd387b-bee"/>
+ </po>
+ <po name="poes_partition_nd387b_bee">
+   <file src="po_partition_nd387b-bee"/>
+ </po>
+ <po name="poes_TEE_nd387b_bee">
+   <file src="po_TEE_nd387b-bee"/>
+ </po>
+ <po name="poes_TEE_RPMB_nd387b-bee">
+   <file src="po_TEE_RPMB_nd387b-bee"/>
+ </po>
+ <po name="poes_TEE_TEEINFO_nd387b-bee">
+   <file src="po_TEE_TEEINFO_nd387b-bee"/>
+ </po>
+ <po name="poes_screenBrightnessSetting_nd387_bee">
+   <file src="po_screenBrightnessSetting_nd387-bee"/>
+ </po>
+ <po name="poes_elan_tee_nd387b_bee">
+   <file src="po_elan_tee_nd387b-bee"/>
+ </po>
+ <po name="poes_leds_nd387b_bee">
+   <file src="po_leds_nd387b-bee"/>
+ </po>
+ <po name="poes_audio_para_nd387b_bee_20170717">
+   <file src="po_audio_para_nd387b-bee"/>
+ </po>
+ <po name="poes_dual_camera_new_design">
+   <file src="po_dual_camera_new_design"/>
+ </po>
+ <po name="poes_blestech_elan_tee_nd387b_bee">
+   <file src="po_blestech_elan_tee_nd387b-bee"/>
+ </po>
+ <po name="poes_fast_finger_nd387b-bee">
+   <file src="po_fast_finger_nd387b-bee"/>
+ </po>
+ <po name="poes_7023fzx">
+   <file src="po_7023fzx"/>
+ </po>
+ <po name="poes_7023fzx2">
+   <file src="po_7023fzx2"/>
+ </po>
+</poes>

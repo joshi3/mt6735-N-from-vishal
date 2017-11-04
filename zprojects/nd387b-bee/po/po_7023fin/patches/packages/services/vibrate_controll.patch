@@ -1,0 +1,23 @@
+diff --git a/Telecomm/src/com/android/server/telecom/Ringer.java b/Telecomm/src/com/android/server/telecom/Ringer.java
+index 1fffdd6..2b5d6d5 100644
+--- a/Telecomm/src/com/android/server/telecom/Ringer.java
++++ b/Telecomm/src/com/android/server/telecom/Ringer.java
+@@ -55,7 +55,7 @@ public class Ringer {
+ */
+     private static final String VIBRATE_ON_OUTGOING_FLAG = "persist.sys.vibrate_call";
+ // End of Vanzo:yujianpeng
+-
++    private static final String VIBRATE_THE_OTHER_SIDE_ANSWERED_FLAG ="persist.sys.vibrate_the_other_side_answered";
+     private static final AudioAttributes VIBRATION_ATTRIBUTES = new AudioAttributes.Builder()
+             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+             .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+@@ -261,6 +261,9 @@ public class Ringer {
+             int emSetting = Settings.Global.getInt(mContext.getContentResolver(),
+                     Settings.Global.TELEPHONY_MISC_FEATURE_CONFIG, KEY_MO_VIBRATE_CONFIG);
+             boolean enabled = (emSetting & KEY_MO_VIBRATE_CONFIG) != 0;
++            if (enabled & (Settings.System.getInt(mContext.getContentResolver(), VIBRATE_THE_OTHER_SIDE_ANSWERED_FLAG, 0) == 1)) {
++                    mVibrator.vibrate(MO_CALL_VIBRATE_TIME); 
++            }
+ /* Vanzo:yujianpeng on: Fri, 25 Mar 2016 16:49:52 +0800
+ * vibrate when answering
+             if (enabled) {

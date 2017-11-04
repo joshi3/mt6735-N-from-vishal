@@ -1,0 +1,86 @@
+diff --git a/src/com/android/settings/WirelessSettings.java b/src/com/android/settings/WirelessSettings.java
+index 01b3fd3..688345e 100644
+--- a/src/com/android/settings/WirelessSettings.java
++++ b/src/com/android/settings/WirelessSettings.java
+@@ -246,6 +246,57 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
+         return MetricsEvent.WIRELESS;
+     }
+ 
++    private void noneJioSimRemoveWfcPreference() {
++        String mccmnc = SystemProperties.get("gsm.sim.operator.numeric", "0");
++        if (mccmnc.contains("405840")) {
++            //do nothing
++        } else if (mccmnc.contains("405854")) {
++            //do nothing
++        } else if (mccmnc.contains("405855")) {
++            //do nothing
++        } else if (mccmnc.contains("405856")) {
++            //do nothing
++        } else if (mccmnc.contains("405857")) {
++            //do nothing
++        } else if (mccmnc.contains("405858")) {
++            //do nothing
++        } else if (mccmnc.contains("405859")) {
++            //do nothing
++        } else if (mccmnc.contains("405860")) {
++            //do nothing
++        } else if (mccmnc.contains("405861")) {
++            //do nothing
++        } else if (mccmnc.contains("405862")) {
++            //do nothing
++        } else if (mccmnc.contains("405863")) {
++            //do nothing
++        } else if (mccmnc.contains("405864")) {
++            //do nothing
++        } else if (mccmnc.contains("405865")) {
++            //do nothing
++        } else if (mccmnc.contains("405866")) {
++            //do nothing
++        } else if (mccmnc.contains("405867")) {
++            //do nothing
++        } else if (mccmnc.contains("405868")) {
++            //do nothing
++        } else if (mccmnc.contains("405869")) {
++            //do nothing
++        } else if (mccmnc.contains("405870")) {
++            //do nothing
++        } else if (mccmnc.contains("405871")) {
++            //do nothing
++        } else if (mccmnc.contains("405872")) {
++            //do nothing
++        } else if (mccmnc.contains("405873")) {
++            //do nothing
++        } else if (mccmnc.contains("405874")) {
++            //do nothing
++        } else {
++            getPreferenceScreen().removePreference(mButtonWfc);
++        }
++    }
++
+     @Override
+     public void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+@@ -276,6 +327,7 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
+         mNfcEnabler = new NfcEnabler(activity, nfc, androidBeam);
+ 
+         mButtonWfc = (PreferenceScreen) findPreference(KEY_WFC_SETTINGS);
++        noneJioSimRemoveWfcPreference();
+ 
+         /// M: Uniservice Pack @ {
+         if (!"no".equals(SystemProperties.get("ro.mtk_carrierexpress_pack", "no"))
+@@ -438,6 +490,7 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
+             if (mWfcExt.isWifiCallingProvisioned(context,
+                 SubscriptionManager.getDefaultVoicePhoneId())) {
+                 getPreferenceScreen().addPreference(mButtonWfc);
++                noneJioSimRemoveWfcPreference();
+ 
+                 mButtonWfc.setSummary(WifiCallingSettings.getWfcModeSummary(
+                         context, ImsManager.getWfcMode(context)));
+@@ -687,6 +740,7 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
+                     if (ImsManager.isWfcEnabledByPlatform(context) && !Utils.isMonkeyRunning()) {
+                         Log.d(TAG, "wfc enabled, add WCF setting");
+                         getPreferenceScreen().addPreference(mButtonWfc);
++                        noneJioSimRemoveWfcPreference();
+                         mWfcExt.initPlugin(WirelessSettings.this);
+                         mButtonWfc.setSummary(mWfcExt.getWfcSummary(context,
+                                 WifiCallingSettings.getWfcModeSummary(context,

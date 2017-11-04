@@ -1,0 +1,452 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index d255e71..3be8b26 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -3240,6 +3240,28 @@ for nck code
+             </intent-filter>
+         </receiver>
+ 
++        <!-- write sn -->
++        <receiver android:name=".WriteSN"
++            android:process="com.android.phone">
++            <intent-filter>
++                <action android:name="com.mediatek.factorymode.write.sn"/>
++            </intent-filter>
++	</receiver>
++
++        <activity
++            android:name=".CleanQCDialog"
++            android:configChanges="orientation|keyboardHidden"
++            android:label="@string/cleanQC"
++            android:process="com.android.phone"
++            android:screenOrientation="portrait"
++            android:theme="@android:style/Theme.Dialog" >
++            <intent-filter>
++                <category android:name="android.intent.category.DEFAULT" />
++                <action android:name="com.factorymode.clean.qc"/>
++            </intent-filter>
++        </activity>
++
++
+         <activity
+             android:name=".WriteIMEIDialog"
+             android:configChanges="orientation|keyboardHidden"
+diff --git a/res/layout/clean_qc.xml b/res/layout/clean_qc.xml
+new file mode 100644
+index 0000000..26ed909
+--- /dev/null
++++ b/res/layout/clean_qc.xml
+@@ -0,0 +1,26 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:orientation="vertical" >
++    <TextView
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:layout_centerVertical="true"
++        android:textSize="17dip"
++        android:text="@string/clean_qc_string"
++        />
++    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:gravity="center_horizontal"
++        android:orientation="horizontal" >
++        <Button
++            android:id = "@+id/resetBtn"
++            android:layout_width="@dimen/imei_width"
++            android:layout_height="wrap_content"
++            android:text="@string/resetBtn"
++        />
++    </LinearLayout>
++
++</LinearLayout>
+diff --git a/res/values/strings_custom_qc.xml b/res/values/strings_custom_qc.xml
+new file mode 100644
+index 0000000..568216d
+--- /dev/null
++++ b/res/values/strings_custom_qc.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<resources>
++    <string name="cleanQC">Reset QC Flag</string>
++    <string name="clean_qc_string">Reset QC Flag by click the reset button.\nQC flag will be reset after reboot.</string>
++    <string name="resetBtn">Reset</string>
++</resources>
+diff --git a/src/com/android/settings/CleanQCDialog.java b/src/com/android/settings/CleanQCDialog.java
+new file mode 100644
+index 0000000..0583a40
+--- /dev/null
++++ b/src/com/android/settings/CleanQCDialog.java
+@@ -0,0 +1,179 @@
++package com.android.settings;
++
++import java.lang.reflect.Method;
++import java.util.Arrays;
++import java.util.Collections;
++import java.util.List;
++
++import com.android.internal.telephony.ITelephony;
++import com.android.internal.telephony.Phone;
++import com.android.internal.telephony.PhoneFactory;
++import com.android.internal.telephony.PhoneConstants;
++import com.android.featureoption.FeatureOption;
++
++import android.app.Activity;
++import android.content.Context;
++import android.content.Intent;
++import android.os.Bundle;
++import android.os.Handler;
++import android.os.IBinder;
++import android.os.Message;
++import android.os.RemoteException;
++import android.os.ServiceManager;
++import android.telephony.TelephonyManager;
++import android.text.Editable;
++import android.text.TextWatcher;
++import android.util.Log;
++import android.view.KeyEvent;
++import android.view.View;
++import android.view.View.OnClickListener;
++import android.view.Window;
++import android.widget.Button;
++import android.widget.EditText;
++import android.widget.LinearLayout;
++import android.widget.Toast;
++
++import java.util.Arrays;
++import java.util.Collections;
++import java.util.List;
++import java.util.Random;
++
++import com.android.internal.telephony.Phone;
++import com.android.internal.telephony.PhoneConstants;
++import com.android.internal.telephony.PhoneFactory;
++import com.android.featureoption.FeatureOption;
++import com.android.settings.NvRAMAgent;
++import com.android.settings.NvRAMBackup;
++
++import android.content.BroadcastReceiver;
++import android.content.Context;
++import android.content.Intent;
++import android.os.IBinder;
++import android.os.RemoteException;
++import android.os.ServiceManager;
++import android.os.SystemProperties;
++import android.telephony.TelephonyManager;
++import android.util.Log;
++import android.os.SystemProperties;
++
++public class CleanQCDialog extends Activity implements OnClickListener{
++
++    private String TAG = "WriteIMEI";
++
++    private Button mResetBtn;
++
++
++
++
++    private Phone mPhone = null;
++    private Context mContext = null;
++
++    private String mExitBarcode = "";
++    private static String INTENT_EXTRA_BARCODE = "extra_barcode";
++    private static int FACTORY_TEST_FLAG_INDEX = 57;
++
++    @Override
++    protected void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        this.setContentView(R.layout.clean_qc);
++
++        mResetBtn = (Button) this.findViewById(R.id.resetBtn);
++        mResetBtn.setOnClickListener(this);
++    }
++
++
++   @Override
++    public void onClick(View v) {
++        int id = v.getId();
++        switch (id) {
++            case R.id.resetBtn:
++                // 1.first
++                resetQCFlag();
++                finish();
++                break;
++
++        }
++    }
++
++    public void resetQCFlag() {
++        boolean isSaveToBinNeeded = false;
++        resetQCSn();
++        isSaveToBinNeeded = true;
++
++        if (true == isSaveToBinNeeded) {
++            new BackupToBinThread().start();
++        }
++
++    }
++
++    private void resetQCSn() {
++        String oldBarcode = getSN();
++        android.util.Log.d("libing", "resetQCSn oldBarcode " + oldBarcode);
++
++        String newBarcode = oldBarcode;
++        android.util.Log.d("libing", "resetQCSn newBarcode " + newBarcode);
++
++        newBarcode = setFactoryTestFlagByIndex(false, FACTORY_TEST_FLAG_INDEX);
++
++        android.util.Log.d("libing", "resetQCSn newBarcode after setFactoryTestFlagByIndex " + newBarcode);
++        String cmd[] = { "AT+EGMR=1,", "" };
++        //cmd[0] = "AT+EGMR=1,5," + newBarcode;
++        cmd[0] = "AT+EGMR=1,5,\"" + newBarcode + "\"";
++        android.util.Log.d("libing", "cmd[0] " + cmd[0]);
++        //android.util.Log.d("libing", "hhh cmd " + cmd);
++
++        mPhone = PhoneFactory.getDefaultPhone();
++        mPhone.invokeOemRilRequestStrings(cmd, null);
++        android.util.Log.d("libing", "resetQCSn done");
++    }
++
++
++    private String getSN() {
++        return SystemProperties.get("gsm.serial");
++    }
++
++    private String setFactoryTestFlagByIndex(boolean pass, int index) {
++        android.util.Log.d("libing", "setFactoryTestFlagByIndex pass " + pass + " index " + index);
++        String flag = pass ? "P" : "F";
++        String oldSn = getSN();
++        String newSn = oldSn;
++        if (oldSn.length() < index + 1) {
++            return oldSn;
++        } else {
++            newSn = oldSn.substring(0, index) + flag + oldSn.substring(index+1);
++        }
++        android.util.Log.d("libing", "setFactoryTestFlagByIndex oldSN " + oldSn);
++        android.util.Log.d("libing", "setFactoryTestFlagByIndex newSN " + newSn);
++        return newSn;
++    }
++
++    private class BackupToBinThread extends Thread {
++
++        @Override
++        public void run() {
++            super.run();
++            try {
++                //Sleep 10 seconds
++                //Some initializaton should be finished before saving to bin region
++                Thread.sleep(10 * 1000);
++            }
++            catch (InterruptedException e) {
++                e.printStackTrace();
++            }
++
++            IBinder binder = ServiceManager.getService("NvRAMBackup");
++            NvRAMBackup agent = NvRAMBackup.Stub.asInterface(binder);
++
++            try {
++                Log.e(TAG, "begin saveToBin");
++                boolean ret = agent.saveToBin();
++                Log.e(TAG, "end saveToBin, return value: " + ret);
++            } catch (Exception e) {
++                e.printStackTrace();
++            }
++        }
++    }
++
++
++
++}
+diff --git a/src/com/android/settings/WriteSN.java b/src/com/android/settings/WriteSN.java
+new file mode 100644
+index 0000000..8c21ce7
+--- /dev/null
++++ b/src/com/android/settings/WriteSN.java
+@@ -0,0 +1,184 @@
++
++package com.android.settings;
++
++import java.util.Arrays;
++import java.util.Collections;
++import java.util.List;
++import java.util.Random;
++
++import com.android.internal.telephony.Phone;
++import com.android.internal.telephony.PhoneConstants;
++import com.android.internal.telephony.PhoneFactory;
++import com.android.featureoption.FeatureOption;
++import com.android.settings.NvRAMAgent;
++import com.android.settings.NvRAMBackup;
++
++import android.content.BroadcastReceiver;
++import android.content.Context;
++import android.content.Intent;
++import android.os.IBinder;
++import android.os.RemoteException;
++import android.os.ServiceManager;
++import android.os.SystemProperties;
++import android.telephony.TelephonyManager;
++import android.util.Log;
++import android.os.SystemProperties;
++
++public class WriteSN extends BroadcastReceiver {
++    String TAG = "libing-WriteSN";
++
++    private Phone mPhone = null;
++    private Context mContext = null;
++
++    private String mExitBarcode = "";
++    private static String INTENT_EXTRA_BARCODE = "extra_barcode";
++    private static int FACTORY_TEST_FLAG_INDEX = 57;
++
++    @Override
++    public void onReceive(Context context, Intent intent) {
++        android.util.Log.d("libing", "WriteSn receive action " + intent.getAction());
++/* Vanzo:libing on: Fri, 11 Dec 2015 16:39:10 +0800
++        if (intent.getAction().equals("com.mediatek.factorymode.write.sn")
++             || (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED))) {
++ */
++        if (intent.getAction().equals("com.mediatek.factorymode.write.sn")) {
++// End of Vanzo:libing
++
++            mExitBarcode = intent.getStringExtra(INTENT_EXTRA_BARCODE);
++            android.util.Log.d("libing", "onReceive mExitBarcode " + mExitBarcode);
++            mContext = context;
++            Log.e(TAG, "Start thread to write IMEI");
++            new WriteImeiThread().start();
++            //mExitBarcode = "";
++        }
++    }
++
++    public void writeRandomImei() {
++        boolean isSaveToBinNeeded = false;
++        writeSn();
++        isSaveToBinNeeded = true;
++
++        if (true == isSaveToBinNeeded) {
++            new BackupToBinThread().start();
++        }
++
++    }
++
++    private void writeSn() {
++        String oldBarcode = getSN();
++        android.util.Log.d("libing", "oldBarcode " + oldBarcode);
++
++        String newBarcode = oldBarcode;
++        //android.util.Log.d("libing", "newBarcode " + newBarcode);
++
++        //newBarcode = mExitBarcode;
++        android.util.Log.d("libing", "mExitBarcode " + mExitBarcode);
++
++        if (mExitBarcode != null && mExitBarcode.equals("P")) {
++            newBarcode = setFactoryTestFlagByIndex(true, FACTORY_TEST_FLAG_INDEX);
++            android.util.Log.d("libing", "newBarcode " + newBarcode);
++        }
++        String cmd[] = { "AT+EGMR=1,", "" };
++        //cmd[0] = "AT+EGMR=1,5," + newBarcode;
++        cmd[0] = "AT+EGMR=1,5,\"" + newBarcode + "\"";
++        android.util.Log.d("libing", "cmd[0] " + cmd[0]);
++        //android.util.Log.d("libing", "hhh cmd " + cmd);
++
++        mPhone = PhoneFactory.getDefaultPhone();
++        mPhone.invokeOemRilRequestStrings(cmd, null);
++        android.util.Log.d("libing", "writeSn done");
++
++/* Vanzo:libing on: Mon, 14 Dec 2015 14:58:18 +0800
++        android.util.Log.d("libing", "get sn " + getSN());
++        cmd[0] = "AT+EGMR=0,5";
++        mPhone.invokeOemRilRequestStrings(cmd, null);
++        android.util.Log.d("libing", "readSn");
++        //test
++        android.util.Log.d("libing", "test 1 getFactoryTestFlagByIndex index 57 " + getFactoryTestFlagByIndex(57));
++        android.util.Log.d("libing", "test 2 setFactoryTestFlagByIndex flag PPPP index 57" + setFactoryTestFlagByIndex(true, 57));
++        android.util.Log.d("libing", "test 3 setFactoryTestFlagByIndex flag FFFF index 57" + setFactoryTestFlagByIndex(false, 57));
++ */
++// End of Vanzo:libing
++
++    }
++
++    private String getSN() {
++        return SystemProperties.get("gsm.serial");
++    }
++
++    private String getFactoryTestFlagByIndex(int index) {
++        String sn = getSN();
++        String testFlag = "";
++        //读取第index位的数值，从0开始计算，整个barcode是64位，0-63
++        //0123456789Y123456789E123456789S123456789S123456789W123456789L123
++        //0123456789Y123456789E123456789S123456789S123456789W12345P789L123
++        //String testFlag = sn.substring(56,57);
++        if (sn.length() < index + 1 ) {
++            return "";
++        } else {
++            testFlag = sn.substring(index, index+1);
++        }
++        android.util.Log.d("libing", "getFactoryTestFlagByIndex index " + index + " flag " + testFlag);
++        return testFlag;
++    }
++
++    private String setFactoryTestFlagByIndex(boolean pass, int index) {
++        android.util.Log.d("libing", "setFactoryTestFlagByIndex pass " + pass + " index " + index);
++        String flag = pass ? "P" : "F";
++        String oldSn = getSN();
++        String newSn = oldSn;
++        if (oldSn.length() < index + 1) {
++            return oldSn;
++        } else {
++            newSn = oldSn.substring(0, index) + flag + oldSn.substring(index+1);
++        }
++        android.util.Log.d("libing", "setFactoryTestFlagByIndex oldSN " + oldSn);
++        android.util.Log.d("libing", "setFactoryTestFlagByIndex newSN " + newSn);
++        return newSn;
++    }
++
++    private class WriteImeiThread extends Thread {
++        @Override
++        public void run() {
++            super.run();
++
++            try {
++                //Sleep 10 seconds
++                //Some initializaton should be finished before saving to bin region
++                Thread.sleep(6 * 1000);
++                android.util.Log.d("libing", "WriteImeiThread after sleep goto writeRandomImei");
++                writeRandomImei() ;
++            }
++            catch (InterruptedException e) {
++                e.printStackTrace();
++            }
++        }
++    }
++
++    private class BackupToBinThread extends Thread {
++
++        @Override
++        public void run() {
++            super.run();
++            try {
++                //Sleep 10 seconds
++                //Some initializaton should be finished before saving to bin region
++                Thread.sleep(10 * 1000);
++            }
++            catch (InterruptedException e) {
++                e.printStackTrace();
++            }
++
++            IBinder binder = ServiceManager.getService("NvRAMBackup");
++            NvRAMBackup agent = NvRAMBackup.Stub.asInterface(binder);
++
++            try {
++                Log.e(TAG, "begin saveToBin");
++                boolean ret = agent.saveToBin();
++                Log.e(TAG, "end saveToBin, return value: " + ret);
++            } catch (Exception e) {
++                e.printStackTrace();
++            }
++        }
++    }
++}

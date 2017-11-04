@@ -1,0 +1,64 @@
+diff --git a/base/core/res/res/values/config.xml b/base/core/res/res/values/config.xml
+index 2aadbff..70055a6 100644
+--- a/base/core/res/res/values/config.xml
++++ b/base/core/res/res/values/config.xml
+@@ -2492,7 +2492,7 @@ Modify max screen brightness for power saving
+ 
+     <!-- Allow the gesture to double tap the power button twice to start the camera while the device
+          is non-interactive. -->
+-    <bool name="config_cameraDoubleTapPowerGestureEnabled">true</bool>
++    <bool name="config_cameraDoubleTapPowerGestureEnabled">false</bool>
+ 
+     <!-- Name of the component to handle network policy notifications. If present,
+          disables NetworkPolicyManagerService's presentation of data-usage notifications. -->
+diff --git a/base/services/core/java/com/android/server/GestureLauncherService.java b/base/services/core/java/com/android/server/GestureLauncherService.java
+index 5a90488..41ec17f 100644
+--- a/base/services/core/java/com/android/server/GestureLauncherService.java
++++ b/base/services/core/java/com/android/server/GestureLauncherService.java
+@@ -260,7 +260,7 @@ public class GestureLauncherService extends SystemService {
+             doubleTapInterval = event.getEventTime() - mLastPowerDown;
+             if (mCameraDoubleTapPowerEnabled
+                     && doubleTapInterval < CAMERA_POWER_DOUBLE_TAP_MAX_TIME_MS) {
+-                launched = true;
++                launched = false;
+                 intercept = interactive;
+             }
+             mLastPowerDown = event.getEventTime();
+diff --git a/base/services/core/java/com/android/server/policy/PhoneWindowManager.java b/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index a20358d..3440ada 100644
+--- a/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -1249,6 +1249,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         }
+     }
+ 
++    private void handleSosCall() {
++        Intent dialIntent = new Intent(Intent.ACTION_CALL_EMERGENCY, android.net.Uri.parse("tel:" + "112"));
++        dialIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++        mContext.startActivity(dialIntent);
++    }
++
+     private void powerMultiPressAction(long eventTime, boolean interactive, int behavior) {
+         switch (behavior) {
+             case MULTI_PRESS_POWER_NOTHING:
+@@ -1282,7 +1288,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 if (!interactive) {
+                     wakeUpFromPowerKey(eventTime);
+                 }
+-                mPowerManager.boostScreenBrightness(eventTime);
++                if (SystemProperties.get("persist.sys.emergency_tag", "1").equals("1")) {
++                    handleSosCall();
++                }
+                 break;
+         }
+     }
+@@ -1778,8 +1786,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 com.android.internal.R.integer.config_longPressOnPowerBehavior);
+         mDoublePressOnPowerBehavior = mContext.getResources().getInteger(
+                 com.android.internal.R.integer.config_doublePressOnPowerBehavior);
+-        mTriplePressOnPowerBehavior = mContext.getResources().getInteger(
+-                com.android.internal.R.integer.config_triplePressOnPowerBehavior);
++        mTriplePressOnPowerBehavior = 2;
+         mShortPressOnSleepBehavior = mContext.getResources().getInteger(
+                 com.android.internal.R.integer.config_shortPressOnSleepBehavior);
+ 

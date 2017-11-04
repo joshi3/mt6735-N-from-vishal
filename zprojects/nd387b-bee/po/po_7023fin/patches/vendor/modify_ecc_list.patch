@@ -1,0 +1,15 @@
+diff --git a/mediatek/proprietary/external/EccList/ecc_list.xml b/mediatek/proprietary/external/EccList/ecc_list.xml
+index 38e576f..96d8635 100755
+--- a/mediatek/proprietary/external/EccList/ecc_list.xml
++++ b/mediatek/proprietary/external/EccList/ecc_list.xml
+@@ -19,6 +19,8 @@
+     <EccEntry Ecc="118" Category="0" Condition="0" />
+     <EccEntry Ecc="119" Category="0" Condition="0" />
+     <EccEntry Ecc="999" Category="0" Condition="0" />
+-    <!-- Add for Malaysis Digi operator -->
+-    <EccEntry Ecc="999" Category="0" Condition="1" Plmn = "502 FFF" />
++    <EccEntry Ecc="100" Category="0" Condition="2" />
++    <EccEntry Ecc="101" Category="0" Condition="2" />
++    <EccEntry Ecc="102" Category="0" Condition="2" />
++    <EccEntry Ecc="108" Category="0" Condition="2" />
+ </EccTable>

@@ -1,0 +1,13 @@
+diff --git a/base/services/core/java/com/android/server/pm/PackageManagerService.java b/base/services/core/java/com/android/server/pm/PackageManagerService.java
+index 91bd3f4..78038fc 100644
+--- a/base/services/core/java/com/android/server/pm/PackageManagerService.java
++++ b/base/services/core/java/com/android/server/pm/PackageManagerService.java
+@@ -6582,6 +6582,8 @@ public class PackageManagerService extends IPackageManager.Stub {
+             "com.android.email",
+             "com.android.exchange",
+             "com.android.chrome",
++            "com.indiagames.runnergame",
++            "com.siui.android.OTAUpdate",
+             "com.android.browser",
+             "com.android.mms",
+             "com.google.android.core.Q00028_47",

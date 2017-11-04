@@ -1,0 +1,21 @@
+diff --git a/core/fingerprintd/FingerprintDaemonProxy.cpp b/core/fingerprintd/FingerprintDaemonProxy.cpp
+index 1c7da30..2ceb82a 100644
+--- a/core/fingerprintd/FingerprintDaemonProxy.cpp
++++ b/core/fingerprintd/FingerprintDaemonProxy.cpp
+@@ -56,7 +56,16 @@ void FingerprintDaemonProxy::hal_notify_callback(const fingerprint_msg_t *msg) {
+             break;
+         case FINGERPRINT_ACQUIRED:
+             ALOGD("onAcquired(%d)", msg->data.acquired.acquired_info);
++#if 1
++            if(6 == msg->data.acquired.acquired_info){
++                ALOGD("onAcquired(1)");
++                callback->onAcquired(device,10);
++            }else {
++                callback->onAcquired(device, msg->data.acquired.acquired_info);
++            }
++#else
+             callback->onAcquired(device, msg->data.acquired.acquired_info);
++#endif
+             break;
+         case FINGERPRINT_AUTHENTICATED:
+             ALOGD("onAuthenticated(fid=%d, gid=%d)",

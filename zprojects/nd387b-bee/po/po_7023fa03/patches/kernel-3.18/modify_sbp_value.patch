@@ -1,0 +1,18 @@
+diff --git a/arch/arm/configs/nd387b_debug_defconfig b/arch/arm/configs/nd387b_debug_defconfig
+index 0a74d34..537e1be 100644
+--- a/arch/arm/configs/nd387b_debug_defconfig
++++ b/arch/arm/configs/nd387b_debug_defconfig
+@@ -507,3 +507,4 @@ CONFIG_MTK_USB_UNIQUE_SERIAL=y
+ CONFIG_NFC_MT6605=n
+ CONFIG_USB_MTK_HDRC_HCD=y
+ CONFIG_USB_MTK_OTG=y
++CONFIG_MTK_MD_SBP_CUSTOM_VALUE="0"
+diff --git a/arch/arm/configs/nd387b_defconfig b/arch/arm/configs/nd387b_defconfig
+index 18eed4c..21dec2c 100644
+--- a/arch/arm/configs/nd387b_defconfig
++++ b/arch/arm/configs/nd387b_defconfig
+@@ -472,3 +472,4 @@ CONFIG_CRYPTO_LZO=y
+ # CONFIG_CRYPTO_ANSI_CPRNG is not set
+ # CONFIG_CRYPTO_HW is not set
+ CONFIG_LIBCRC32C=y
++CONFIG_MTK_MD_SBP_CUSTOM_VALUE="0"

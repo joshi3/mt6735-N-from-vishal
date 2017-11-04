@@ -1,0 +1,85 @@
+diff --git a/packages/FactoryMode/src/com/mediatek/factorymode/FactoryMode.java b/packages/FactoryMode/src/com/mediatek/factorymode/FactoryMode.java
+index d094dd8..3344a71 100755
+--- a/packages/FactoryMode/src/com/mediatek/factorymode/FactoryMode.java
++++ b/packages/FactoryMode/src/com/mediatek/factorymode/FactoryMode.java
+@@ -451,7 +451,8 @@ public class FactoryMode extends Activity implements OnItemClickListener {
+             mReset.setVisibility(View.GONE);
+         }
+  */
+-        boolean ataFlag = isATAPass();
++        //boolean ataFlag = isATAPass();
++        boolean ataFlag = isCFTPass();
+         android.util.Log.d("libing", "result " + result);
+         android.util.Log.d("libing", "ataFlag " + ataFlag);
+ 
+@@ -508,6 +509,7 @@ public class FactoryMode extends Activity implements OnItemClickListener {
+  */
+     private static String INTENT_EXTRA_BARCODE = "extra_barcode";
+     private static int ATA_FLAG_INDEX = 59;
++    private static int CFT_FLAG_INDEX = 60;
+     //private static int FACTORY_TEST_FLAG_INDEX = 57;
+ 
+     private boolean isATAPass() {
+@@ -520,6 +522,18 @@ public class FactoryMode extends Activity implements OnItemClickListener {
+         }
+         return ata.equals("P");
+     }
++
++    private boolean isCFTPass() {
++        String sn = getSN();
++        String testFlag = ""; 
++        if (sn.length() < CFT_FLAG_INDEX + 3) {
++            return false;
++        } else {
++            testFlag = sn.substring(CFT_FLAG_INDEX, CFT_FLAG_INDEX+3);
++        }   
++        android.util.Log.d("libing", "isCFTPass " + testFlag);
++        return testFlag.equals("10P") ? true : false;
++    }
+ // End of Vanzo:libing
+ 
+     @Override
+diff --git a/packages/FactoryMode/src/com/mediatek/factorymode/InterLock.java b/packages/FactoryMode/src/com/mediatek/factorymode/InterLock.java
+index 9350f93..f2c8e7b 100644
+--- a/packages/FactoryMode/src/com/mediatek/factorymode/InterLock.java
++++ b/packages/FactoryMode/src/com/mediatek/factorymode/InterLock.java
+@@ -22,9 +22,9 @@ public class InterLock extends Activity {
+     SharedPreferences mSp;
+ 
+     private static int CFT_FLAG_INDEX = 60;
+-    private static int ATA_FLAG_INDEX = 59;
+-    private static int FACTORY_TEST_FLAG_INDEX = 57;
+-    private static int IMEI_FLAG_INDEX = 55;
++    private static int ATA_FLAG_INDEX = 57;
++    private static int WL_FLAG_INDEX = 55;
++    private static int IMEI_FLAG_INDEX = 57;
+ 
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+@@ -55,21 +55,21 @@ public class InterLock extends Activity {
+ 
+     private String getInterLock() {
+         String inter = "CFT :" + "         " + isCFTPass() + "\n" +
+-            "ATA :" + "         " + isFlagPassByIndex(ATA_FLAG_INDEX) + "\n" +
+-            "QC  :" + "        " + isFlagPassByIndex(IMEI_FLAG_INDEX);
++            "QC :" + "         " + isFlagPassByIndex(IMEI_FLAG_INDEX) + "\n" +
++            "WL  :" + "        " + isFlagPassByIndex(WL_FLAG_INDEX);
+         return inter;
+     }
+ 
+     private String isCFTPass() {
+         String sn = getSN();
+         String testFlag = "";
+-        if (sn.length() < CFT_FLAG_INDEX + 2) {
++        if (sn.length() < CFT_FLAG_INDEX + 3) {
+             return "Fail";
+         } else {
+-            testFlag = sn.substring(CFT_FLAG_INDEX, CFT_FLAG_INDEX+2);
++            testFlag = sn.substring(CFT_FLAG_INDEX, CFT_FLAG_INDEX+3);
+         }
+         android.util.Log.d("libing", "isCFTPass " + testFlag);
+-        return testFlag.equals("10") ? "Pass" : "Fail";
++        return testFlag.equals("10P") ? "Pass" : "Fail";
+     }
+ 
+     private String isFlagPassByIndex(int index) {

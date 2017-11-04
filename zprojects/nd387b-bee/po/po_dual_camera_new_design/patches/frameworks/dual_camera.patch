@@ -1,0 +1,200 @@
+diff --git a/av/services/camera/libcameraservice/Android.mk b/av/services/camera/libcameraservice/Android.mk
+index e4fcb2a..29edd30 100755
+--- a/av/services/camera/libcameraservice/Android.mk
++++ b/av/services/camera/libcameraservice/Android.mk
+@@ -91,13 +91,6 @@ endif
+ ifeq ($(MTK_CAM_FRAMEWORK_DEFAULT_CODE),yes)
+     LOCAL_CFLAGS += -DMTK_CAM_FRAMEWORK_DEFAULT_CODE
+ endif
+-# Vanzo:yucheng on: Tue, 17 Jan 2017 15:25:10 +0800
+-# Modify for fake dual camera
+-ifeq ($(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME),yes)
+-    LOCAL_CFLAGS += -DVANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME
+-endif
+-# End of Vanzo: yucheng
+-
+ 
+     LOCAL_SHARED_LIBRARIES += libdl
+     LOCAL_SHARED_LIBRARIES += libmtkcam_fwkutils
+diff --git a/av/services/camera/libcameraservice/CameraService.cpp b/av/services/camera/libcameraservice/CameraService.cpp
+index 8026f9b..c2597e4 100644
+--- a/av/services/camera/libcameraservice/CameraService.cpp
++++ b/av/services/camera/libcameraservice/CameraService.cpp
+@@ -199,16 +199,7 @@ void CameraService::onFirstRef()
+     }
+     ALOGI("Loaded \"%s\" camera module", mModule->getModuleName());
+ 
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 15:30:29 +0800
+- * Modify for dual fake camera
+     mNumberOfCameras = mModule->getNumberOfCameras();
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-    mNumberOfCameras = 2;
+-#else
+-    mNumberOfCameras = mModule->getNumberOfCameras();
+-#endif
+-// End of Vanzo: yucheng
+     mNumberOfNormalCameras = mNumberOfCameras;
+ 
+     // Setup vendor tags before we call get_camera_info the first time
+diff --git a/av/services/camera/libcameraservice/api1/CameraClient.cpp b/av/services/camera/libcameraservice/api1/CameraClient.cpp
+index 30fa60f..031c201 100644
+--- a/av/services/camera/libcameraservice/api1/CameraClient.cpp
++++ b/av/services/camera/libcameraservice/api1/CameraClient.cpp
+@@ -108,13 +108,6 @@ status_t CameraClient::initialize(CameraModule *module) {
+ 
+     // Enable zoom, error, focus, and metadata messages by default
+     enableMsgType(CAMERA_MSG_ERROR | CAMERA_MSG_ZOOM | CAMERA_MSG_FOCUS |
+-/* Vanzo:yucheng on: Mon, 16 Jan 2017 15:33:55 +0800
+- * Modify for dual fake camera
+- */
+-#if defined(VANZO_FEATURE_FAKE_DUAL_CAMERA_BY_NAME)
+-                  CAMERA_MSG_PREVIEW_BV |
+-#endif
+-// End of Vanzo: yucheng
+                   CAMERA_MSG_PREVIEW_METADATA | CAMERA_MSG_FOCUS_MOVE);
+ 
+     //!++
+diff --git a/base/core/java/android/hardware/Camera.java b/base/core/java/android/hardware/Camera.java
+index 5af59d6..f1cc19e 100755
+--- a/base/core/java/android/hardware/Camera.java
++++ b/base/core/java/android/hardware/Camera.java
+@@ -67,7 +67,12 @@ import android.hardware.camera2.impl.CameraMetadataNative;
+ import android.hardware.camera2.CaptureResult;
+ import android.hardware.camera2.CameraCharacteristics;
+ //!--
+-
++/* Vanzo:yucheng on: Thu, 20 Apr 2017 14:49:26 +0800
++ * Added to support dual camera(fake)
++ */
++import java.io.File;
++import java.io.FileReader;
++// End of Vanzo: yucheng
+ 
+ import static android.system.OsConstants.*;
+ 
+@@ -900,6 +905,7 @@ public class Camera {
+ /* Vanzo:linmaobin on: Thu, 12 Jan 2017 20:48:01 +0800
+  */
+         mPreviewBVCallback = null;
++        stopDualCameraObserver();
+ // End of Vanzo:linmaobin
+     }
+ 
+@@ -1774,7 +1780,8 @@ public class Camera {
+ 
+     private native void enableFocusMoveCallback(int enable);
+ 
+-/* Vanzo:linmaobin on: Thu, 12 Jan 2017 20:48:43 +0800
++/* Vanzo:yucheng on: Thu, 12 Jan 2017 20:48:43 +0800
++ * Added to support dual camera(fake)
+  */
+     /**
+      *@hide
+@@ -1820,10 +1827,104 @@ public class Camera {
+      * @param cb the callback to run
+      */
+     public void setPreviewBVCallback(PreviewBVCallback cb) {
+-        Log.i(TAG, "setPreviewBVCallback, cb:" + cb);
++        Log.i(TAG, "setPreviewBVCallback, callback:" + cb);
+         mPreviewBVCallback = cb;
++        if (cb != null) {
++            startDualCameraObserver();
++        } else {
++            stopDualCameraObserver();
++        }
+     }
+-// End of Vanzo:linmaobin
++
++    private String [] mFakeCameraPathList = {"/sys/bus/platform/drivers/image_sensor/bv_val"};
++    private String mActiveFakeCameraPath;
++    private Handler mHandler;
++    private static int NEARBY_BV_VAL = 10;
++
++    /**
++     * @hide
++     */
++    public static boolean isFakeCameraBlocked(int bv_val) {
++        if(bv_val <= NEARBY_BV_VAL) {
++            return true;
++        }
++        else {
++            return false;
++        }
++    }
++
++    private Runnable mRunnable = new Runnable() {
++        @Override
++        public void run() {
++            File file = new File(mActiveFakeCameraPath);
++            String pSensorValues2 = readFile(file);
++            int bv_val = Integer.parseInt(pSensorValues2.trim());
++            if(bv_val>=0 && bv_val <10){
++                Log.i(TAG, "DualCameraObserver nearby");
++            } else {
++                Log.i(TAG, "DualCameraObserver faraway");
++            }
++            if (mPreviewBVCallback != null) {
++                mPreviewBVCallback.onPreviewBV(null, bv_val, 0);
++            }
++
++            mHandler.postDelayed(mRunnable, 200);
++        }
++    };
++    private void startDualCameraObserver () {
++        if (mActiveFakeCameraPath != null) {
++            //initialized already, nothing need to do
++            return;
++        }
++        File file =null;
++        for (int i = 0; i<mFakeCameraPathList.length; i++) {
++            file = new File(mFakeCameraPathList[i]);
++            if (file.exists()) {
++                mActiveFakeCameraPath = mFakeCameraPathList[i];
++                Log.v(TAG, "start DualCameraObserver,path:" + mActiveFakeCameraPath);
++                break;
++            }
++        } //End of for
++
++        if (mActiveFakeCameraPath != null) {
++            Log.v(TAG, "start DualCameraObserver");
++            mHandler = new Handler();
++            mHandler.post(mRunnable);
++        }
++    }
++    private void stopDualCameraObserver () {
++        if (mHandler != null) {
++            Log.v(TAG, "stop DualCameraObserver");
++            mHandler.removeCallbacksAndMessages(null);
++            mHandler = null;
++        }
++    }
++    private String readFile(File fn) {
++        FileReader f;
++        int len;
++
++        f = null;
++        try {
++            f = new FileReader(fn);
++            String s = "";
++            char[] cbuf = new char[200];
++            while ((len = f.read(cbuf, 0, cbuf.length)) >= 0) {
++                s += String.valueOf(cbuf, 0, len);
++            }
++            return s;
++        } catch (IOException ex) {
++            return "0";
++        } finally {
++            if (f != null) {
++                try {
++                    f.close();
++                } catch (IOException ex) {
++                    return "0";
++                }
++            }
++        }
++    }
++// End of Vanzo:yucheng
+     /**
+      * Callback interface used to signal the moment of actual image capture.
+      *

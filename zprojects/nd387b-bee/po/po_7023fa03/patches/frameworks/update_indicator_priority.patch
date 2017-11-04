@@ -1,0 +1,165 @@
+diff --git a/base/core/java/android/provider/Settings.java b/base/core/java/android/provider/Settings.java
+index 4fa917e..6a891e7 100755
+--- a/base/core/java/android/provider/Settings.java
++++ b/base/core/java/android/provider/Settings.java
+@@ -3976,6 +3976,10 @@ public final class Settings {
+          * @hide
+          */
+         public static final String HDMI_ENABLE_STATUS = "hdmi_enable_status";
++        /**
++         * @hide
++         */
++        public static final String HY_LED_INDICATOR = "hy_led_indicator";
+ 
+         /**
+          * M: HDMI video resolution config
+@@ -4227,6 +4231,7 @@ public final class Settings {
+  */
+             PUBLIC_SETTINGS.add("com_android_contacts_mtk_unread");
+ // End of Vanzo: yucheng
++            PUBLIC_SETTINGS.add(HY_LED_INDICATOR);
+         }
+ 
+         /**
+diff --git a/base/services/core/java/com/android/server/BatteryService.java b/base/services/core/java/com/android/server/BatteryService.java
+index 31c13cd..1a36461 100644
+--- a/base/services/core/java/com/android/server/BatteryService.java
++++ b/base/services/core/java/com/android/server/BatteryService.java
+@@ -65,6 +65,9 @@ import java.io.FileOutputStream;
+ import java.io.IOException;
+ import java.io.PrintWriter;
+ 
++import android.database.ContentObserver;
++import android.net.Uri;
++
+ /**
+  * <p>BatteryService monitors the charging status, and charge level of the device
+  * battery.  When these values change this service broadcasts the new values
+@@ -169,6 +172,8 @@ public final class BatteryService extends SystemService {
+     // True if boot completed occurred.  We keep the battery status update hold until this happens.
+     private boolean mBootCompleted = false;
+ 
++    public static final String HY_LED_INDICATOR = "hy_led_indicator";
++
+     public BatteryService(Context context) {
+         super(context);
+ 
+@@ -258,11 +263,27 @@ public final class BatteryService extends SystemService {
+                 resolver.registerContentObserver(Settings.Global.getUriFor(
+                         Settings.Global.LOW_POWER_MODE_TRIGGER_LEVEL),
+                         false, obs, UserHandle.USER_ALL);
++                        ContentObserver obs2 = new ContentObserver(mHandler) {
++                                @Override
++                                public void onChange(boolean selfChange) {
++                                        synchronized (mLock) {
++                                                        mLed.updateLightsLocked();
++                                                }
++                                        }
++                                };
++                        resolver.registerContentObserver(Settings.System.getUriFor(HY_LED_INDICATOR),
++                        false, obs2, UserHandle.USER_ALL);
+                 updateBatteryWarningLevelLocked();
+             }
+         }
+     }
+ 
++    private boolean isLedIndicatorEnabled(Context ctx) {
++    
++            return (Settings.System.getInt(ctx.getContentResolver(),
++                                            HY_LED_INDICATOR, 0) == 1);
++    }
++
+     private void updateBatteryWarningLevelLocked() {
+         final ContentResolver resolver = mContext.getContentResolver();
+         int defWarnLevel = mContext.getResources().getInteger(
+@@ -966,6 +987,14 @@ public final class BatteryService extends SystemService {
+          * Synchronize on BatteryService.
+          */
+         public void updateLightsLocked() {
++            if(isLedIndicatorEnabled(mContext)) {
++                android.util.Log.i("zhangweigang", "ledindicator close!");
++                        mBatteryLight.turnOff();
++                        return;
++                }
++            
++                if (mBatteryProps == null)
++                     return;
+             final int level = mBatteryProps.batteryLevel;
+             final int status = mBatteryProps.batteryStatus;
+             if (mIPOBoot)
+@@ -992,7 +1021,7 @@ public final class BatteryService extends SystemService {
+                 }
+             } else if (status == BatteryManager.BATTERY_STATUS_CHARGING
+                     || status == BatteryManager.BATTERY_STATUS_FULL) {
+-                if (status == BatteryManager.BATTERY_STATUS_FULL || level >= 90) {
++                if (status == BatteryManager.BATTERY_STATUS_FULL || level >= 100) {
+                     updateLedStatus();
+                     // Solid green when full or charging and nearly full
+                     mBatteryLight.setColor(mBatteryFullARGB);
+@@ -1003,7 +1032,7 @@ public final class BatteryService extends SystemService {
+                 }
+             } else {
+                 if (ipo_led_on && mIPOBoot) {
+-                    if (status == BatteryManager.BATTERY_STATUS_FULL || level >= 90) {
++                    if (status == BatteryManager.BATTERY_STATUS_FULL || level >= 100) {
+                         mBatteryLight.setColor(mBatteryFullARGB);
+                     }
+                     else {
+diff --git a/base/services/core/java/com/android/server/am/ActivityManagerService.java b/base/services/core/java/com/android/server/am/ActivityManagerService.java
+index fc539f8..4266090 100644
+--- a/base/services/core/java/com/android/server/am/ActivityManagerService.java
++++ b/base/services/core/java/com/android/server/am/ActivityManagerService.java
+@@ -23603,6 +23603,8 @@ public final class ActivityManagerService extends ActivityManagerNative
+         /// M: Dynamic configurable NBT dump
+         mANRManager.registerDumpNBTReceiver();
+ 
++        Settings.System.putInt(mContext.getContentResolver(), Settings.System.HY_LED_INDICATOR, 0);
++
+         /// M: ANR debug mechanism @{
+         int anrStatus = Settings.System.getInt(mContext.getContentResolver(),
+             Settings.System.ANR_DEBUGGING_MECHANISM_STATUS, 0);
+diff --git a/base/services/core/java/com/android/server/notification/NotificationManagerService.java b/base/services/core/java/com/android/server/notification/NotificationManagerService.java
+index 4708fb7..f0e0f4d 100644
+--- a/base/services/core/java/com/android/server/notification/NotificationManagerService.java
++++ b/base/services/core/java/com/android/server/notification/NotificationManagerService.java
+@@ -320,7 +320,7 @@ public class NotificationManagerService extends SystemService {
+     private RankingHandler mRankingHandler;
+     private long mLastOverRateLogTime;
+     private float mMaxPackageEnqueueRate = DEFAULT_MAX_NOTIFICATION_ENQUEUE_RATE;
+-
++    public static final String HY_LED_INDICATOR = "hy_led_indicator";
+     private static class Archive {
+         final int mBufferSize;
+         final ArrayDeque<StatusBarNotification> mBuffer;
+@@ -3691,6 +3691,14 @@ public class NotificationManagerService extends SystemService {
+         }
+     }
+ 
++    private void setLedIndicatorEnabled(Context context,int state){
++        final long token = Binder.clearCallingIdentity();
++        try{
++           Settings.System.putInt(context.getContentResolver(),HY_LED_INDICATOR,state); 
++        }finally {
++            Binder.restoreCallingIdentity(token);
++        }
++    }
+     // lock on mNotificationList
+     void updateLightsLocked()
+     {
+@@ -3709,11 +3717,15 @@ public class NotificationManagerService extends SystemService {
+         // if (mLedNotification == null || mInCall || mScreenOn) {
+         /// M: Add DM/PPL lock related.
+         if (ledNotification == null || mInCall || mScreenOn || mDmLock || mPplLock) {
+-            mNotificationLight.turnOff();
++		     android.util.Log.d("zhang","mInCall-->"+mInCall+",mScreenOn->"+mScreenOn+",ledNotification->"+ledNotification+"mDmLock->"+mDmLock+",mPplLock->"+mPplLock);
++             mNotificationLight.turnOff();
+             if (mStatusBar != null) {
+                 mStatusBar.notificationLightOff();
+             }
++	        setLedIndicatorEnabled(getContext(),0);			
+         } else {
++            setLedIndicatorEnabled(getContext(),1);
++            android.util.Log.d("zhang","light---mNotificationPulseEnabled->"+mNotificationPulseEnabled);
+             final Notification ledno = ledNotification.sbn.getNotification();
+             int ledARGB = ledno.ledARGB;
+             int ledOnMS = ledno.ledOnMS;

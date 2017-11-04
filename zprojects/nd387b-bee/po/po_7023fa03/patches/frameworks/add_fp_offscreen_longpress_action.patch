@@ -1,0 +1,165 @@
+diff --git a/base/packages/SystemUI/src/com/android/systemui/statusbar/policy/FlashlightController.java b/base/packages/SystemUI/src/com/android/systemui/statusbar/policy/FlashlightController.java
+index 9a21a1e..182bdb0 100644
+--- a/base/packages/SystemUI/src/com/android/systemui/statusbar/policy/FlashlightController.java
++++ b/base/packages/SystemUI/src/com/android/systemui/statusbar/policy/FlashlightController.java
+@@ -28,6 +28,9 @@ import android.util.Log;
+ 
+ import java.lang.ref.WeakReference;
+ import java.util.ArrayList;
++import android.content.BroadcastReceiver;
++import android.content.IntentFilter;
++import android.content.Intent;
+ 
+ /**
+  * Manages the flashlight.
+@@ -71,8 +74,21 @@ public class FlashlightController {
+             ensureHandler();
+             mCameraManager.registerTorchCallback(mTorchCallback, mHandler);
+         }
++        IntentFilter torchFilter = new IntentFilter("com.v.torch.toggle");
++        torchFilter.addAction("com.v.torch.toggle");
++        mContext.registerReceiver(mTorchReceiver, torchFilter);
+     }
+ 
++    private final BroadcastReceiver mTorchReceiver = new BroadcastReceiver() {
++        @Override
++            public void onReceive(Context context, Intent intent) {
++                String action = intent.getAction();
++                if ("com.v.torch.toggle".equals(action)) {
++                    setFlashlight(!mFlashlightEnabled);
++                }
++            }
++    };
++
+     public void setFlashlight(boolean enabled) {
+         boolean pendingError = false;
+         synchronized (this) {
+diff --git a/base/services/core/java/com/android/server/fingerprint/FingerprintService.java b/base/services/core/java/com/android/server/fingerprint/FingerprintService.java
+index 1f285d5..0b9d931 100644
+--- a/base/services/core/java/com/android/server/fingerprint/FingerprintService.java
++++ b/base/services/core/java/com/android/server/fingerprint/FingerprintService.java
+@@ -73,6 +73,13 @@ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Collections;
+ import java.util.List;
++/* Vanzo:libing on: Fri, 19 Aug 2016 18:22:43 +0800
++ * for fp quick action
++ */
++import android.content.SharedPreferences;
++import android.content.pm.PackageManager.NameNotFoundException;
++import android.provider.Settings;
++// End of Vanzo:libing
+ 
+ /**
+  * A service to manage multiple clients that want to access the fingerprint HAL API.
+@@ -265,10 +272,51 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+     protected void handleAuthenticated(long deviceId, int fingerId, int groupId) {
+         ClientMonitor client = mCurrentClient;
+         if (client != null && client.onAuthenticated(fingerId, groupId)) {
++/* Vanzo:libing on: Tue, 23 Aug 2016 15:04:58 +0800
++ * for fp quick action
++ */
++            if(countFlag) {
++                //handleFpStartApp(fingerId);
++                Settings.System.putInt(mContext.getContentResolver(), "current_finger_id", fingerId);
++            }
++// End of Vanzo:libing
+             removeClient(client);
+         }
+     }
+ 
++/* Vanzo:libing on: Fri, 19 Aug 2016 17:44:26 +0800
++ * for fp quick action
++ */
++        private void handleFpStartApp(int fpId) {
++            Context context = mContext;
++            SharedPreferences pref = null;
++            String name = "null";
++
++            try {
++                context = mContext.createPackageContext("com.android.settings", Context.CONTEXT_IGNORE_SECURITY);
++
++                pref = context.getSharedPreferences("fpid_appinfo", Context.MODE_MULTI_PROCESS);
++
++                name = pref.getString(fpId + "_appcmpinfo", "null");
++                android.util.Log.d("libing", "handleFpStartApp fpId " + fpId + " name " + name);
++                if (!name.equals("null")) {
++                    Intent intent = new Intent();
++                    intent.setClassName(name.split(":")[0], name.split(":")[1]);
++                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++                    mContext.startActivity(intent);
++                    android.util.Log.d("libing", "handleFpStartApp startActivity done");
++                }
++            } catch (NameNotFoundException e) {
++                android.util.Log.d("libing", "handleFpStartApp NameNotFoundException");
++            } finally {
++                android.util.Log.d("libing", "handleFpStartApp finally");
++                context = null;
++                pref = null;
++                name = "null";
++            }
++        }
++// End of Vanzo:libing
++
+     protected void handleAcquired(long deviceId, int acquiredInfo) {
+         ClientMonitor client = mCurrentClient;
+         if (client != null && client.onAcquired(acquiredInfo)) {
+diff --git a/base/services/core/java/com/android/server/policy/PhoneWindowManager.java b/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index a20358d..56f986c 100644
+--- a/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -175,6 +175,8 @@ import com.android.server.policy.smartwake.WindowGestureManager;
+  */
+ import android.app.ActivityManager.RunningAppProcessInfo;
+ import android.app.ActivityManager.RunningTaskInfo;
++import android.content.SharedPreferences;
++import android.content.pm.PackageManager.NameNotFoundException;
+ // End of Vanzo:fenghaitao
+ /**
+  * WindowManagerPolicy implementation for the Android phone UI.  This
+@@ -6072,6 +6074,45 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         }
+         mPressHome = false;
+ // End of Vanzo:fenghaitao
++        if (keyCode == KeyEvent.KEYCODE_F11 && down) {
++            int fpId = Settings.System.getInt(mContext.getContentResolver(), "current_finger_id", 0);
++
++            if (fpId != 0) {
++                if (SystemProperties.getInt("persist.sys.fp_torch" , 0) == 1) {
++                    Intent intent = new Intent("com.v.torch.toggle");
++                    mContext.sendBroadcast(intent);
++                    mVibrator.vibrate(30);
++                } else {
++                    Context context = mContext;
++                    SharedPreferences pref = null;
++                    String name = "null";
++
++                    try {
++                        context = mContext.createPackageContext("com.android.settings", Context.CONTEXT_IGNORE_SECURITY);
++
++                        pref = context.getSharedPreferences("fpid_appinfo", Context.MODE_MULTI_PROCESS);
++
++                        name = pref.getString(fpId + "_appcmpinfo", "null");
++                        android.util.Log.d("libing", "handleFpStartApp fpId " + fpId + " name " + name);
++                        if (!name.equals("null")) {
++                            Intent intent = new Intent();
++                            intent.setClassName(name.split(":")[0], name.split(":")[1]);
++                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++                            mContext.startActivity(intent);
++                            mVibrator.vibrate(30);
++                            android.util.Log.d("libing", "handleFpStartApp startActivity done");
++                        }
++                    } catch (NameNotFoundException e) {
++                        android.util.Log.d("libing", "handleFpStartApp NameNotFoundException");
++                    } finally {
++                        android.util.Log.d("libing", "handleFpStartApp finally");
++                        context = null;
++                        pref = null;
++                        name = "null";
++                    }
++                }
++            }
++        }
+ /* Vanzo:tanglei on: Wed, 28 Jan 2015 20:09:22 +0800
+  * smart wake
+  */

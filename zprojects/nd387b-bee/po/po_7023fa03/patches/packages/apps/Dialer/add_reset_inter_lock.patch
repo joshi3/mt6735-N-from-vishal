@@ -1,0 +1,33 @@
+diff --git a/res/values/strings_engineer.xml b/res/values/strings_engineer.xml
+index 9c9046f..8e21c0a 100755
+--- a/res/values/strings_engineer.xml
++++ b/res/values/strings_engineer.xml
+@@ -22,6 +22,7 @@
+         <item>@string/engineer_code_agingtest</item>
+         <item>@string/engineer_code_smsregister</item>
+         <item>@string/engineer_code_writeimei</item>
++        <item>@string/engineer_code_cleanqc</item>
+     </string-array>
+ 
+     <string-array name="engineer_entrys" translatable="false">
+@@ -29,17 +30,20 @@
+         <item>@string/engineer_entry_agingtest</item>
+         <item>@string/engineer_entry_smsregister</item>
+         <item>@string/engineer_entry_writeimei</item>
++        <item>@string/engineer_entry_cleanqc</item>
+     </string-array>
+ 
+     <string name="engineer_code_factorymode">*#66#</string>
+     <string name="engineer_code_agingtest">*#11#</string>
+     <string name="engineer_code_smsregister">*#55555#</string>
+     <string name="engineer_code_writeimei">*#4634#</string>
++    <string name="engineer_code_cleanqc">*#*#7372#*#*</string>
+ 
+     <string name="engineer_entry_factorymode">com.mediatek.factorymode/com.mediatek.factorymode.FactoryMode</string>
+     <string name="engineer_entry_agingtest">com.mediatek.factorymode/com.mediatek.factorymode.agingtest.AgingTestBegin</string>
+     <string name="engineer_entry_smsregister">com.android.smsregister/com.android.smsregister.TestSms</string>
+     <string name="engineer_entry_writeimei">com.android.settings/com.android.settings.WriteIMEIDialog</string>
++    <string name="engineer_entry_cleanqc">com.android.settings/com.android.settings.CleanQCDialog</string>
+ 
+ 
+     <string name="sar_display">no</string> <!--whether to display sar infomation, fill with yes or no-->

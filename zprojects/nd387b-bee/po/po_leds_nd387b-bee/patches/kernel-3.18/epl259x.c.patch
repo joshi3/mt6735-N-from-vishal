@@ -1,0 +1,16 @@
+diff --git a/drivers/misc/mediatek/alsps/epl259x-new/epl259x.c b/drivers/misc/mediatek/alsps/epl259x-new/epl259x.c
+index 6ebfd0b..ce5258a 100644
+--- a/drivers/misc/mediatek/alsps/epl259x-new/epl259x.c
++++ b/drivers/misc/mediatek/alsps/epl259x-new/epl259x.c
+@@ -914,8 +914,10 @@ static void initial_global_variable(struct i2c_client *client, struct epl_sensor
+ 
+     //ps setting
+     epl_sensor.ps.polling_mode = obj->hw->polling_mode_ps;
+-    epl_sensor.ps.integration_time = EPL_PS_INTT_272;
++    epl_sensor.ps.integration_time = EPL_PS_INTT_1040;
+     epl_sensor.ps.gain = EPL_GAIN_LOW;
++    //epl_sensor.ps.integration_time = EPL_PS_INTT_1040;
++    //epl_sensor.ps.gain = EPL_GAIN_MID;
+     epl_sensor.ps.adc = EPL_PSALS_ADC_11;
+     epl_sensor.ps.cycle = EPL_CYCLE_16;
+     epl_sensor.ps.ps_rs = EPL_RS_0;

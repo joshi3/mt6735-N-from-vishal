@@ -1,0 +1,13 @@
+diff --git a/base/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java b/base/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
+index 538cc7c..489c36d 100644
+--- a/base/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
++++ b/base/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
+@@ -2375,7 +2375,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
+         try {
+             stmt = db.compileStatement("INSERT OR IGNORE INTO system(name,value)"
+                     + " VALUES(?,?);");
+-            loadSetting(stmt, Settings.System.VIBRATE_WHEN_RINGING, vibrateWhenRinging ? 1 : 0);
++            loadSetting(stmt, Settings.System.VIBRATE_WHEN_RINGING, 1);
+         } finally {
+             if (stmt != null) stmt.close();
+         }

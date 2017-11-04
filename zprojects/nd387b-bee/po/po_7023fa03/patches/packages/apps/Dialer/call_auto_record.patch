@@ -1,0 +1,46 @@
+diff --git a/res/values-zh-rCN/strings_custom.xml b/res/values-zh-rCN/strings_custom.xml
+index dd781e2..a202cfc 100755
+--- a/res/values-zh-rCN/strings_custom.xml
++++ b/res/values-zh-rCN/strings_custom.xml
+@@ -11,5 +11,6 @@
+     <string name="reset_factory_notify">确定要恢复出厂设置么?</string>
+     <string name="reset_factory_title">恢复出厂设置</string>
+     <string name="vibrate_when_answer_title">连接振动</string>
++    <string name="call_auto_record_lable">通话自动录音</string>
+     <string name="vibrate_when_answer_summary">来电接听振动</string>
+ </resources>
+diff --git a/res/values/strings_custom.xml b/res/values/strings_custom.xml
+index 1eb2650..9622cae 100755
+--- a/res/values/strings_custom.xml
++++ b/res/values/strings_custom.xml
+@@ -16,6 +16,7 @@
+     <string name="vibrate_when_answer_title">Connection notice</string>
+     <string name="vibrate_when_answer_summary">Vibrate when answers</string>
+     <string name="call_log_empty_geocode" translatable="false"></string>
++    <string name="call_auto_record_lable">Auto Call Record</string>
+ <!-- Vanzo:tangshenghu on: Mon, 18 Jan 2016 17:13:41 +0800
+ implment #133474 add ru dialpad
+ -->
+diff --git a/src/com/android/dialer/settings/DialerSettingsActivity.java b/src/com/android/dialer/settings/DialerSettingsActivity.java
+index 8e503b4..bb00b14 100644
+--- a/src/com/android/dialer/settings/DialerSettingsActivity.java
++++ b/src/com/android/dialer/settings/DialerSettingsActivity.java
+@@ -124,6 +124,18 @@ public class DialerSettingsActivity extends AppCompatPreferenceActivity {
+             target.add(blockedCallsHeader);
+             migrationStatusOnBuildHeaders = FilteredNumberCompat.hasMigratedToNewBlocking();
+         }
++
++/* Vanzo:yujianpeng on: Fri, 31 Mar 2017 14:23:54 +0800
++ */
++        if (true) {
++            Header audioRecordHeader = new Header();
++            Intent audioRecordIntent = new Intent();
++            audioRecordIntent.setClassName("com.android.server.telecom","com.android.server.telecom.callrejection.CallRejectSettingActivity");
++            audioRecordHeader.titleRes = R.string.call_auto_record_lable;
++            audioRecordHeader.intent = audioRecordIntent;
++            target.add(audioRecordHeader);
++        }
++// End of Vanzo:yujianpeng
+         if (isPrimaryUser
+                 && (TelephonyManagerCompat.isTtyModeSupported(telephonyManager)
+                 || TelephonyManagerCompat.isHearingAidCompatibilitySupported(telephonyManager))) {

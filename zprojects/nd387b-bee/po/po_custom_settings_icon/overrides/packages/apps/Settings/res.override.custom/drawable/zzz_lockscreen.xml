@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:drawable="@drawable/infocus_setting_icon_green"/>
+    <item android:drawable="@drawable/zzz_ic_settings_lockscreen_alpha"
+        android:top="@dimen/cust_icon_bg_top"
+        android:bottom="@dimen/cust_icon_bg_bottom"
+        android:right="@dimen/cust_icon_bg_right"
+        android:left="@dimen/cust_icon_bg_left"
+    />
+</layer-list>

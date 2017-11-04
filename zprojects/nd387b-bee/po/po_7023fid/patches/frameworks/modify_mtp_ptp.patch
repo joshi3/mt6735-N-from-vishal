@@ -1,0 +1,109 @@
+diff --git a/av/media/mtp/MtpServer.cpp b/av/media/mtp/MtpServer.cpp
+index 9f5d3b7..8081fed 100755
+--- a/av/media/mtp/MtpServer.cpp
++++ b/av/media/mtp/MtpServer.cpp
+@@ -500,7 +500,7 @@ MtpResponseCode MtpServer::doGetDeviceInfo() {
+     mData.putString(string);   // Manufacturer
+ 
+     property_get("ro.product.model", prop_value, "MTP Device");
+-    string.set(prop_value);
++    string.set("Sharp Pi");
+     mData.putString(string);   // Model
+     string.set("1.0");
+     mData.putString(string);   // Device Version
+diff --git a/base/media/java/android/mtp/MtpDatabase.java b/base/media/java/android/mtp/MtpDatabase.java
+index 794b893..74c0a28 100755
+--- a/base/media/java/android/mtp/MtpDatabase.java
++++ b/base/media/java/android/mtp/MtpDatabase.java
+@@ -44,6 +44,7 @@ import java.io.IOException;
+ import java.util.HashMap;
+ import java.util.Locale;
+ import java.util.concurrent.atomic.AtomicBoolean;
++import android.os.SystemProperties;
+ 
+ /**
+  * {@hide}
+@@ -852,17 +853,81 @@ public class MtpDatabase implements AutoCloseable {
+     private int getDeviceProperty(int property, long[] outIntValue, char[] outStringValue) {
+         Log.d(TAG, "getDeviceProperty  property = 0x" + Integer.toHexString(property));
+ 
++        String value = "",deviceName;
++        int length = 0,lengthDeviceName = 0;
+         switch (property) {
+             case MtpConstants.DEVICE_PROPERTY_SYNCHRONIZATION_PARTNER:
++                //Ainge
++                // writable string properties kept in shared preferences
++                value = mDeviceProperties.getString(Integer.toString(property), ""); 
++                length = value.length();
++                if (length > 255) {
++                    length = 255; 
++                }    
++                value.getChars(0, length, outStringValue, 0);
++                outStringValue[length] = 0; 
++                /// M: Added for USB Develpment debug, more log for more debuging help @{
++                if(length > 0) { 
++                    Log.d(TAG, "getDeviceProperty  property = " + Integer.toHexString(property));
++                    Log.d(TAG, "getDeviceProperty  value = " + value + ", length = " + length);
++                }    
++                Log.d(TAG, "getDeviceProperty  length = " + length);
++
++                /// M: Added Modification for ALPS00278882 @{
++                // Return the device name for the PC display if the FriendlyName is empty!!
++                deviceName = "Sharp Pi";
++
++                lengthDeviceName = deviceName.length();
++                if (lengthDeviceName > 255) {
++                    lengthDeviceName = 255; 
++                }    
++                if(lengthDeviceName >0) {
++                    deviceName.getChars(0, lengthDeviceName, outStringValue, 0);
++                    outStringValue[lengthDeviceName] = 0; 
++                    Log.d(TAG, "getDeviceProperty  deviceName = " + deviceName + ", lengthDeviceName = " + lengthDeviceName);
++                } else {
++                    Log.d(TAG, "getDeviceProperty  lengthDeviceName = " + lengthDeviceName);
++                }    
++                /// M: @}
++                //Ainge
++                return MtpConstants.RESPONSE_OK;
+             case MtpConstants.DEVICE_PROPERTY_DEVICE_FRIENDLY_NAME:
+                 // writable string properties kept in shared preferences
+-                String value = mDeviceProperties.getString(Integer.toString(property), "");
+-                int length = value.length();
++                value = mDeviceProperties.getString(Integer.toString(property), "");
++                length = value.length();
+                 if (length > 255) {
+                     length = 255;
+                 }
+                 value.getChars(0, length, outStringValue, 0);
+                 outStringValue[length] = 0;
++                /// M: Added for USB Develpment debug, more log for more debuging help @{
++                if(length > 0) {
++                    Log.d(TAG, "getDeviceProperty  property = " + Integer.toHexString(property));
++                    Log.d(TAG, "getDeviceProperty  value = " + value + ", length = " + length);
++                }
++                else if(SystemProperties.get("ro.sys.usb.mtp.whql.enable").equals("0"))
++                {
++                    Log.d(TAG, "getDeviceProperty  length = " + length);
++                    /// M: Added Modification for ALPS00278882 @{
++                    if(property == MtpConstants.DEVICE_PROPERTY_DEVICE_FRIENDLY_NAME) {
++                        // Return the device name for the PC display if the FriendlyName is empty!!
++                        deviceName = "Sharp Pi";
++
++                        lengthDeviceName = deviceName.length();
++                        if (lengthDeviceName > 255) {
++                            lengthDeviceName = 255;
++                        }
++                        if(lengthDeviceName >0) {
++                            deviceName.getChars(0, lengthDeviceName, outStringValue, 0);
++                            outStringValue[lengthDeviceName] = 0;
++                            Log.d(TAG, "getDeviceProperty  deviceName = " + deviceName + ", lengthDeviceName = " + lengthDeviceName);
++                        } else {
++                            Log.d(TAG, "getDeviceProperty  lengthDeviceName = " + lengthDeviceName);
++                        }
++                    }
++                    /// M: @}
++                }
++                /// M: @}
+                 return MtpConstants.RESPONSE_OK;
+ 
+             case MtpConstants.DEVICE_PROPERTY_IMAGE_SIZE:

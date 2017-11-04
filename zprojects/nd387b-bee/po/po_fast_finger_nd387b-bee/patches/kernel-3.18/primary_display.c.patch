@@ -1,0 +1,38 @@
+diff --git a/drivers/misc/mediatek/video/mt6735/primary_display.c b/drivers/misc/mediatek/video/mt6735/primary_display.c
+old mode 100644
+new mode 100755
+index 51fec8f..05d78d9
+--- a/drivers/misc/mediatek/video/mt6735/primary_display.c
++++ b/drivers/misc/mediatek/video/mt6735/primary_display.c
+@@ -3764,7 +3764,9 @@ done:
+ 	return ret;
+ 
+ }
+-
++//blestech add
++extern int lcm_off_flag;
++//blestech end
+ #ifdef MTK_FB_ESD_ENABLE
+ static int primary_display_esd_check_worker_kthread(void *data)
+ {
+@@ -3782,6 +3784,7 @@ static int primary_display_esd_check_worker_kthread(void *data)
+ #if 0
+ 		dpmgr_wait_event(pgc->dpmgr_handle, DISP_PATH_EVENT_FRAME_START);
+ 		ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle, DISP_PATH_EVENT_FRAME_DONE, HZ);
++		
+ 		if (ret <= 0) {
+ 			DISPERR("wait frame done timeout, reset whole path now\n");
+ 			primary_display_diagnose();
+@@ -3799,6 +3802,12 @@ static int primary_display_esd_check_worker_kthread(void *data)
+ 			DISPMSG("[ESD]esd check thread waked up accidently\n");
+ 			continue;
+ 		}
++		
++		//blestech add
++		if(lcm_off_flag)		
++			 continue;
++		//blestech end
++		
+ #ifdef DISP_SWITCH_DST_MODE
+ 		_primary_path_switch_dst_lock();
+ #endif

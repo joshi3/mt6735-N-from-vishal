@@ -1,0 +1,13 @@
+diff --git a/base/packages/SystemUI/src/com/android/systemui/BatteryMeterDrawable.java b/base/packages/SystemUI/src/com/android/systemui/BatteryMeterDrawable.java
+index f824c61..5f30c5b 100755
+--- a/base/packages/SystemUI/src/com/android/systemui/BatteryMeterDrawable.java
++++ b/base/packages/SystemUI/src/com/android/systemui/BatteryMeterDrawable.java
+@@ -407,7 +407,7 @@ public class BatteryMeterDrawable extends Drawable implements
+         mShapePath.lineTo(mButtonFrame.left, mFrame.top);
+         mShapePath.lineTo(mButtonFrame.left, mButtonFrame.top);
+         /// M: Support "Battery Protection".
+-        if (mPluggedIn && mCharging) {
++        if (mPluggedIn && mCharging && level < 100) {
+             // define the bolt shape
+             final float bl = mFrame.left + mFrame.width() / 4f;
+             final float bt = mFrame.top + mFrame.height() / 6f;

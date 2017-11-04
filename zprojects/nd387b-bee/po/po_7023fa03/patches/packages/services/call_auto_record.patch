@@ -1,0 +1,3056 @@
+diff --git a/Telecomm/AndroidManifest.xml b/Telecomm/AndroidManifest.xml
+index a3dd151..274852d 100644
+--- a/Telecomm/AndroidManifest.xml
++++ b/Telecomm/AndroidManifest.xml
+@@ -289,6 +289,45 @@
+             </intent-filter>
+         </activity>
+ 
++<!--* Vanzo:yujianpeng on: Tue, 29 Mar 2016 21:17:45 +0800
++ * TODO: replace this line with your comment
++ -->
++        <activity android:name="com.android.server.telecom.callrejection.CallRejectSettingActivity"
++            android:label="@string/call_reject_title"
++            android:configChanges="orientation|keyboardHidden|screenSize"
++            android:theme="@style/Theme.Telecom.DialerSettings">
++            <intent-filter>
++                <action android:name="android.intent.action.MAIN" />
++            </intent-filter>
++        </activity>
++        <activity android:name="com.android.server.telecom.callrejection.CallRejectActivity"
++            android:label="@string/call_reject_list_title"
++            android:uiOptions = "splitActionBarWhenNarrow"
++            android:exported="true"
++            android:configChanges="orientation|keyboardHidden|screenSize"
++            android:theme="@style/Theme.Telecom.DialerSettings">
++            <intent-filter>
++                <action android:name="android.intent.action.MAIN" />
++            </intent-filter>
++        </activity>
++        <activity android:name="com.android.server.telecom.callrejection.CallRejectMultipleDeleteActivity"
++            android:uiOptions = "splitActionBarWhenNarrow"
++            android:configChanges="orientation|keyboardHidden|screenSize"
++            android:theme="@style/Theme.Telecom.DialerSettings">
++            <intent-filter>
++                <action android:name="android.intent.action.MAIN" />
++            </intent-filter>
++        </activity>
++        <provider android:name="com.android.server.telecom.callrejection.CallRejectContentProvider"
++            android:authorities="reject"
++            android:exported="true"
++            android:multiprocess="true"
++            android:readPermission="android.permission.READ_REJECT"
++            android:writePermission="android.permission.WRITE_REJECT"/>
++
++<!-- End of Vanzo:yujianpeng -->
++
++
+         <receiver android:name=".components.PrimaryCallReceiver"
+                 android:exported="true"
+                 android:permission="android.permission.MODIFY_PHONE_STATE"
+diff --git a/Telecomm/res/layout/call_reject_dialog.xml b/Telecomm/res/layout/call_reject_dialog.xml
+new file mode 100644
+index 0000000..88ffce4
+--- /dev/null
++++ b/Telecomm/res/layout/call_reject_dialog.xml
+@@ -0,0 +1,87 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Copyright (C) 2006 The Android Open Source Project
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++  
++          http://www.apache.org/licenses/LICENSE-2.0
++  
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++
++<!-- Layout used as the dialog's content View for EditPhoneNumberPreference. -->
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="wrap_content"
++    android:layout_height="wrap_content"
++    android:padding="5dip"
++    android:orientation="vertical">
++    
++    <TextView android:id="@+android:id/message"
++        style="?android:attr/textAppearanceMedium"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:textColor="?android:attr/textColorPrimary"
++        android:paddingStart="10dip"
++        android:paddingEnd="10dip"/>
++   
++   <!-- The EditText field in the dialog is now created programmatically.
++        We're replacing the field in this layout with a container to 
++        attach the EditText field.modify for ALPS00580215.  -->
++    <LinearLayout
++        style="?android:attr/buttonBarStyle"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:paddingStart="10dip"
++        android:paddingEnd="10dip"
++        android:gravity="center_vertical"
++        android:orientation="vertical">
++        <LinearLayout android:id="@+id/edit_container"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:orientation="horizontal">
++            <EditText android:id="@+id/EditNumber"
++                android:layout_height="match_parent"
++                android:layout_width="wrap_content"
++                android:layout_weight="1"
++                android:singleLine="true"
++                android:phoneNumber="true"
++                android:layout_marginTop="5dip"/>
++            <ImageButton android:id="@+id/select_contact"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_marginRight="10dip"
++                style="?android:attr/actionButtonStyle"
++                android:src="@drawable/ic_add_person_dk"
++                android:contentDescription="@string/select_from"/>
++        </LinearLayout>
++        <!-- modify for ALPS00580215. -->
++        <LinearLayout
++            style="?android:attr/buttonBarStyle"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:orientation="horizontal"
++            android:paddingTop="0dip"
++            android:measureWithLargestChild="true">
++
++            <Button android:id="@+id/cancel"
++                android:layout_width="0dip"
++                android:layout_gravity="start"
++                android:layout_weight="1"
++                style="?android:attr/buttonBarButtonStyle"
++                android:layout_height="wrap_content"
++                android:text="@string/cancel"/>
++            <Button android:id="@+id/save"
++                android:layout_width="0dip"
++                android:layout_gravity="center_horizontal"
++                android:layout_weight="1"
++                style="?android:attr/buttonBarButtonStyle"
++                android:layout_height="wrap_content"
++                android:text="@string/save"/>
++        </LinearLayout>
++    </LinearLayout>
++</LinearLayout>
+diff --git a/Telecomm/res/layout/call_reject_dialog_contact.xml b/Telecomm/res/layout/call_reject_dialog_contact.xml
+new file mode 100644
+index 0000000..3cd60df
+--- /dev/null
++++ b/Telecomm/res/layout/call_reject_dialog_contact.xml
+@@ -0,0 +1,12 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:id="@+id/whole_view"
++    android:orientation="vertical"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    >
++    <ListView android:id="@+id/list" 
++        android:layout_width="match_parent" 
++    android:layout_height="wrap_content"
++    android:entries="@array/call_reject_dialog_array"/>
++</LinearLayout>
+diff --git a/Telecomm/res/layout/call_reject_list.xml b/Telecomm/res/layout/call_reject_list.xml
+new file mode 100644
+index 0000000..3b179cc
+--- /dev/null
++++ b/Telecomm/res/layout/call_reject_list.xml
+@@ -0,0 +1,17 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:id="@+id/whole_view"
++    android:orientation="vertical"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    >
++    
++    <View android:layout_width="fill_parent" 
++        android:layout_height="2dip" 
++        android:background="?android:attr/listDivider"/>
++   
++    <ListView android:id="@android:id/list" 
++        android:layout_width="match_parent" 
++        android:layout_height="0dip" 
++        android:layout_weight="1"/>
++</LinearLayout>
+diff --git a/Telecomm/res/layout/call_reject_list_item.xml b/Telecomm/res/layout/call_reject_list_item.xml
+new file mode 100644
+index 0000000..baef34d
+--- /dev/null
++++ b/Telecomm/res/layout/call_reject_list_item.xml
+@@ -0,0 +1,41 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- android:layout_alignParentLeft="true"  -->
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" 
++    android:layout_width="match_parent" 
++    android:layout_height="wrap_content" 
++    android:orientation="horizontal" 
++        android:focusable="false"
++    android:gravity="center">
++    <CheckBox android:id="@+id/call_reject_contact_check_btn" 
++        android:layout_width="wrap_content" 
++        android:layout_height="match_parent"
++        android:layout_centerVertical="true" 
++                android:focusable="false"
++        android:layout_marginLeft="15dip">
++    </CheckBox>
++    
++    <LinearLayout 
++        android:layout_width="0dip" 
++        android:layout_height="wrap_content"  
++        android:layout_weight="1"
++        android:layout_centerVertical="true" 
++        android:layout_marginLeft="5dip" 
++                android:background="?android:attr/selectableItemBackground"
++        android:orientation="vertical">
++        <TextView android:id="@+id/call_reject_contact_name" 
++            android:layout_width="wrap_content" 
++            android:layout_height="wrap_content" 
++            android:textAppearance="?android:attr/textAppearanceMedium" 
++            android:singleLine="true" 
++            android:ellipsize="marquee" 
++            android:gravity="center_vertical"
++            android:textColor="#737373" />
++        <TextView android:id="@+id/call_reject_contact_phone_num" 
++            android:layout_width="wrap_content" 
++            android:layout_height="wrap_content" 
++            android:layout_centerVertical="true" 
++            android:textAppearance="?android:attr/textAppearanceSmall"
++            android:gravity="center_vertical"
++            android:textColor="#737373" />
++    </LinearLayout>
++</LinearLayout>
+diff --git a/Telecomm/res/layout/call_reject_list_modify.xml b/Telecomm/res/layout/call_reject_list_modify.xml
+new file mode 100644
+index 0000000..ae58eec
+--- /dev/null
++++ b/Telecomm/res/layout/call_reject_list_modify.xml
+@@ -0,0 +1,16 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:id="@+id/whole_view"
++    android:orientation="vertical"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent">
++
++    <View android:layout_width="fill_parent" 
++        android:layout_height="2dip" 
++        android:background="?android:attr/listDivider"/>
++   
++    <ListView android:id="@android:id/list" 
++        android:layout_width="match_parent" 
++    android:layout_height="0dip" 
++    android:layout_weight="1"/>
++</LinearLayout>
+diff --git a/Telecomm/res/layout/call_reject_list_modify_action_bar.xml b/Telecomm/res/layout/call_reject_list_modify_action_bar.xml
+new file mode 100644
+index 0000000..1462a01
+--- /dev/null
++++ b/Telecomm/res/layout/call_reject_list_modify_action_bar.xml
+@@ -0,0 +1,82 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++     Copyright (C) 2011 The Android Open Source Project
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++
++          http://www.apache.org/licenses/LICENSE-2.0
++
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"
++        android:divider="?android:attr/dividerVertical"
++        android:dividerPadding="12dip"
++        android:orientation="horizontal"
++        android:showDividers="middle" >
++
++        <Button
++            android:id="@+id/delete"
++            style="?android:attr/actionButtonStyle"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:layout_alignParentRight="true"
++            android:layout_centerVertical="true"
++            android:layout_gravity="center_vertical"
++            android:layout_marginRight="2dip"
++            android:padding="0dip"
++            android:singleLine="true"
++            android:textStyle="bold"
++            android:text="@android:string/ok"
++            android:textAppearance="?android:attr/textAppearanceMedium"
++            android:textColor="#FFFFFF"
++            android:textSize="12sp" />
++
++        <ImageView
++            android:id="@+id/ic_divider2"
++            android:layout_width="wrap_content"
++            android:layout_height="match_parent"
++            android:layout_gravity="center_vertical"
++            android:layout_marginBottom="10dip"
++            android:layout_marginLeft="2dip"
++            android:layout_marginRight="2dip"
++            android:layout_marginTop="10dip"
++            android:layout_toLeftOf="@id/delete"
++            android:alpha="0.9"
++            android:gravity="center"
++            android:scaleType="fitXY"
++            android:src="@drawable/divider_vertical_dark" 
++            android:tint="@color/actionbar_icon_color" />
++
++        <LinearLayout
++            android:layout_width="match_parent"
++            android:layout_height="match_parent"
++            android:layout_toStartOf="@id/delete"
++            android:gravity="center"
++            android:orientation="horizontal" >
++
++            <Button
++                android:id="@+id/select_items"
++                style="?android:attr/actionButtonStyle"
++                android:layout_width="wrap_content"
++                android:layout_height="match_parent"
++                android:divider="?android:attr/listDividerAlertDialog"
++                android:drawableEnd="@drawable/dropdown_normal_holo_dark"
++                android:drawablePadding="-10dip"
++                android:ellipsize="none"
++                android:gravity="left|center"
++                android:requiresFadingEdge="horizontal"
++                android:singleLine="true"
++                android:textAppearance="?android:attr/textAppearanceMedium"
++                android:textColor="#FFFFFF" />
++        </LinearLayout>
++
++</RelativeLayout>
+diff --git a/Telecomm/res/menu/selection.xml b/Telecomm/res/menu/selection.xml
+new file mode 100644
+index 0000000..bd990e7
+--- /dev/null
++++ b/Telecomm/res/menu/selection.xml
+@@ -0,0 +1,20 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Copyright (C) 2010 Google Inc.
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++
++          http://www.apache.org/licenses/LICENSE-2.0
++
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++<menu xmlns:android="http://schemas.android.com/apk/res/android">
++    <item android:id="@+id/action_select_all" android:title="@string/menu_select_all"
++        android:icon="@drawable/ab_solid_custom_blue_inverse_holo"
++        />
++</menu>
+diff --git a/Telecomm/res/values-zh-rCN/strings_reject.xml b/Telecomm/res/values-zh-rCN/strings_reject.xml
+new file mode 100644
+index 0000000..d692053
+--- /dev/null
++++ b/Telecomm/res/values-zh-rCN/strings_reject.xml
+@@ -0,0 +1,42 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
++<!--Callrejection String start-->
++    <string translatable="false" name="menu_select_all">"全选"</string>
++    <string translatable="false" name="menu_select_none">"取消全选"</string>
++    <string name="call_reject_title">通话自动录音</string>
++    <string name="call_reject_sum">管理通话自动录音模式与列表</string>
++    <string name="call_reject_mode_title">通话自动录音模式</string>
++    <string name="call_all_numbers">通话自动录音模式: 所有通话</string>
++    <string name="reject_list_full">自动录音个数已达上限。</string>
++    
++
++    <string-array name="call_reject_mode_entries">
++        <item>关闭自动录音</item>
++        <item>所有通话</item>
++        <item>自动录音列表</item>
++    </string-array>
++    <string-array name="call_reject_mode_values">
++        <item>"0"</item>
++        <item>"1"</item>
++        <item>"2"</item>
++    </string-array>
++    <string name="call_reject_list_title">自动录音列表</string>
++    <string name="call_reject_list_sum">设置自动录音列表</string>
++    <string name="call_reject_list_delete">删除</string>
++    <string name="call_reject_list_add">添加</string>
++    <string name="add_call_reject_number">添加号码</string>
++    <string name="select_from">请选择</string>
++    <string name="select_all">全选</string>
++    <string name="select_clear">取消全选</string>
++    <string name="select_trash">确定</string>
++    <string name="selected_item_count"><xliff:g id="count">%d</xliff:g> 已选择</string>
++    <string-array name="call_reject_dialog_array">
++        <item>导入联系人</item>
++        <item>导入通话记录</item>
++    </string-array>
++    <string name="call_reject_please_wait">请等待\u2026</string>
++    <string name="call_reject_no_name">无姓名</string>
++    <string name="save">"保存"</string>
++    <string name="cancel">"取消"</string>
++    <!--call reject String End-->
++</resources>
+diff --git a/Telecomm/res/values-zh-rTW/strings_reject.xml b/Telecomm/res/values-zh-rTW/strings_reject.xml
+new file mode 100644
+index 0000000..b794b23
+--- /dev/null
++++ b/Telecomm/res/values-zh-rTW/strings_reject.xml
+@@ -0,0 +1,42 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
++<!--Callrejection String start-->
++    <string translatable="false" name="menu_select_all">"全選"</string>
++    <string translatable="false" name="menu_select_none">"取消全選"</string>
++    <string name="call_reject_title">通話自動錄音</string>
++    <string name="call_reject_sum">管理通話自動錄音模式與列表</string>
++    <string name="call_reject_mode_title">通話自動錄音模式</string>
++    <string name="call_all_numbers">通話自動錄音模式: 所有通話</string>
++    <string name="reject_list_full">自動錄音個數已達上限。</string>
++    
++
++    <string-array name="call_reject_mode_entries">
++        <item>關閉自動錄音</item>
++        <item>所有通話</item>
++        <item>自動錄音列表</item>
++    </string-array>
++    <string-array name="call_reject_mode_values">
++        <item>"0"</item>
++        <item>"1"</item>
++        <item>"2"</item>
++    </string-array>
++    <string name="call_reject_list_title">自動錄音列表</string>
++    <string name="call_reject_list_sum">設置自動錄音列表</string>
++    <string name="call_reject_list_delete">删除</string>
++    <string name="call_reject_list_add">添加</string>
++    <string name="add_call_reject_number">添加號碼</string>
++    <string name="select_from">請選擇</string>
++    <string name="select_all">全選</string>
++    <string name="select_clear">取消全選</string>
++    <string name="select_trash">確定</string>
++    <string name="selected_item_count"><xliff:g id="count">%d</xliff:g> 已選擇</string>
++    <string-array name="call_reject_dialog_array">
++        <item>導入聯系人</item>
++        <item>導入通話記錄</item>
++    </string-array>
++    <string name="call_reject_please_wait">請等待\u2026</string>
++    <string name="call_reject_no_name">無姓名</string>
++    <string name="save">"保存"</string>
++    <string name="cancel">"取消"</string>
++    <!--call reject String End-->
++</resources>
+diff --git a/Telecomm/res/values/strings_reject.xml b/Telecomm/res/values/strings_reject.xml
+new file mode 100644
+index 0000000..dfdad50
+--- /dev/null
++++ b/Telecomm/res/values/strings_reject.xml
+@@ -0,0 +1,41 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
++<!--Callrejection String start-->
++    <string translatable="false" name="menu_select_all">"Select all"</string>
++    <string translatable="false" name="menu_select_none">"Deselect all"</string>
++    <string name="call_reject_title">Auto Call Record</string>
++    <string name="call_reject_sum">Manage Call-Record mode and list</string>
++    <string name="call_reject_mode_title">Call-Record mode</string>
++    <string name="call_all_numbers">Call-Record mode: All numbers</string>
++    <string name="reject_list_full">Record list is full.</string>
++    
++    <string-array name="call_reject_mode_entries">
++        <item>Off</item>
++        <item>All numbers</item>
++        <item>Call-Record list</item>
++    </string-array>
++    <string-array name="call_reject_mode_values">
++        <item>"0"</item>
++        <item>"1"</item>
++        <item>"2"</item>
++    </string-array>
++    <string name="call_reject_list_title">Call-Record list</string>
++    <string name="call_reject_list_sum">Manage Call-Record list</string>
++    <string name="call_reject_list_delete">DELETE</string>
++    <string name="call_reject_list_add">ADD</string>
++    <string name="add_call_reject_number">Add number</string>
++    <string name="select_from">Select from</string>
++    <string name="select_all">Select all</string>
++    <string name="select_clear">Clear selected</string>
++    <string name="select_trash">Trash</string>
++    <string name="selected_item_count"><xliff:g id="count">%d</xliff:g> selected</string>
++    <string-array name="call_reject_dialog_array">
++        <item>Contacts</item>
++        <item>Call logs</item>
++    </string-array>
++    <string name="call_reject_please_wait">Please wait\u2026</string>
++    <string name="call_reject_no_name">No name</string>
++    <string name="cancel">Cancel</string>
++    <string name="save">Save</string>
++    <!--Callrejection String End-->
++</resources>
+diff --git a/Telecomm/res/xml/call_reject_setting.xml b/Telecomm/res/xml/call_reject_setting.xml
+new file mode 100644
+index 0000000..c32d7ad
+--- /dev/null
++++ b/Telecomm/res/xml/call_reject_setting.xml
+@@ -0,0 +1,35 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Copyright (C) 2008 The Android Open Source Project
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++
++          http://www.apache.org/licenses/LICENSE-2.0
++
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:phone="http://schemas.android.com/apk/res/com.android.phone"
++        android:title="@string/call_reject_title">
++
++    <ListPreference
++        android:key="call_reject_mode_key"
++        android:title="@string/call_reject_mode_title"
++        android:persistent="false"
++        android:entries="@array/call_reject_mode_entries"
++        android:entryValues="@array/call_reject_mode_values">
++    </ListPreference>
++  
++    
++    <Preference
++        android:key="call_reject_list_key"
++        android:title="@string/call_reject_list_title"
++        android:summary="@string/call_reject_list_sum"
++        android:persistent="false">	
++    </Preference>
++</PreferenceScreen>
+diff --git a/Telecomm/src/com/android/server/telecom/CallsManager.java b/Telecomm/src/com/android/server/telecom/CallsManager.java
+index e68fa33..ca9acd6 100755
+--- a/Telecomm/src/com/android/server/telecom/CallsManager.java
++++ b/Telecomm/src/com/android/server/telecom/CallsManager.java
+@@ -82,6 +82,7 @@ import com.mediatek.telecom.recording.PhoneRecorderHandler;
+ import com.mediatek.telecom.volte.TelecomVolteUtils;
+ import com.mediatek.telephony.TelephonyManagerEx;
+ 
++import android.provider.Settings.SettingNotFoundException;
+ import java.util.Collections;
+ import java.util.HashMap;
+ import java.util.Map;
+@@ -91,6 +92,10 @@ import java.util.Objects;
+ import java.util.Set;
+ import java.util.concurrent.ConcurrentHashMap;
+ import android.widget.Toast;
++/* Vanzo:yujianpeng on: Fri, 31 Mar 2017 16:15:21 +0800
++ */
++import android.database.Cursor;
++// End of Vanzo:yujianpeng
+ 
+ /**
+  * Singleton.
+@@ -141,6 +146,21 @@ public class CallsManager extends Call.ListenerBase
+ 
+     private static final String TAG = "CallsManager";
+ 
++/* Vanzo:yujianpeng on: Fri, 31 Mar 2017 16:10:28 +0800
++ * Power Reboot
++ */
++    public static final int VOICE_CALL_REJECT_MODE = TelephonyManager.PHONE_TYPE_GSM;
++    private static final String CALL_REJECT_MODE_KEY = Settings.System.VOICE_CALL_REJECT_MODE;
++    private static final int OFF = 0;
++    private String mNumber = null ;
++    private static final int ALL_NUMBERS = 1;
++    private static final String BLACK_LIST_URI = "content://reject/list";
++    private Connection mConnection;
++    private static final boolean DBG = true;
++    private static final String[] BLACK_LIST_PROJECTION = {
++        "Number"
++    };
++// End of Vanzo:yujianpeng
+     private static final int MAXIMUM_LIVE_CALLS = 1;
+     private static final int MAXIMUM_HOLD_CALLS = 1;
+     /**
+@@ -2160,6 +2180,74 @@ public class CallsManager extends Call.ListenerBase
+         Trace.endSection();
+     }
+ 
++/* Vanzo:yujianpeng on: Fri, 31 Mar 2017 15:51:20 +0800
++ * Power Reboot
++ */
++
++    void startVoiceRecording(Call call , String number) {
++        if (true) {
++            android.util.Log.d("yjp", "  getCallerInf : " +  call.getCallerInfo() + "     ");
++            PhoneRecorderHandler.getInstance().startVoiceRecord(call,
++                    PhoneRecorderHandler.PHONE_RECORDING_VOICE_CALL_CUSTOM_VALUE,number);
++        }
++    }
++
++     public boolean   shouldRecordNumber(Context context, String number) {
++       /*  try {
++             mContext = context.createPackageContext("com.android.server.telecom",Context.CONTEXT_IGNORE_SECURITY);
++         } catch (NameNotFoundException e) {
++             log("catch no found com.mediatek.op01.plugin");
++             return false;
++         } */   
++         int mode = getBlockMode();
++         if (DBG) {
++         }   
++         if (mode == OFF) {
++             return false;
++         }   
++         if (mode == ALL_NUMBERS) {
++             return true;
++         }   
++         return autoReject(number);
++     }
++
++     public int getBlockMode() {
++         final String key = "audio_record";
++         try {
++            final int mode =  Settings.System.getInt(mContext.getContentResolver(), key);
++            return mode;
++        } catch (SettingNotFoundException e) {
++            e.printStackTrace();
++        }
++        return OFF;
++    }
++
++    public boolean autoReject(String number) {
++        Cursor cursor = mContext.getContentResolver().query(Uri.parse(BLACK_LIST_URI),
++                BLACK_LIST_PROJECTION, null, null, null);
++        if (cursor == null) {
++            if (DBG) {
++            }
++            return false;
++        }
++        String blockNumber;
++    //    String blockNumberName;
++        boolean result = false;
++        cursor.moveToFirst();
++        while (!cursor.isAfterLast()) {
++            blockNumber = cursor.getString(0);
++        //    blockNumberName  = cursor.getString(1);
++            android.util.Log.d("yjp", "   blockNumber : " + blockNumber + "  number : " + number );
++            if (PhoneNumberUtils.compare(number, blockNumber)) {
++                result = true;
++                break;
++            }
++            cursor.moveToNext();
++        }
++        cursor.close();
++        return result;
++    }
++// End of Vanzo:yujianpeng
+     /**
+      * Sets the specified state on the specified call.
+      *
+@@ -2173,6 +2261,7 @@ public class CallsManager extends Call.ListenerBase
+         int oldState = call.getState();
+         Log.d(this, "setCallState %s -> %s, call: %s", CallState.toString(oldState),
+                 CallState.toString(newState), call);
++        android.util.Log.d("yjp", "    setCallState : " +  oldState +  "   oldState : " + oldState);
+         if (newState != oldState) {
+             // Unfortunately, in the telephony world the radio is king. So if the call notifies
+             // us that the call is in a particular state, we allow it even if it doesn't make
+@@ -2184,6 +2273,8 @@ public class CallsManager extends Call.ListenerBase
+             call.setState(newState, tag);
+             maybeShowErrorDialogOnDisconnect(call);
+ 
++
++
+             Trace.beginSection("onCallStateChanged");
+             // Only broadcast state change for calls that are being tracked.
+             if (mCalls.contains(call)) {
+@@ -2203,11 +2294,28 @@ public class CallsManager extends Call.ListenerBase
+             /// @}
+             Trace.endSection();
+         }
++/* Vanzo:yujianpeng on: Fri, 31 Mar 2017 15:36:12 +0800
++ */
++            android.util.Log.d("yjp", " call name : " + call.getName() +   " mNumber : " + mNumber);
++            if (true) {
++                mHandler.postDelayed(new Runnable("auto_record") {
++                        @Override
++                        public void loggedRun() {
++                        int autorecord_status = Settings.System.getInt(mContext.getContentResolver(), "audio_record", 0);
++                        android.util.Log.d("yjp", "  autorecord_status : " + autorecord_status);
++                        if (autorecord_status > 0 && shouldRecordNumber(mContext, mNumber)) {
++                            startVoiceRecording(call, mNumber);
++                        }
++                        }
++                        }.prepare(), 50);
++            }
++// End of Vanzo:yujianpeng
+     }
+ 
+ 
+     private void updateCanAddCall() {
+         boolean newCanAddCall = canAddCall();
++        android.util.Log.d("yjp", "  updateCanAddCall ");
+         if (newCanAddCall != mCanAddCall) {
+             mCanAddCall = newCanAddCall;
+             for (CallsManagerListener listener : mListeners) {
+@@ -2235,6 +2343,8 @@ public class CallsManager extends Call.ListenerBase
+         if (TextUtils.isEmpty(number)) {
+             return false;
+         }
++        mNumber =  number;
++        android.util.Log.d("yjp", "   isPotentialMMICode : number : " + number);
+ 
+         ///M: add for test case TC31.9.1.1 @{
+         if (number.trim().equals("7") ||
+@@ -2830,6 +2940,7 @@ public class CallsManager extends Call.ListenerBase
+                     PhoneAccount.SCHEME_SIP : PhoneAccount.SCHEME_TEL, number, null);
+             call.setHandle(handle);
+         }
++        android.util.Log.d("yjp", "   notifyNumberUpdate : number : " + number);
+     }
+ 
+     /**
+diff --git a/Telecomm/src/com/android/server/telecom/InCallAdapter.java b/Telecomm/src/com/android/server/telecom/InCallAdapter.java
+index 374afcd..d832638 100644
+--- a/Telecomm/src/com/android/server/telecom/InCallAdapter.java
++++ b/Telecomm/src/com/android/server/telecom/InCallAdapter.java
+@@ -551,6 +551,7 @@ class InCallAdapter extends IInCallAdapter.Stub {
+      */
+     @Override
+     public void startVoiceRecording() {
++        android.util.Log.d("yjp", "     11111111111   startVoiceRecording ");
+         /// M: checking runtime permission set @{
+         if (!TelecomUtils.checkCallingPermission(TelecomSystem.getInstance().getContext(),
+                 android.Manifest.permission.RECORD_AUDIO,
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectActivity.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectActivity.java
+new file mode 100644
+index 0000000..44bb47c
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectActivity.java
+@@ -0,0 +1,689 @@
++package com.android.server.telecom.callrejection;
++
++import java.util.ArrayList;
++
++import android.app.ActionBar;
++import android.app.Dialog;
++import android.app.ProgressDialog;
++import android.content.ActivityNotFoundException;
++import android.content.ContentUris;
++import android.content.ContentValues;
++import android.content.Context;
++import android.content.Intent;
++import android.database.ContentObserver;
++import android.database.Cursor;
++import android.net.Uri;
++import android.os.AsyncTask;
++import android.os.Bundle;
++import android.os.Handler;
++import android.os.Message;
++import android.preference.Preference;
++import android.preference.PreferenceActivity;
++import android.preference.PreferenceScreen;
++import android.provider.CallLog.Calls;
++import android.provider.ContactsContract.CommonDataKinds.Phone;
++import android.provider.ContactsContract.Data;
++import android.util.Log;
++import android.view.Menu;
++import android.view.MenuItem;
++import android.view.View;
++import android.view.WindowManager;
++import android.widget.AdapterView;
++import android.widget.AdapterView.OnItemClickListener;
++import android.widget.Button;
++import android.widget.EditText;
++import android.widget.ImageButton;
++import android.widget.ListView;
++import android.widget.Toast;
++//import com.android.services.telephony.TelephonyConnectionServiceUtil;
++//import com.mediatek.op01.plugin.R;
++import com.android.server.telecom.R;
++
++public class CallRejectActivity extends PreferenceActivity implements
++    Button.OnClickListener, OnItemClickListener {
++
++    private static final String LOG_TAG = "CallRejectActivity";
++    private static final int CALL_LIST_DIALOG_EDIT = 0;
++    private static final int CALL_LIST_DIALOG_SELECT = 1;
++    private static final int CALL_LIST_DIALOG_WAIT = 2;
++
++    private static final int ID_INDEX = 0;
++    private static final int NUMBER_INDEX = 1;
++    private static final int TYPE_INDEX = 2;
++
++    private static final Uri CALLREJECT_URI = Uri.parse("content://reject/list");
++    private static final Uri CONTACT_URI = Data.CONTENT_URI;
++    private static final Uri CALLLOG_URI = Uri.parse("content://call_log/calls");
++
++    private static final String CONTACTS_ADD_ACTION = "android.intent.action.contacts.list.PICKMULTIPHONES";
++    private static final String CONTACTS_ADD_ACTION_RESULT = "com.mediatek.contacts.list.pickdataresult";
++    private static final String CALL_LOG_SEARCH = "android.intent.action.SEARCH";
++
++    /// M: For ALPS01188072, fro ex, B phone fire "hide call id" funtion,
++    ///the calllog realy savenumber is -2, and show"private number"@{
++    private static final String CALL_LOG_HIDE_NUMBER = "-2";
++    private static final String CALL_LOG_SPACE_NUMBER = "-1";
++    /// @}
++
++    private static final int CALL_REJECT_CONTACTS_REQUEST = 125;
++    private static final int CALL_REJECT_LOG_REQUEST = 126;
++
++    private static final int MENU_ID_DELETE = Menu.FIRST;
++    private static final int MENU_ID_ADD = Menu.FIRST + 2;
++    private static final int PHONE_NUMBER_COLUMN = 1;
++
++    private static final String[] CALLER_ID_PROJECTION = new String[] {
++        Phone._ID,                      // 0
++        Phone.NUMBER,                   // 1
++        Phone.LABEL,                    // 2
++        Phone.DISPLAY_NAME,             // 3
++    };
++
++    public static final String[] CALL_LOG_PROJECTION = new String[] {
++        Calls._ID,                       // 0
++        Calls.NUMBER,                    // 1
++        Calls.DATE,                      // 2
++        Calls.DURATION,                  // 3
++        Calls.TYPE,                      // 4
++        Calls.COUNTRY_ISO,               // 5
++        Calls.VOICEMAIL_URI,             // 6
++        Calls.GEOCODED_LOCATION,         // 7
++        Calls.CACHED_NAME,               // 8
++        Calls.CACHED_NUMBER_TYPE,        // 9
++        Calls.CACHED_NUMBER_LABEL,       // 10
++        Calls.CACHED_LOOKUP_URI,         // 11
++        Calls.CACHED_MATCHED_NUMBER,     // 12
++        Calls.CACHED_NORMALIZED_NUMBER,  // 13
++        Calls.CACHED_PHOTO_ID,           // 14
++        Calls.CACHED_FORMATTED_NUMBER,   // 15
++    };
++
++    public static final int ID = 0;
++    public static final int NUMBER = 1;
++    public static final int DATE = 2;
++    public static final int DURATION = 3;
++    public static final int CALL_TYPE = 4;
++    public static final int COUNTRY_ISO = 5;
++    public static final int VOICEMAIL_URI = 6;
++    public static final int GEOCODED_LOCATION = 7;
++    public static final int CACHED_NAME = 8;
++    public static final int CACHED_NUMBER_TYPE = 9;
++    public static final int CACHED_NUMBER_LABEL = 10;
++    public static final int CACHED_LOOKUP_URI = 11;
++    public static final int CACHED_MATCHED_NUMBER = 12;
++    public static final int CACHED_NORMALIZED_NUMBER = 13;
++    public static final int CACHED_PHOTO_ID = 14;
++    public static final int CACHED_FORMATTED_NUMBER = 15;
++
++    private ListView mListView;
++    private Button mDialogSaveBtn;
++    private Button mDialogCancelBtn;
++    private ImageButton mAddContactsBtn;
++    private EditText mNumberEditText;
++
++    private Intent mResultIntent;
++    private ArrayList<String> mRejectNumbers = new ArrayList<String>();
++    private ArrayList<String> mRejectNames = new ArrayList<String>();
++    private PreferenceScreen mPreferenceScreen;
++    private boolean mNeedQuery = false;
++    private static final int REJECT_LIST_FULL = 2000;
++
++    private MyHandler mHandler = new MyHandler(this);
++
++    private class MyHandler extends Handler {
++
++        static final int MESSAGE_FULL = 0;
++        private Context mContext = null;
++
++        MyHandler(Context context){
++            mContext = context;
++        }
++        @Override
++        public void handleMessage(Message msg) {
++            switch (msg.what) {
++                case MESSAGE_FULL:
++                    Toast.makeText(mContext, mContext.getResources().getString(R.string.reject_list_full), Toast.LENGTH_SHORT).show();
++                    break;
++            }
++        }
++    }
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        setContentView(R.layout.call_reject_list);
++
++        mPreferenceScreen = getPreferenceManager().createPreferenceScreen(this);
++        setPreferenceScreen(mPreferenceScreen);
++
++        mListView = (ListView) findViewById(R.id.list);
++
++        setTitle(getResources().getString(R.string.call_reject_list_title));
++        ActionBar actionBar = getActionBar();
++        if (actionBar != null) {
++            actionBar.setDisplayHomeAsUpEnabled(true);
++        }
++        getContentResolver().registerContentObserver(CONTACT_URI, true, mContactsObserver);
++        mNeedQuery = true;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        log("onResume----mNeedQuery=" + mNeedQuery);
++        if ((mAddContactsCallLogTask != null) && (mAddContactsCallLogTask.getStatus() == AsyncTask.Status.RUNNING)) {
++            log("onResume-------no update again--------");
++        } else if (mNeedQuery) {
++            updataCallRejectListView();
++        }
++        mNeedQuery = false;
++    }
++
++    @Override
++    public void onSaveInstanceState(Bundle savedInstatanceState) {
++        super.onSaveInstanceState(savedInstatanceState);
++        String numberKey = "rejectNumbers";
++        String nameKey = "rejectNames";
++        savedInstatanceState.putStringArrayList(numberKey, mRejectNumbers);
++        savedInstatanceState.putStringArrayList(nameKey, mRejectNames);
++        log("onSaveInstanceState mRejectNumbers size: " + mRejectNumbers.size());
++    }
++
++    @Override
++    public void onRestoreInstanceState(Bundle savedInstatanceState) {
++        super.onRestoreInstanceState(savedInstatanceState);
++        String numberKey = "rejectNumbers";
++        String nameKey = "rejectNames";
++        mRejectNumbers = savedInstatanceState.getStringArrayList(numberKey);
++        mRejectNames = savedInstatanceState.getStringArrayList(nameKey);
++        log("onRestoreInstanceState mRejectNumbers size: " + mRejectNumbers.size());
++    }
++
++    @Override
++    public void onDestroy() {
++        super.onDestroy();
++        log("onDestroy");
++        if (mAddContactsCallLogTask != null) {
++            mAddContactsCallLogTask.cancel(true);
++        }
++        if (mUpdateCallRejectTask != null) {
++            mUpdateCallRejectTask.cancel(true);
++        }
++        //mRejectNumbers.clear();
++        //mRejectNames.clear();
++        getContentResolver().unregisterContentObserver(mContactsObserver);
++    }
++
++    @Override
++    public boolean onCreateOptionsMenu(Menu menu) {
++        menu.add(Menu.NONE, MENU_ID_DELETE, 0, R.string.call_reject_list_delete);
++        menu.add(Menu.NONE, MENU_ID_ADD, 1, R.string.call_reject_list_add);
++        return super.onCreateOptionsMenu(menu);
++    }
++
++    @Override
++    public boolean onPrepareOptionsMenu(Menu menu) {
++        int count = getPreferenceScreen().getPreferenceCount();
++        log("[preference count=" + count + "]");
++        menu.getItem(0).setVisible(count != 0);
++        menu.getItem(1).setEnabled(true);
++        return super.onPrepareOptionsMenu(menu);
++    }
++
++    @Override
++    public boolean onOptionsItemSelected(MenuItem item) {
++        switch (item.getItemId()) {
++        case MENU_ID_ADD:
++            showDialog(CALL_LIST_DIALOG_EDIT);
++            break;
++        case MENU_ID_DELETE:
++            Intent it = new Intent(this, CallRejectMultipleDeleteActivity.class);
++            mNeedQuery = true;
++            startActivity(it);
++            break;
++        case android.R.id.home:
++            finish();
++            return true;
++        default:
++            break;
++        }
++        return super.onOptionsItemSelected(item);
++    }
++
++    @Override
++    protected Dialog onCreateDialog(int id) {
++        if (id == CALL_LIST_DIALOG_EDIT) {
++            Dialog dialog = new Dialog(this);
++            dialog.setContentView(R.layout.call_reject_dialog);
++            dialog.setTitle(getResources().getString(R.string.add_call_reject_number));
++            log("--------------[MYREJECT:0000---------------");
++            mAddContactsBtn = (ImageButton) dialog.findViewById(R.id.select_contact);
++            if (mAddContactsBtn != null) {
++                mAddContactsBtn.setOnClickListener(this);
++            }
++
++            mDialogSaveBtn = (Button) dialog.findViewById(R.id.save);
++            if (mDialogSaveBtn != null) {
++                mDialogSaveBtn.setOnClickListener(this);
++            }
++
++            mDialogCancelBtn = (Button) dialog.findViewById(R.id.cancel);
++            if (mDialogCancelBtn != null) {
++                mDialogCancelBtn.setOnClickListener(this);
++            }
++            mNumberEditText = (EditText) dialog.findViewById(R.id.EditNumber);
++            //set EditText min width
++            WindowManager wm = (WindowManager) this.getWindowManager(); 
++            int minWidth = wm.getDefaultDisplay().getWidth()/2;
++            mNumberEditText.setMinimumWidth(minWidth);
++            return dialog;
++        } else if (id == CALL_LIST_DIALOG_SELECT) {
++            Dialog dialog = new Dialog(this);
++            dialog.setContentView(R.layout.call_reject_dialog_contact);
++            dialog.setTitle(getResources().getString(R.string.select_from));
++            ListView listview = (ListView) dialog.findViewById(R.id.list);
++            listview.setOnItemClickListener(this);
++            return dialog;
++        } else if (id == CALL_LIST_DIALOG_WAIT) {
++            ProgressDialog dialog = new ProgressDialog(this);
++            dialog.setMessage(getResources().getString(R.string.call_reject_please_wait));
++            dialog.setCancelable(false);
++            dialog.setIndeterminate(true);
++            return dialog;
++        }
++        return null;
++    }
++
++    @Override
++    protected void onPrepareDialog(int id, Dialog dialog, Bundle args) {
++        switch(id) {
++        case CALL_LIST_DIALOG_EDIT:
++            if (mNumberEditText != null) {
++                mNumberEditText.setText("");
++            }
++            break;
++        default:
++        }
++    }
++
++    @Override
++    public void onClick(View v) {
++        if (v == mAddContactsBtn) {
++            dismissDialog(CALL_LIST_DIALOG_EDIT);
++            showDialog(CALL_LIST_DIALOG_SELECT);
++        } else if (v == mDialogSaveBtn) {
++            dismissDialog(CALL_LIST_DIALOG_EDIT);
++            if (mRejectNumbers.size() >= REJECT_LIST_FULL) {
++                log("self add is full");
++                Toast.makeText(this, R.string.reject_list_full, Toast.LENGTH_SHORT).show();
++                return;
++            }
++            if (mNumberEditText == null
++                || mNumberEditText.getText().toString().isEmpty()) {
++                return;
++            }
++            String rejectNumber = CallRejectUtils.allWhite(mNumberEditText.getText().toString());
++            String rejectName = CallRejectUtils.getContactsName(this, rejectNumber);
++            showDialog(CALL_LIST_DIALOG_WAIT);
++            if (insertNumber(rejectNumber, true)) {
++                mRejectNumbers.add(rejectNumber);
++                mRejectNames.add(rejectName);
++                addNumberOnPreference(rejectName, rejectNumber);
++            }
++            dismissDialog(CALL_LIST_DIALOG_WAIT);
++        } else if (v == mDialogCancelBtn) {
++            dismissDialog(CALL_LIST_DIALOG_EDIT);
++        }
++    }
++
++    @Override
++    public void onItemClick(AdapterView<?>arg0, View arg1, int arg2, long arg3) {
++        log("onItemClick:arg2=" + arg2 + " arg2=" + arg3);
++        if (arg2 == 0) {
++            Intent intent = new Intent(CONTACTS_ADD_ACTION);
++            intent.setType(Phone.CONTENT_TYPE);
++            try {
++                startActivityForResult(intent, CALL_REJECT_CONTACTS_REQUEST);
++                dismissDialog(CALL_LIST_DIALOG_SELECT);
++            } catch (ActivityNotFoundException e) {
++                log(e.toString());
++            }
++        } else if (arg2 == 1) {
++            Intent intent = new Intent();
++            intent.setClassName("com.android.dialer",
++                        "com.mediatek.dialer.activities.CallLogMultipleChoiceActivity");
++            final String CALL_LOG_TYPE_FILTER = "call_log_type_filter";
++            final int CALL_TYPE_ALL = -1;
++            intent.putExtra(CALL_LOG_TYPE_FILTER, CALL_TYPE_ALL);
++            try {
++                startActivityForResult(intent, CALL_REJECT_LOG_REQUEST);
++                dismissDialog(CALL_LIST_DIALOG_SELECT);
++            } catch (ActivityNotFoundException e) {
++                log(e.toString());
++            }
++        }
++    }
++
++    @Override
++    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
++        if (resultCode != RESULT_OK) {
++            return;
++        }
++        mAddContactsCallLogTask = new AddContactsCallLogTask();
++        mResultIntent = data;
++        mAddContactsCallLogTask.execute(requestCode, resultCode);
++    }
++
++    private UpdateCallRejectTask mUpdateCallRejectTask = null;
++    /*sync the name begine*/
++    class UpdateCallRejectTask extends AsyncTask<Integer, Integer, String> {
++        @Override
++        protected void onPreExecute() {
++            super.onPreExecute();
++            showDialog(CALL_LIST_DIALOG_WAIT);
++        }
++
++        @Override
++        protected String doInBackground(Integer... params) {
++            log("UpdateCallRejectTask-----doInBackground");
++            queryCallRejectNumbers();
++            return "";
++        }
++
++        @Override
++        protected void onProgressUpdate(Integer... progress) {
++            super.onProgressUpdate(progress);
++        }
++
++        @Override
++        protected void onPostExecute(String result) {
++            super.onPostExecute(result);
++            log("UpdateCallRejectTask-----onPostExecute");
++            displayCallRejectNumbers();
++            dismissDialogSafely(CALL_LIST_DIALOG_WAIT);
++            invalidateOptionsMenu();
++        }
++
++        @Override
++        protected void onCancelled(String result) {
++            super.onCancelled(result);
++        }
++    }
++
++    private AddContactsCallLogTask mAddContactsCallLogTask = null;
++    class AddContactsCallLogTask extends AsyncTask<Integer, Integer, String> {
++        @Override
++        protected void onPreExecute() {
++            super.onPreExecute();
++            showDialog(CALL_LIST_DIALOG_WAIT);
++        }
++
++        @Override
++        protected String doInBackground(Integer... params) {
++            log("AddContactsCallLogTask-----doInBackground");
++            addCallRejectNumbers(params[0], params[1], mResultIntent);
++            return "";
++        }
++
++        @Override
++        protected void onProgressUpdate(Integer... progress) {
++            super.onProgressUpdate(progress);
++        }
++
++        @Override
++        protected void onPostExecute(String result) {
++            super.onPostExecute(result);
++            log("AddContactsCallLogTask-----onPostExecute");
++            displayCallRejectNumbers();
++            dismissDialogSafely(CALL_LIST_DIALOG_WAIT);
++            invalidateOptionsMenu();
++        }
++
++        @Override
++        protected void onCancelled(String result) {
++            super.onCancelled(result);
++        }
++    }
++
++    private void queryDisplayNumbers() {
++        mUpdateCallRejectTask = new UpdateCallRejectTask();
++        mUpdateCallRejectTask.execute(RESULT_OK, RESULT_OK);
++    }
++
++    private void queryCallRejectNumbers() {
++        mPreferenceScreen.removeAll();
++        Cursor cursor = getContentResolver().query(CALLREJECT_URI, new String[] {"_id", "Number"}, null, null, null);
++        if (cursor == null) return;
++        cursor.moveToFirst();
++        try {
++            while (!cursor.isAfterLast()) {
++                String number = cursor.getString(NUMBER_INDEX);
++                String name = "";
++                log("queryCallRejectNumbers rejectDB..number:" + number + " name:" + name);
++                if (number == null || number.isEmpty()) {
++                    log("queryCallRejectNumbers--number is null");
++                } else {
++                    log("queryCallRejectNumbers--number: " + number);
++                    mRejectNumbers.add(number);
++                }
++                cursor.moveToNext();
++            }
++        } finally {
++            cursor.close();
++        }
++        mRejectNames = CallRejectUtils.getContactsNames(this, mRejectNumbers);
++    }
++
++    private void displayCallRejectNumbers() {
++        // remove all preferenceScreen item
++        if(mPreferenceScreen.getPreferenceCount() > 0) {
++            mPreferenceScreen.removeAll();
++        }
++        if (mRejectNumbers.size() > 0) {
++            int nameSize = mRejectNames.size();
++            for (int i = 0; i < mRejectNumbers.size(); i++) {
++                log("mRejectNumbers[" + i + "]: " + mRejectNumbers.get(i));
++                if(i < nameSize){
++                    addNumberOnPreference(mRejectNames.get(i), mRejectNumbers.get(i));
++                }else {
++                    addNumberOnPreference(this.getResources().getString(R.string.call_reject_no_name), mRejectNumbers.get(i));
++                }
++            }
++        }
++    }
++
++    private void addCallRejectNumbers(int requestCode, int resultCode, Intent data) {
++        PreferenceScreen preferenceScreen = getPreferenceScreen();
++        ArrayList<String> contactCallLogNumbers = new ArrayList<String>();
++        Uri uri =  Uri.parse("content://com.android.contacts/contacts/lookup/3176r8-29292929/8");
++        switch(resultCode) {
++            case RESULT_OK:
++                if (requestCode == CALL_REJECT_CONTACTS_REQUEST) {
++                    final long[] contactId = data.getLongArrayExtra(CONTACTS_ADD_ACTION_RESULT);
++                    if (contactId == null || contactId.length < 0) {
++                        break;
++                    }
++                    for (int i = 0; i < contactId.length && !mAddContactsCallLogTask.isCancelled(); i++) {
++                        getContactsNumbers((int) contactId[i], contactCallLogNumbers);
++                    }
++                    if (contactCallLogNumbers.size() > 0) {
++                        for (int l = 0; l < contactCallLogNumbers.size(); l++) {
++                            Log.d("yjp","Numbers : " + contactCallLogNumbers.get(l));
++/* Vanzo:yujianpeng on: Thu, 31 Mar 2016 14:37:57 +0800
++                            TelephonyConnectionServiceUtil.getInstance().shouldBlockNumber();
++ */
++// End of Vanzo:yujianpeng
++                        }
++                    }
++                } else if (requestCode == CALL_REJECT_LOG_REQUEST) {
++                    final String callLogId = data.getStringExtra("calllogids");
++                    log("callLogId: " + callLogId);
++                    if (callLogId == null || callLogId.isEmpty()) return;
++                    if (!callLogId.startsWith("_id")) return;
++                    getCallLogNumbers(callLogId, contactCallLogNumbers);
++                }
++                break;
++            default:
++                break;
++        }
++
++        removeDuplicateAndOutOfRangeNumbers(contactCallLogNumbers);
++
++        if (contactCallLogNumbers.size() > 0) {
++            for (int l = 0; l < contactCallLogNumbers.size(); l++) {
++                insertNumber(contactCallLogNumbers.get(l), false);
++            }
++            mRejectNumbers.addAll(contactCallLogNumbers);
++            ArrayList<String> phoneNames = CallRejectUtils.getContactsNames(this, contactCallLogNumbers);
++            mRejectNames.addAll(phoneNames);
++        }
++    }
++
++    private void getContactsNumbers(int id, ArrayList<String> numbers) {
++        Uri existNumberURI = ContentUris.withAppendedId(CONTACT_URI, id);
++        Cursor cursor = getContentResolver().query(existNumberURI, CALLER_ID_PROJECTION, null, null, null);
++        cursor.moveToFirst();
++        try {
++            while (!cursor.isAfterLast()) {
++                String number = cursor.getString(PHONE_NUMBER_COLUMN);
++                log("getContactsNumbers number:" + number);
++                if (number == null || number.isEmpty()) {
++                    log("getContactsNumbers number is null");
++                } else {
++                    number = CallRejectUtils.allWhite(number);
++                    numbers.add(number);
++                }
++                cursor.moveToNext();
++           }
++        } finally {
++            cursor.close();
++        }
++    }
++
++    private void getCallLogNumbers(String callLogId, ArrayList<String> numbers) {
++        String ids = callLogId.substring(8, callLogId.length() - 1);
++        String [] idsArray = ids.split(",");
++        for (int i = 0; i < idsArray.length && !mAddContactsCallLogTask.isCancelled(); i++) {
++            try {
++                int id = Integer.parseInt(idsArray[i].substring(1, idsArray[i].length() - 1));
++                Uri existNumberURI = ContentUris.withAppendedId(CALLLOG_URI, id);
++                Cursor cursor = getContentResolver().query(existNumberURI, CALL_LOG_PROJECTION, null, null, null);
++                cursor.moveToFirst();
++                log("----getCallLogNumbers---[calllogid" + id + "]-------");
++                try {
++                    if (!cursor.isAfterLast()) {
++                        String number = cursor.getString(NUMBER);
++                        if (number.isEmpty()
++                                || number.equals(CALL_LOG_HIDE_NUMBER)
++                                || number.equals(CALL_LOG_SPACE_NUMBER)) {
++                            log("callLogId:" + id + " the number is invalid");
++                        } else {
++                            number = CallRejectUtils.allWhite(number);
++                            numbers.add(number);
++                        }
++                        cursor.moveToNext();
++                    }
++                } finally {
++                    cursor.close();
++                }
++                log("id is " + id);
++            } catch (NumberFormatException e) {
++                log("parseInt failed, the id is " + e);
++            }
++        }
++    }
++
++    private boolean insertNumber(String number, boolean needCompare) {
++        log("insertNumberb number:" + number);
++        number = CallRejectUtils.allWhite(number);
++        if (mRejectNumbers.size() > 0 && needCompare) {
++            for (int i = 0; i < mRejectNumbers.size(); i++) {
++                if (CallRejectUtils.equalsNumber(number, mRejectNumbers.get(i))) {
++                    log("same number:" + number);
++                    return false;
++                }
++            }
++        }
++        //insert reject numbers
++        ContentValues contentValues = new ContentValues();
++        contentValues.put("Number", number);
++        getContentResolver().insert(CALLREJECT_URI, contentValues);
++        return true;
++    }
++
++    private void addNumberOnPreference(String phoneName, String phoneNumber) {
++        log("addNumberOnPreference");
++        Preference preference = new Preference(this);
++        preference.setTitle(phoneName);
++        preference.setSummary(phoneNumber);
++        mPreferenceScreen.addPreference(preference);
++    }
++
++    private void dismissDialogSafely(int id) {
++        try {
++            dismissDialog(id);
++        } catch (IllegalArgumentException e) {
++            log("IllegalArgumentException");
++        }
++    }
++
++    private void removeDuplicateAndOutOfRangeNumbers(ArrayList<String> contactCallLogNumbers) {
++        for (int i = 0; i < contactCallLogNumbers.size(); i++) {
++            for (int j = i + 1; j < contactCallLogNumbers.size(); j++) {
++                if (contactCallLogNumbers.get(i).equals(contactCallLogNumbers.get(j))) {
++                    log("remove duplicate number: " + contactCallLogNumbers.get(j));
++                    contactCallLogNumbers.remove(j--);
++                }
++            }
++        }
++
++        if (mRejectNumbers.size() > 0) {
++            for (int k = 0; k < contactCallLogNumbers.size(); k++) {
++                for (int l = 0; l < mRejectNumbers.size(); l++) {
++                    if (CallRejectUtils.equalsNumber(contactCallLogNumbers.get(k), mRejectNumbers.get(l))) {
++                        log("remove duplicate number with already number:" + contactCallLogNumbers.get(k));
++                        contactCallLogNumbers.remove(k--);
++                        break;
++                    }
++                }
++            }
++        }
++
++        if (mRejectNumbers.size() >= REJECT_LIST_FULL) {
++            log("reject list is full");
++            mHandler.sendMessage(mHandler.obtainMessage(MyHandler.MESSAGE_FULL));
++        }
++
++        if (mRejectNumbers.size() + contactCallLogNumbers.size() >= REJECT_LIST_FULL) {
++            mHandler.sendMessage(mHandler.obtainMessage(MyHandler.MESSAGE_FULL));
++            int deleteStartIndex = REJECT_LIST_FULL - mRejectNumbers.size();
++            log("reject list is full, remove out of range. deleteStartIndex: " + deleteStartIndex);
++            for (int m = deleteStartIndex; m < contactCallLogNumbers.size(); m++) {
++                contactCallLogNumbers.remove(m--);
++            }
++        }
++    }
++
++    private void updataCallRejectListView() {
++        mRejectNumbers.clear();
++        mRejectNames.clear();
++        queryDisplayNumbers();
++        mNeedQuery = false;
++    }
++
++    private final ContentObserver mContactsObserver = new CustomContentObserver();
++    public class CustomContentObserver extends ContentObserver {
++        public CustomContentObserver() {
++            super(new Handler());
++        }
++        @Override
++        public void onChange(boolean selfChange) {
++            log("Contact db Change, update Contacts name");
++            updataCallRejectListView();
++        }
++    }
++
++    private void log(String msg) {
++        Log.d(LOG_TAG, msg);
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectContentData.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectContentData.java
+new file mode 100644
+index 0000000..df7bd5f
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectContentData.java
+@@ -0,0 +1,29 @@
++package com.android.server.telecom.callrejection;
++
++import android.content.UriMatcher;
++import android.provider.BaseColumns;
++
++public class CallRejectContentData {
++    public static final String AUTHORITY = "reject";
++    public static final String DATABASE_NAME = "reject.db";
++    public static final int DATABASE_VERSION = 4;
++    public static final String USERS_TABLE_NAME = "list";
++
++    public static final class UserTableData implements BaseColumns {
++        public static final String TABLE_NAME = "list";
++        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/com.android.rejects";
++        public static final String CONTENT_TYPE_ITME = "vnd.android.cursor.item/com.android.reject";
++        public static final int REJECTS = 1;
++        public static final int REJECT = 2;
++        public static final String NUMBER = "Number";
++        public static final String TYPE = "Type";
++        public static final String CONTACTID = "ContactId";
++        public static final UriMatcher URIMATCHER;
++
++        static {
++            URIMATCHER = new UriMatcher(UriMatcher.NO_MATCH);
++            URIMATCHER.addURI(CallRejectContentData.AUTHORITY, "list", REJECTS);
++            URIMATCHER.addURI(CallRejectContentData.AUTHORITY, "list/#", REJECT);
++        }
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectContentProvider.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectContentProvider.java
+new file mode 100644
+index 0000000..42f9d73
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectContentProvider.java
+@@ -0,0 +1,127 @@
++package  com.android.server.telecom.callrejection;
++
++import android.content.ContentProvider;
++import android.content.ContentUris;
++import android.content.ContentValues;
++import android.database.Cursor;
++import android.database.sqlite.SQLiteDatabase;
++import android.net.Uri;
++import android.text.TextUtils;
++import android.util.Log;
++
++import static com.android.server.telecom.callrejection.CallRejectContentData.UserTableData.CONTENT_TYPE;
++import static com.android.server.telecom.callrejection.CallRejectContentData.UserTableData.CONTENT_TYPE_ITME;
++import static com.android.server.telecom.callrejection.CallRejectContentData.UserTableData.REJECT;
++import static com.android.server.telecom.callrejection.CallRejectContentData.UserTableData.REJECTS;
++import static com.android.server.telecom.callrejection.CallRejectContentData.UserTableData.URIMATCHER;
++
++public class CallRejectContentProvider extends ContentProvider {
++    private static final String TAG = "callrejection::CallRejectContentProvider";
++    private CallRejectDBOpenHelper mDbOpenHelper = null;
++
++    @Override
++    public boolean onCreate() {
++        mDbOpenHelper = new CallRejectDBOpenHelper(this.getContext(),
++                CallRejectContentData.DATABASE_NAME, CallRejectContentData.DATABASE_VERSION);
++        Log.d(TAG, "onCreate");
++        return true;
++    }
++
++    @Override
++    public Uri insert(Uri uri, ContentValues values) {
++        SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
++        long id = 0;
++        Log.d(TAG, "insert");
++        switch (URIMATCHER.match(uri)) {
++        case REJECTS:
++            Log.d(TAG, "REJECTS");
++            id = db.insert("list", null, values);
++            return ContentUris.withAppendedId(uri, id);
++        case REJECT:
++            Log.d(TAG, "REJECT");
++            id = db.insert("list", null, values);
++            String path = uri.toString();
++            return Uri.parse(path.substring(0, path.lastIndexOf("/")) + id);
++        default:
++            throw new IllegalArgumentException("Unknown URI " + uri);
++        }
++    }
++
++    @Override
++    public int delete(Uri uri, String selection, String[] selectionArgs) {
++        SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
++        int count = 0;
++        Log.d(TAG, "delete");
++        switch (URIMATCHER.match(uri)) {
++        case REJECTS:
++            Log.d(TAG, "REJECTS");
++            count = db.delete("list", selection, selectionArgs);
++            break;
++        case REJECT:
++            Log.d(TAG, "REJECT");
++            long personid = ContentUris.parseId(uri);
++            String where = "_ID=" + personid;
++            where += !TextUtils.isEmpty(selection) ? " and (" + selection + ")" : "";
++            count = db.delete("list", where, selectionArgs);
++            break;
++        default:
++            throw new IllegalArgumentException("Unknown URI " + uri);
++        }
++        db.close();
++        return count;
++    }
++
++    @Override
++    public int update(Uri uri, ContentValues values, String selection,
++            String[] selectionArgs) {
++        SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
++        int count = 0;
++        Log.d(TAG, "update");
++        switch (URIMATCHER.match(uri)) {
++        case REJECTS:
++            Log.d(TAG, "REJECTS");
++            count = db.update("list", values, selection, selectionArgs);
++            break;
++        case REJECT:
++            Log.d(TAG, "REJECT");
++            long personid = ContentUris.parseId(uri);
++            String where = "_ID=" + personid;
++            where += !TextUtils.isEmpty(selection) ? " and (" + selection + ")" : "";
++            count = db.update("list", values, where, selectionArgs);
++            break;
++        default:
++            throw new IllegalArgumentException("Unknown URI " + uri);
++        }
++        db.close();
++        return count;
++    }
++
++    @Override
++    public String getType(Uri uri) {
++        switch (URIMATCHER.match(uri)) {
++        case REJECTS:
++            return CONTENT_TYPE;
++        case REJECT:
++            return CONTENT_TYPE_ITME;
++        default:
++            throw new IllegalArgumentException("Unknown URI " + uri);
++        }
++    }
++
++    @Override
++    public Cursor query(Uri uri, String[] projection, String selection,
++            String[] selectionArgs, String sortOrder) {
++        SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
++        switch (URIMATCHER.match(uri)) {
++        case REJECTS:
++            return db.query("list", projection, selection, selectionArgs, null, null, sortOrder);
++        case REJECT:
++            long personid = ContentUris.parseId(uri);
++            String where = "_ID=" + personid;
++            where += !TextUtils.isEmpty(selection) ? " and (" + selection + ")" : "";
++            return db.query("list", projection, where, selectionArgs, null, null, sortOrder);
++        default:
++            throw new IllegalArgumentException("Unknown URI " + uri);
++        }
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectDBOpenHelper.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectDBOpenHelper.java
+new file mode 100644
+index 0000000..d306c8c
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectDBOpenHelper.java
+@@ -0,0 +1,35 @@
++package com.android.server.telecom.callrejection;
++
++import android.content.Context;
++import android.database.sqlite.SQLiteDatabase;
++import android.database.sqlite.SQLiteDatabase.CursorFactory;
++import android.database.sqlite.SQLiteOpenHelper;
++
++public class CallRejectDBOpenHelper extends SQLiteOpenHelper {
++
++    public CallRejectDBOpenHelper(Context context, String name, CursorFactory factory,
++            int version) {
++        super(context, name, factory, version);
++    }
++
++    public CallRejectDBOpenHelper(Context context, String name, int version) {
++        this(context, name, null, version);
++    }
++
++    /**
++     * create db
++     */
++    @Override
++    public void onCreate(SQLiteDatabase db) {
++        db.execSQL("create table " + CallRejectContentData.UserTableData.TABLE_NAME
++                + "(" + CallRejectContentData.UserTableData._ID
++                + " INTEGER PRIMARY KEY autoincrement,"
++                + CallRejectContentData.UserTableData.NUMBER + " varchar(20)"
++                + ");");
++    }
++
++    @Override
++    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
++
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectDropMenu.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectDropMenu.java
+new file mode 100644
+index 0000000..7a05b95
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectDropMenu.java
+@@ -0,0 +1,84 @@
++package com.android.server.telecom.callrejection;
++
++import android.content.Context;
++import android.view.Menu;
++import android.view.MenuItem;
++import android.view.View;
++import android.view.View.OnClickListener;
++import android.widget.Button;
++import android.widget.PopupMenu;
++import android.widget.PopupMenu.OnMenuItemClickListener;
++
++
++import java.util.ArrayList;
++
++public class CallRejectDropMenu implements OnMenuItemClickListener {
++
++    //private static final String TAG = "CallRejectDropMenu";
++
++    public static class DropDownMenu {
++        private Button mButton;
++        private PopupMenu mPopupMenu;
++        private Menu mMenu;
++
++        public DropDownMenu(Context context, Button selectItem, int menuId,
++                OnMenuItemClickListener listener) {
++            mButton = selectItem;
++            //mButton.setBackgroundDrawable(context.getResources().getDrawable( R.drawable.dropdown_normal_holo_dark));
++            mPopupMenu = new PopupMenu(context, mButton);
++            mMenu = mPopupMenu.getMenu();
++            // add the menu("Select all" or "Deselect all") on the button("XX selected").
++            mPopupMenu.getMenuInflater().inflate(menuId, mMenu);
++            mPopupMenu.setOnMenuItemClickListener(listener);
++            mButton.setOnClickListener(new OnClickListener() {
++                public void onClick(View v) {
++                    // when click the button, show the popupMenu.
++                    mPopupMenu.show();
++                }
++            });
++        }
++
++        /**
++         * find menu item from menu id.
++         * @param id
++         * @return the menu
++         */
++        public MenuItem findItem(int id) {
++            return mMenu.findItem(id);
++        }
++
++        public void show() {
++            mPopupMenu.show();
++        }
++    }
++
++    private Context mContext;
++    private ArrayList<DropDownMenu> mMenus;
++    private OnMenuItemClickListener mListener;
++
++    public CallRejectDropMenu(Context context) {
++        mContext = context;
++        mMenus = new ArrayList<DropDownMenu>();
++    }
++
++    /**
++     * new and add a menu on select_item.
++     * @param select_item
++     * @param menuId
++     * @return
++     */
++    public DropDownMenu addDropDownMenu(Button selectItem, int menuId) {
++        DropDownMenu menu = new DropDownMenu(mContext, selectItem, menuId, this);
++        mMenus.add(menu);
++        return menu;
++    }
++    public void setOnMenuItemClickListener(OnMenuItemClickListener listener) {
++        mListener = listener;
++    }
++    public boolean onMenuItemClick(MenuItem item) {
++        if (mListener != null) {
++            return mListener.onMenuItemClick(item);
++        }
++        return false;
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectListAdapter.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectListAdapter.java
+new file mode 100644
+index 0000000..efe598d
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectListAdapter.java
+@@ -0,0 +1,94 @@
++package com.android.server.telecom.callrejection;
++
++import android.content.Context;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++import android.widget.BaseAdapter;
++import android.widget.CheckBox;
++import android.widget.CompoundButton;
++import android.widget.TextView;
++
++import com.android.server.telecom.R;
++
++import java.util.ArrayList;
++
++public class CallRejectListAdapter extends BaseAdapter {
++    //private static final String TAG = "CallRejectListAdapter";
++
++    private LayoutInflater mInflater;
++    private ArrayList<CallRejectListItem> mDataList;
++    private Context mContext;
++    private CheckSelectCallBack mCheckSelectCallBack = null;
++
++    public CallRejectListAdapter(Context context, ArrayList<CallRejectListItem> data) {
++        mContext = context;
++        mDataList = data;
++        mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
++    }
++
++    @Override
++    public View getView(final int position, View convertView, ViewGroup parent) {
++        final ItemViewHolder holder;
++        if (convertView == null) {
++            holder = new ItemViewHolder();
++            convertView = mInflater.inflate(R.layout.call_reject_list_item, null);
++            holder.mName = (TextView) convertView.findViewById(R.id.call_reject_contact_name);
++            holder.mCheckBox = (CheckBox) convertView.findViewById(R.id.call_reject_contact_check_btn);
++            holder.mId = position;
++            holder.mCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
++                @Override
++                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
++                    mDataList.get(holder.mId).setIsChecked(isChecked);
++                    mCheckSelectCallBack.setChecked(isChecked);
++                }
++            });
++            holder.mPhoneNum = (TextView) convertView.findViewById(R.id.call_reject_contact_phone_num);
++            convertView.setTag(holder);
++        } else {
++            holder = (ItemViewHolder) convertView.getTag();
++            holder.mId = position;
++        }
++
++        if (holder.mName != null) {
++            holder.mName.setText(mDataList.get(position).getName());
++        }
++        if (holder.mCheckBox != null) {
++            holder.mCheckBox.setChecked(mDataList.get(position).getIsChecked());
++        }
++        if (holder.mPhoneNum != null) {
++            holder.mPhoneNum.setText(mDataList.get(position).getPhoneNum());
++        }
++        return convertView;
++    }
++
++    @Override
++    public int getCount() {
++        return mDataList != null ? mDataList.size() : 0;
++    }
++
++    @Override
++    public Object getItem(int position) {
++        return mDataList != null ? mDataList.get(position) : null;
++    }
++
++    @Override
++    public long getItemId(int position) {
++        return 0;
++    }
++
++    public void setCheckSelectCallBack(CheckSelectCallBack callBack) {
++        mCheckSelectCallBack = callBack;
++    }
++
++    static class ItemViewHolder {
++        TextView mName;
++        TextView mPhoneNum;
++        CheckBox mCheckBox;
++        int mId;
++    }
++
++    public interface CheckSelectCallBack {
++        void setChecked(boolean isChecked);
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectListItem.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectListItem.java
+new file mode 100644
+index 0000000..73d82e0
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectListItem.java
+@@ -0,0 +1,57 @@
++package com.android.server.telecom.callrejection;
++
++/**
++ * Assisted class for transfer contact data
++ * @author MTK80906
++ */
++public class CallRejectListItem {
++    private String mId;
++    private String mName;
++    private String mPhoneNum;
++    private boolean mIsChecked;
++
++    public CallRejectListItem() {
++        mName = "";
++        mPhoneNum = "";
++        mId = "";
++        mIsChecked = false;
++    }
++
++    public CallRejectListItem(String name, String phoneNum, String id, boolean isChecked) {
++        this.mName = name;
++        this.mPhoneNum = phoneNum;
++        this.mId = id;
++        this.mIsChecked = isChecked;
++    }
++    public String getId() {
++        return mId;
++    }
++
++    public void setId(String id) {
++        this.mId = id;
++    }
++
++    public String getName() {
++        return mName;
++    }
++
++    public void setName(String name) {
++        this.mName = name;
++    }
++
++    public String getPhoneNum() {
++        return mPhoneNum;
++    }
++
++    public void setPhoneNum(String phoneNum) {
++        this.mPhoneNum = phoneNum;
++    }
++
++    public boolean getIsChecked() {
++        return mIsChecked;
++    }
++
++    public void setIsChecked(boolean isChecked) {
++        this.mIsChecked = isChecked;
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectMultipleDeleteActivity.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectMultipleDeleteActivity.java
+new file mode 100644
+index 0000000..3491f6c
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectMultipleDeleteActivity.java
+@@ -0,0 +1,537 @@
++package com.android.server.telecom.callrejection;
++
++import android.app.ActionBar;
++import android.app.Activity;
++import android.app.Dialog;
++import android.app.ProgressDialog;
++import android.content.ContentUris;
++import android.content.ContentValues;
++import android.content.Context;
++import android.database.Cursor;
++import android.graphics.Color;
++import android.net.Uri;
++import android.os.AsyncTask;
++import android.os.Bundle;
++import android.util.Log;
++import android.view.LayoutInflater;
++import android.view.Menu;
++import android.view.MenuItem;
++import android.view.View;
++import android.view.View.OnClickListener;
++import android.widget.AdapterView;
++import android.widget.Button;
++import android.widget.CheckBox;
++import android.widget.ImageButton;
++import android.widget.ListView;
++import android.widget.PopupMenu.OnMenuItemClickListener;
++
++import com.android.server.telecom.R;
++import com.android.server.telecom.callrejection.CallRejectDropMenu.DropDownMenu;
++
++import java.util.ArrayList;
++import java.util.HashSet;
++import java.util.Set;
++
++public class CallRejectMultipleDeleteActivity extends Activity implements CallRejectListAdapter.CheckSelectCallBack {
++    private static final String TAG = "CallRejectMultipleDeleteActivity";
++
++    private static final Uri URI = Uri.parse("content://reject/list");
++    private static final int ID_INDEX = 0;
++    private static final int NUMBER_INDEX = 1;
++    private static final int NAME_INDEX = 3;
++
++    private static final int CALL_LIST_DIALOG_WAIT = 2;
++
++    private ListView mListView;
++    private CallRejectListAdapter mCallRejectListAdapter;
++
++    private static final int MENU_ID_SELECT_ALL = Menu.FIRST;
++    private static final int MENU_ID_UNSELECT_ALL = Menu.FIRST + 1;
++    private static final int MENU_ID_TRUSH = Menu.FIRST + 2;
++
++    private ArrayList<CallRejectListItem> mCRLItemArray = new ArrayList<CallRejectListItem>();
++    private ArrayList<CallRejectListItem> mCRLItemArrayTemp = new ArrayList<CallRejectListItem>();
++    private DelContactsTask mDelContactsTask = null;
++    private ReadContactsTask mReadContactsTask = null;
++    private boolean mIsGetover = false;
++    /// New feature: For ALPS00670111 @{
++    private DropDownMenu mSelectionMenu;
++    /// @}
++    private Set<Long> mCheckedIds = new HashSet<Long>();
++    private static final String KEY_CHECKEDIDS = "checkedids";
++    class ReadContactsTask extends AsyncTask<Integer, Integer, String> {
++
++        @Override
++        protected void onPreExecute() {
++            showDialog(CALL_LIST_DIALOG_WAIT);
++            super.onPreExecute();
++        }
++
++        @Override
++        protected String doInBackground(Integer... params) {
++            getCallRejectListItems();
++            return "";
++        }
++
++        @Override
++        protected void onProgressUpdate(Integer... progress) {
++            super.onProgressUpdate(progress);
++        }
++
++        @Override
++        protected void onPostExecute(String result) {
++            if (!this.isCancelled()) {
++                mCRLItemArray.clear();
++                mCRLItemArray.addAll(mCRLItemArrayTemp);
++                for (CallRejectListItem callrejectitem : mCRLItemArrayTemp) {
++                    Log.v(TAG, "ReadContactsTask:onPostExecute: name=" + callrejectitem.getName() +
++                            " number=" + callrejectitem.getPhoneNum());
++                }
++                int index = 0;
++                for (CallRejectListItem item : mCRLItemArray) {
++                    Log.v(TAG, "ReadContactsTask:onPostExecute: name=" + item.getName()
++                        + " number=" + item.getPhoneNum()
++                        + " mId:" + item.getId() +
++                        " ischecked" + item.getIsChecked());
++                    if (mCheckedIds.contains(Long.parseLong(item.getId())))item.setIsChecked(true);
++                }
++
++                for (CallRejectListItem item : mCRLItemArray) {
++                     Log.v(TAG, "ReadContactsTask:onPostExecute1: name=" + item.getName()
++                        + " number=" + item.getPhoneNum()
++                        + " mId:" + item.getId()
++                        + " ischecked" + item.getIsChecked());
++                }
++                mCallRejectListAdapter.notifyDataSetChanged();
++                mIsGetover = true;
++                dismissDialog(CALL_LIST_DIALOG_WAIT);
++            }
++            super.onPostExecute(result);
++        }
++    }
++
++    class DelContactsTask extends AsyncTask<Integer, String, Integer> {
++        @Override
++        protected void onPreExecute() {
++            showDialog(CALL_LIST_DIALOG_WAIT);
++            super.onPreExecute();
++        }
++
++        @Override
++        protected Integer doInBackground(Integer... params) {
++            int index = params[0];
++            int size = params[1];
++            while ((index < size) && !isCancelled()) {
++                //CallRejectListItem callrejectitem = mCRLItemArray.get(index);
++                CallRejectListItem callrejectitem = mCRLItemArrayTemp.get(index);
++                if (callrejectitem.getIsChecked()) {
++                    String id = callrejectitem.getId();
++                    //mCRLItemArray.remove(index);
++                    mCRLItemArrayTemp.remove(index);
++                    Log.v(TAG, "doInBackground---------------");
++                    //publishProgress("fire");
++                    //if (isCurTypeVtAndVoice(id)) {
++                     //   updateRowById(id);
++                    //} else {
++                    deleteRowById(id);
++                    //}
++                    size--;
++                } else {
++                    index++;
++                }
++            }
++            return size;
++        }
++
++        @Override
++        protected void onProgressUpdate(String... id) {
++            Log.v(TAG, "onProgressUpdate---------------");
++            super.onProgressUpdate(id);
++            //mCallRejectListAdapter.notifyDataSetChanged();
++        }
++
++        @Override
++        protected void onPostExecute(Integer size) {
++            if (!this.isCancelled()) {
++                mCRLItemArray.clear();
++                mCRLItemArray.addAll(mCRLItemArrayTemp);
++                mCallRejectListAdapter.notifyDataSetChanged();
++                dismissDialog(CALL_LIST_DIALOG_WAIT);
++                mListView.invalidateViews();
++                /*if (size == 0) {
++                    CallRejectListModify.this.finish();
++                }
++                updateSelectedItemsView(getString(R.string.selected_item_count, 0));
++                /// JE: For ALPS00688770 @{
++                updateOkButton(null);
++                /// @}
++                */
++                CallRejectMultipleDeleteActivity.this.finish();
++            }
++            super.onPostExecute(size);
++        }
++    }
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        setContentView(R.layout.call_reject_list_modify);
++        //getCallRejectListItems();
++        mListView = (ListView) findViewById(android.R.id.list);
++        mCallRejectListAdapter = new CallRejectListAdapter(this, mCRLItemArray);
++        if (mListView != null) {
++            mListView.setAdapter(mCallRejectListAdapter);
++            mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
++                @Override
++                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
++                    Log.v(TAG, "onItemClick-----position:" + position + " id:" + id);
++                    CheckBox checkboxView = (CheckBox) view.findViewById(R.id.call_reject_contact_check_btn);
++                    if (checkboxView != null) {
++                        checkboxView.setChecked(!checkboxView.isChecked());
++                        String sid = mCRLItemArray.get(position).getId();
++                        if (checkboxView.isChecked()) {
++
++                            mCheckedIds.add(Long.parseLong(sid));
++                        } else {
++                            mCheckedIds.remove(Long.parseLong(sid));
++                        }
++                    }
++                }
++            });
++        }
++        mCallRejectListAdapter.setCheckSelectCallBack(this);
++        configureActionBar();
++        Log.v(TAG, "onCreate: mCheckedIds.size():" + mCheckedIds.size());
++        updateSelectedItemsView(getString(R.string.selected_item_count, mCheckedIds.size()));
++    }
++
++    @Override
++    protected Dialog onCreateDialog(int id) {
++        if (id == CALL_LIST_DIALOG_WAIT) {
++            ProgressDialog dialog = new ProgressDialog(this);
++            dialog.setMessage(getResources().getString(R.string.call_reject_please_wait));
++            dialog.setCancelable(false);
++            dialog.setIndeterminate(true);
++            return dialog;
++        }
++        return null;
++    }
++
++    @Override
++    public void onResume() {
++        Log.v(TAG, "onResume---------------mIsGetover:" + mIsGetover);
++        super.onResume();
++        if ((mDelContactsTask != null) && (mDelContactsTask.getStatus() == AsyncTask.Status.RUNNING)) {
++            Log.v(TAG, "onResume-------no update again--------");
++        } else if (!mIsGetover) {
++            mCRLItemArray.clear();
++            mCRLItemArrayTemp.clear();
++            mReadContactsTask = new ReadContactsTask();
++            mReadContactsTask.execute(0, 0);
++            Log.v(TAG, "onResume---------------");
++        }
++    }
++
++    @Override
++    public void onDestroy() {
++        super.onDestroy();
++        if (mDelContactsTask != null) {
++            mDelContactsTask.cancel(true);
++        }
++        if (mReadContactsTask != null) {
++            mReadContactsTask.cancel(true);
++        }
++    }
++
++    private void getCallRejectListItems() {
++        Cursor cursor = null;
++        try {
++            cursor = getContentResolver().query(URI, new String[] {
++                "_id", "Number"}, null, null, null);
++
++            if (cursor == null) {
++                return;
++            }
++            cursor.moveToFirst();
++            mCRLItemArrayTemp.clear();
++            while (!cursor.isAfterLast()) {
++                String id = cursor.getString(ID_INDEX);
++                String numberDB = cursor.getString(NUMBER_INDEX);
++                String name = CallRejectUtils.getContactsName(this, numberDB);
++                Log.d(TAG, "id=" + id);
++                Log.d(TAG, "numberDB=" + numberDB);
++                Log.d(TAG, "name=" + name);
++                CallRejectListItem crli = new CallRejectListItem(name, numberDB, id, false);
++                //mCRLItemArray.add(crli);
++                mCRLItemArrayTemp.add(crli);
++                cursor.moveToNext();
++            }
++        } finally {
++            if (cursor != null) {
++                cursor.close();
++            }
++        }
++    }
++
++    private void selectAll() {
++        for (CallRejectListItem callrejectitem : mCRLItemArrayTemp) {
++            callrejectitem.setIsChecked(true);
++            mCheckedIds.add(Long.parseLong(callrejectitem.getId()));
++            Log.i(TAG, "Enter deleteSecection Function:" + callrejectitem.getId());
++        }
++        updateSelectedItemsView(getString(R.string.selected_item_count, mCRLItemArrayTemp.size()));
++        mListView.invalidateViews();
++    }
++
++    private void unSelectAll() {
++        for (CallRejectListItem callrejectitem : mCRLItemArrayTemp) {
++            callrejectitem.setIsChecked(false);
++        }
++        mCheckedIds.clear();
++        updateSelectedItemsView(getString(R.string.selected_item_count, 0));
++        mListView.invalidateViews();
++    }
++
++    private void deleteSelection() {
++        Log.i(TAG, "Enter deleteSecection Function");
++        boolean isSelected = false;
++        for (CallRejectListItem callrejectitem : mCRLItemArrayTemp) {
++            isSelected |= callrejectitem.getIsChecked();
++        }
++        if (isSelected) {
++            mDelContactsTask  = new DelContactsTask();
++            mCRLItemArrayTemp.clear();
++            mCRLItemArrayTemp.addAll(mCRLItemArray);
++            mDelContactsTask.execute(0, mCRLItemArray.size());
++        }
++    }
++
++    private void updateRowById(String id) {
++        try {
++            Uri existNumberURI = ContentUris.withAppendedId(URI, Integer.parseInt(id));
++            int result = getContentResolver().update(existNumberURI, null, null, null);
++            Log.i(TAG, "result is " + result);
++        } catch (NumberFormatException e) {
++            Log.e(TAG, "parseInt failed, the index is " + id);
++        }
++    }
++
++    private void deleteRowById(String id) {
++        try {
++            Uri existNumberURI = ContentUris.withAppendedId(URI, Integer.parseInt(id));
++            Log.i(TAG, "existNumberURI is " + existNumberURI);
++            int result = getContentResolver().delete(existNumberURI, null, null);
++            Log.i(TAG, "result is " + result);
++        } catch (NumberFormatException e) {
++            Log.e(TAG, "parseInt failed, the index is " + id);
++        }
++    }
++
++    /// New feature: For ALPS0000670111 @{
++    protected OnClickListener getClickListenerOfActionBarOKButton() {
++        return new OnClickListener() {
++            @Override
++            public void onClick(View v) {
++                deleteSelection();
++                Log.v(TAG, "configureActionBar, delete");
++                return;
++            }
++        };
++    }
++
++    /**
++     * add dropDown menu on the selectItems.The menu is "Select all" or "Deselect all"
++     * @param customActionBarView
++     */
++    public void updateSelectionMenu(View customActionBarView) {
++        CallRejectDropMenu dropMenu = new CallRejectDropMenu(this);
++        // new and add a menu.
++        mSelectionMenu = dropMenu.addDropDownMenu((Button) customActionBarView
++                .findViewById(R.id.select_items), R.menu.selection);
++        // new and add a menu.
++        Button selectView = (Button) customActionBarView
++                .findViewById(R.id.select_items);
++        //selectView.setBackgroundDrawable(getResources().getDrawable(R.drawable.dropdown_normal_holo_dark));
++        selectView.setOnClickListener(new OnClickListener() {
++            @Override
++            public void onClick(View v) {
++                View parent = (View) v.getParent();
++                updateSelectionMenu(parent);
++                mSelectionMenu.show();
++                return;
++            }
++        });
++        MenuItem item = mSelectionMenu.findItem(R.id.action_select_all);
++        int count = 0;
++        for (CallRejectListItem callrejectitem : mCRLItemArrayTemp) {
++            if (callrejectitem.getIsChecked()) {
++            count++;
++            }
++        }
++        boolean mIsSelectedAll = mCRLItemArrayTemp.size() == count;
++        // if select all items, the menu is "Deselect all"; else the menu is "Select all".
++        if (mIsSelectedAll) {
++            Log.e(TAG, "mIsSelectedAll:" + mIsSelectedAll + "select none string:" + getString(R.string.menu_select_none));
++            item.setChecked(true);
++            item.setTitle(R.string.menu_select_none);
++            // click the menu, deselect all items
++            dropMenu.setOnMenuItemClickListener(new OnMenuItemClickListener() {
++                public boolean onMenuItemClick(MenuItem item) {
++                    Log.e(TAG, "select none click");
++                    unSelectAll();
++                    return false;
++                }
++            });
++        } else {
++            Log.e(TAG, "mIsSelectedAll:" + mIsSelectedAll + "select all string:" + getString(R.string.menu_select_all));
++            item.setChecked(false);
++            item.setTitle(R.string.menu_select_all);
++            //click the menu, select all items.
++            dropMenu.setOnMenuItemClickListener(new OnMenuItemClickListener() {
++                public boolean onMenuItemClick(MenuItem item) {
++                    Log.e(TAG, "select all click");
++                    selectAll();
++                    return false;
++                }
++            });
++        }
++        return;
++    }
++
++    /**
++     * when the selected item changed, update the show count"
++     * return the count
++     */
++    public int updateOkButton(Button okButton) {
++        Log.e(TAG, "updateOkButton");
++        int count = 0;
++        for (CallRejectListItem callrejectitem : mCRLItemArrayTemp) {
++            if (callrejectitem.getIsChecked()) {
++                count++;
++            }
++        }
++        /// JE: For ALPS00688770 @{
++        Button deleteView = null;
++        if (okButton == null) {
++            Log.v(TAG, "updateOkButton, okButton is null, reload again");
++            deleteView = (Button) getActionBar().getCustomView().findViewById(R.id.delete);
++        } else {
++            Log.v(TAG, "updateOkButton, okButton is not null");
++            deleteView = okButton;
++        }
++        /// @}
++        Log.v(TAG, "updateOkButton, checked count= " + count);
++        if (count == 0) {
++            // if there is no item selected, the "OK" button is disable.
++            deleteView.setEnabled(false);
++            deleteView.setTextColor(Color.GRAY);
++        } else {
++            deleteView.setEnabled(true);
++            deleteView.setTextColor(Color.WHITE);
++        }
++        return count;
++    }
++
++    /// @}
++    private void updateSelectedItemsView(String checkedItemsCount) {
++        Button selectedItemsView = (Button) getActionBar().getCustomView().findViewById(R.id.select_items);
++        if (selectedItemsView == null) {
++            return;
++        }
++        selectedItemsView.setText(checkedItemsCount);
++    }
++
++    private void configureActionBar() {
++        Log.v(TAG, "configureActionBar() mIsGetover:" + mIsGetover);
++        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
++        View customActionBarView = inflater.inflate(R.layout.call_reject_list_modify_action_bar, null);
++        /// New feature: For ALPS0000670111 @{
++        //dispaly the "select_items" .
++        Button selectView = (Button) customActionBarView
++                .findViewById(R.id.select_items);
++        //selectView.setBackgroundDrawable(getResources().getDrawable(R.drawable.dropdown_normal_holo_dark));
++        selectView.setOnClickListener(new OnClickListener() {
++            @Override
++            public void onClick(View v) {
++                View parent = (View) v.getParent();
++                updateSelectionMenu(parent);
++                mSelectionMenu.show();
++                Log.v(TAG, "configureActionBar, tophome");
++                return;
++            }
++        });
++
++        //dispaly the "OK" button.
++        Button deleteView = (Button) customActionBarView
++                .findViewById(R.id.delete);
++        updateOkButton(deleteView);
++        deleteView.setOnClickListener(getClickListenerOfActionBarOKButton());
++        /// @}
++        ActionBar actionBar = getActionBar();
++        if (actionBar != null) {
++            actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM,
++                    ActionBar.DISPLAY_SHOW_CUSTOM | ActionBar.DISPLAY_SHOW_HOME
++                    | ActionBar.DISPLAY_SHOW_TITLE);
++            actionBar.setCustomView(customActionBarView);
++            //actionBar.setDisplayShowHomeEnabled(false);
++            actionBar.setDisplayHomeAsUpEnabled(true);
++            //actionBar.setDisplayHomeAsUpEnabled(true);
++        }
++    }
++
++    @Override
++    public void setChecked(boolean isChecked) {
++        int count = 0;
++        /// New feature: For ALPS0000670111 @{
++        count = updateOkButton(null);
++        /// @}
++        updateSelectedItemsView(getString(R.string.selected_item_count, count));
++    }
++
++    @Override
++    public void onRestoreInstanceState(Bundle savedState) {
++        super.onRestoreInstanceState(savedState);
++
++        if (savedState == null) {
++            Log.v(TAG, "[restoreSavedState]saved state is null");
++            return;
++        }
++
++        if (mCheckedIds == null) {
++            mCheckedIds = new HashSet<Long>();
++        }
++        mCheckedIds.clear();
++
++        long[] ids = savedState.getLongArray(KEY_CHECKEDIDS);
++        int checkedItemSize = ids.length;
++        Log.v(TAG, "[restoreSavedState]restore " + checkedItemSize + " ids");
++        for (int index = 0; index < checkedItemSize; ++index) {
++            mCheckedIds.add(Long.valueOf(ids[index]));
++        }
++    }
++
++    @Override
++    public boolean onOptionsItemSelected(MenuItem item) {
++        switch (item.getItemId()) {
++        case android.R.id.home:
++            finish();
++            return true;
++        default:
++            break;
++        }
++        return super.onOptionsItemSelected(item);
++    }
++
++    @Override
++    public void onSaveInstanceState(Bundle outState) {
++        super.onSaveInstanceState(outState);
++        final int checkedItemsCount = mCheckedIds.size();
++        long[] checkedIds = new long[checkedItemsCount];
++        int index = 0;
++        for (Long id : mCheckedIds) {
++            checkedIds[index++] = id;
++        }
++        Log.v(TAG, "[onSaveInstanceState]save " + checkedIds.length + " ids");
++        outState.putLongArray(KEY_CHECKEDIDS, checkedIds);
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectSettingActivity.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectSettingActivity.java
+new file mode 100644
+index 0000000..2f83404
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectSettingActivity.java
+@@ -0,0 +1,155 @@
++/* Copyright Statement:
++ *
++ * This software/firmware and related documentation ("MediaTek Software") are
++ * protected under relevant copyright laws. The information contained herein
++ * is confidential and proprietary to MediaTek Inc. and/or its licensors.
++ * Without the prior written permission of MediaTek inc. and/or its licensors,
++ * any reproduction, modification, use or disclosure of MediaTek Software,
++ * and information contained herein, in whole or in part, shall be strictly prohibited.
++ *
++ * MediaTek Inc. (C) 2010. All rights reserved.
++ *
++ * BY OPENING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
++ * THAT THE SOFTWARE/FIRMWARE AND ITS DOCUMENTATIONS ("MEDIATEK SOFTWARE")
++ * RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER ON
++ * AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL WARRANTIES,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NONINFRINGEMENT.
++ * NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH RESPECT TO THE
++ * SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY, INCORPORATED IN, OR
++ * SUPPLIED WITH THE MEDIATEK SOFTWARE, AND RECEIVER AGREES TO LOOK ONLY TO SUCH
++ * THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO. RECEIVER EXPRESSLY ACKNOWLEDGES
++ * THAT IT IS RECEIVER'S SOLE RESPONSIBILITY TO OBTAIN FROM ANY THIRD PARTY ALL PROPER LICENSES
++ * CONTAINED IN MEDIATEK SOFTWARE. MEDIATEK SHALL ALSO NOT BE RESPONSIBLE FOR ANY MEDIATEK
++ * SOFTWARE RELEASES MADE TO RECEIVER'S SPECIFICATION OR TO CONFORM TO A PARTICULAR
++ * STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S ENTIRE AND
++ * CUMULATIVE LIABILITY WITH RESPECT TO THE MEDIATEK SOFTWARE RELEASED HEREUNDER WILL BE,
++ * AT MEDIATEK'S OPTION, TO REVISE OR REPLACE THE MEDIATEK SOFTWARE AT ISSUE,
++ * OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE CHARGE PAID BY RECEIVER TO
++ * MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
++ *
++ * The following software/firmware and/or related documentation ("MediaTek Software")
++ * have been modified by MediaTek Inc. All revisions are subject to any receiver's
++ * applicable license agreements with MediaTek Inc.
++ */
++package com.android.server.telecom.callrejection;
++
++import android.app.ActionBar;
++import android.app.AlertDialog;
++import android.app.AlertDialog.Builder;
++import android.app.Dialog;
++import android.content.Intent;
++import android.os.Bundle;
++import android.preference.ListPreference;
++import android.preference.Preference;
++import android.preference.PreferenceActivity;
++import android.preference.PreferenceScreen;
++import android.provider.Settings;
++import android.util.Log;
++import android.view.MenuItem;
++
++import com.android.server.telecom.R;
++//import com.mediatek.common.featureoption.FeatureOption;
++
++public class CallRejectSettingActivity extends PreferenceActivity implements Preference.OnPreferenceChangeListener {
++
++    private static final String LOG_TAG = "CallRejectSettingActivity";
++    private static final boolean DBG = true;
++
++    private static final String CALL_REJECT_MODE_KEY = "call_reject_mode_key";
++    private static final String CALL_REJECT_LIST_KEY = "call_reject_list_key";
++    private static final String CALL_REJECT_TARGET_CLASS = "com.mediatek.settings.CallRejectListSetting";
++    private static final int CALL_ALL_NUMBERS = 100;
++
++    private String[] mCallRejectModeArray;
++    private ListPreference mRejectSetting;
++    private Preference mRejectList;
++
++    private static void log(String msg) {
++        Log.d(LOG_TAG, msg);
++    }
++
++    @Override
++    protected void onCreate(Bundle icicle) {
++        super.onCreate(icicle);
++        addPreferencesFromResource(R.xml.call_reject_setting);
++        mCallRejectModeArray = getResources().getStringArray(R.array.call_reject_mode_entries);
++
++        mRejectSetting = (ListPreference) findPreference(CALL_REJECT_MODE_KEY);
++        mRejectSetting.setOnPreferenceChangeListener(this);
++
++        mRejectList = (Preference) findPreference(CALL_REJECT_LIST_KEY);
++        mRejectList.setOnPreferenceChangeListener(this);
++
++        ActionBar actionBar = getActionBar();
++        if (actionBar != null) {
++            actionBar.setDisplayHomeAsUpEnabled(true);
++        }
++    }
++
++    @Override
++    protected void onResume() {
++        super.onResume();
++        int rejectMode = Settings.System.getInt(getContentResolver(), "audio_record", 0);
++        mRejectSetting.setValueIndex(rejectMode);
++        mRejectSetting.setSummary(mCallRejectModeArray[rejectMode]);
++        mRejectList.setEnabled(rejectMode == 2);
++    }
++
++    @Override
++    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
++        log("Enter onPreferenceTreeClick function.");
++        if (preference == mRejectList) {
++            Intent intent = new Intent(this, CallRejectActivity.class);
++            startActivity(intent);
++        }
++        return true;
++    }
++
++    @Override
++    public boolean onOptionsItemSelected(MenuItem item) {
++        final int itemId = item.getItemId();
++        switch (itemId) {
++        case android.R.id.home:
++            finish();
++            return true;
++        default:
++            break;
++        }
++        return super.onOptionsItemSelected(item);
++    }
++
++    @Override
++    public boolean onPreferenceChange(Preference arg0, Object arg1) {
++        log("Enter onPreferenceChange function.");
++        final String key = arg0.getKey();
++        int value = Integer.parseInt(String.valueOf(arg1));
++        if (CALL_REJECT_MODE_KEY.equals(key)) {
++            Settings.System.putInt(getContentResolver(), "audio_record", value);
++            mRejectSetting.setSummary(mCallRejectModeArray[value]);
++            mRejectList.setEnabled(value == 2);
++            if (value == 1) {
++                showDialog(CALL_ALL_NUMBERS);
++            }
++        }
++        return true;
++    }
++
++    @Override
++    public Dialog onCreateDialog(int id) {
++        Builder builder = new AlertDialog.Builder(this);
++        builder.setTitle(android.R.string.dialog_alert_title);
++        builder.setIcon(android.R.drawable.ic_dialog_alert);
++        AlertDialog alertDlg;
++        switch(id) {
++        case CALL_ALL_NUMBERS:
++            builder.setMessage(getResources().getString(R.string.call_all_numbers));
++            break;
++        default:
++            break;
++        }
++        builder.setPositiveButton(android.R.string.yes, null);
++        alertDlg = builder.create();
++        return alertDlg;
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectUtils.java b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectUtils.java
+new file mode 100644
+index 0000000..cb00246
+--- /dev/null
++++ b/Telecomm/src/com/mediatek/telecom/callrejection/CallRejectUtils.java
+@@ -0,0 +1,101 @@
++package com.android.server.telecom.callrejection;
++
++
++
++import java.util.ArrayList;
++
++import android.content.Context;
++import android.database.Cursor;
++import android.net.Uri;
++import android.provider.ContactsContract.PhoneLookup;
++import android.util.Log;
++
++import com.android.server.telecom.R;
++
++public class CallRejectUtils {
++
++    private static final String LOG_TAG = "CallRejectUtils";
++
++    private static final int REJECT_LIST_FULL = 100;
++    private static final Uri rejectUri = Uri.parse("content://reject/list");
++
++    /** This class is never instantiated. */
++    private CallRejectUtils() {
++    }
++
++    public static String allWhite(String str) {
++        if (str != null) {
++            str = str.replaceAll(" ", "");
++        }
++        return str;
++    }
++
++    public static boolean equalsNumber(String number1, String number2) {
++        log("equalsNumber:number:" + number1 + " DBnumber:" + number2);
++        if (number1 == null || number2 == null) {
++            return false;
++        }
++        boolean isEquals = false;
++
++        if (number1.equals(number2) || allWhite(number1).equals(allWhite(number2))) {
++            isEquals = true;
++        } else {
++            isEquals = false;
++        }
++        log("equalsNumber:number:" + number1 + " DBnumber:" + number2 + " isEquals:" + isEquals);
++        return isEquals;
++    }
++
++    public static ArrayList<String> getContactsNames(Context context, ArrayList<String> numbers) {
++        ArrayList<String> names = new ArrayList<String>();
++        for (int i = 0; i < numbers.size(); i++) {
++            String name = "";
++            Cursor contactCursor = context.getContentResolver().query(
++                    Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI, Uri.encode(numbers.get(i))),
++                    new String[] {PhoneLookup.DISPLAY_NAME, PhoneLookup.NUMBER}, null, null, null);
++            if (contactCursor == null) return null;
++            contactCursor.moveToFirst();
++            try {
++                /* seek all name and number*/
++                while (!contactCursor.isAfterLast()) {
++                    name = contactCursor.getString(0);
++                    break;
++                }
++            } finally {
++                contactCursor.close();
++            }
++            log("getContactsNames name:" + name );
++            if (name.length() == 0) {
++                name = context.getResources().getString(R.string.call_reject_no_name);
++            }
++            names.add(name) ;
++        }
++        return names;
++    }
++
++    public static String getContactsName(Context context, String number) {
++        String name = "";
++        Cursor contactCursor = context.getContentResolver().query(
++                Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number)),
++                new String[] {PhoneLookup.DISPLAY_NAME, PhoneLookup.NUMBER}, null, null, null);
++        if (contactCursor == null) return null;
++        contactCursor.moveToFirst();
++        try {
++                /* seek all name and number*/
++            while (!contactCursor.isAfterLast()) {
++                name = contactCursor.getString(0);
++                break;
++            }
++        } finally {
++            contactCursor.close();
++        }
++        if (name.length() == 0) {
++            name = context.getResources().getString(R.string.call_reject_no_name);
++        }
++        return name;
++    }
++
++    private static void log(String msg) {
++        Log.d(LOG_TAG, msg);
++    }
++}
+diff --git a/Telecomm/src/com/mediatek/telecom/recording/IPhoneRecorder.aidl b/Telecomm/src/com/mediatek/telecom/recording/IPhoneRecorder.aidl
+index 0cb05f4..a0d3dd1 100755
+--- a/Telecomm/src/com/mediatek/telecom/recording/IPhoneRecorder.aidl
++++ b/Telecomm/src/com/mediatek/telecom/recording/IPhoneRecorder.aidl
+@@ -6,6 +6,7 @@ interface IPhoneRecorder {
+     void listen(IPhoneRecordStateListener callback);
+     void remove();
+     void startRecord();
++    void startRecordCustom(String name,String number);
+     void stopRecord(boolean isMount);
+     boolean isRecording();
+ }
+diff --git a/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorder.java b/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorder.java
+index cc50da6..63bf1f6 100755
+--- a/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorder.java
++++ b/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorder.java
+@@ -107,6 +107,32 @@ public class PhoneRecorder extends Recorder {
+         stopRecording();
+     }
+ 
++/* Vanzo:yujianpeng on: Mon, 08 May 2017 14:35:59 +0800
++ */
++    public void startRecordCustom(String name , String number) {
++        log("startRecord, mRequestedType = " + mRequestedType);
++        if (sIsRecording) {
++            return;
++        }
++
++        if (RecorderUtils.isStorageAvailable(mContext)) {
++            sIsRecording = true;
++            try {
++                if (AUDIO_AMR.equals(mRequestedType)) {
++                    startRecording(MediaRecorder.OutputFormat.RAW_AMR, ".amr", name , number);
++                } else if (AUDIO_3GPP.equals(mRequestedType) || AUDIO_ANY.equals(mRequestedType)) {
++                    startRecording(MediaRecorder.OutputFormat.THREE_GPP, ".3gpp", name, number);
++                } else {
++                    sIsRecording = false;
++                    throw new IllegalArgumentException("Invalid output file type requested");
++                }
++            } catch (IOException oe) { 
++                Log.e(TAG, "--------IOException occurred------");
++                sIsRecording = false;
++            }
++        }
++    }
++// End of Vanzo:yujianpeng
+     public void startRecord() {
+         log("startRecord, mRequestedType = " + mRequestedType);
+         if (sIsRecording) {
+diff --git a/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorderHandler.java b/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorderHandler.java
+index 5b5390b..6e3035a 100644
+--- a/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorderHandler.java
++++ b/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorderHandler.java
+@@ -66,6 +66,9 @@ public class PhoneRecorderHandler extends CallsManagerListenerBase{
+     private int mPhoneRecorderState = PhoneRecorder.IDLE_STATE;
+     private Listener mListener;
+     private Call mRecordingCall;
++    private String  mName  = null ;
++    private String  mNumber  =  null ;
++    private boolean  mTag  =  false ;
+ 
+     public static final long PHONE_RECORD_LOW_STORAGE_THRESHOLD = 2L * 1024L * 1024L; // unit is BYTE, totally 2MB
+     public static final int PHONE_RECORDING_VOICE_CALL_CUSTOM_VALUE = 0;
+@@ -109,6 +112,32 @@ public class PhoneRecorderHandler extends CallsManagerListenerBase{
+         }
+     }
+ 
++/* Vanzo:yujianpeng on: Mon, 08 May 2017 20:22:18 +0800
++ */
++    private ServiceConnection mConnectionCustom = new ServiceConnection() {
++        public void onServiceConnected(ComponentName className, IBinder service) {
++            mPhoneRecorder = IPhoneRecorder.Stub.asInterface(service);
++            try {
++                log("onServiceConnected");
++                if (null != mPhoneRecorder) {
++                    mPhoneRecorder.listen(mPhoneRecordStateListener);
++                    if (okToRecordVoice(mRecordingCall)) {
++                        mPhoneRecorder.startRecordCustom(mName , mNumber);
++                        android.util.Log.d("yjp", "     hahahaha    is ok???   ");
++                    }
++                }
++            } catch (RemoteException e) {
++                Log.e(LOG_TAG, "onServiceConnected: couldn't register to record service",
++                        new IllegalStateException());
++            }
++        }
++
++        public void onServiceDisconnected(ComponentName className) {
++            log("[onServiceDisconnected]");
++            mPhoneRecorder = null;
++        }
++    };
++// End of Vanzo:yujianpeng
+     private ServiceConnection mConnection = new ServiceConnection() {
+         public void onServiceConnected(ComponentName className, IBinder service) {
+             mPhoneRecorder = IPhoneRecorder.Stub.asInterface(service);
+@@ -221,6 +250,41 @@ public class PhoneRecorderHandler extends CallsManagerListenerBase{
+         return false;
+     }
+ 
++/* Vanzo:yujianpeng on: Mon, 08 May 2017 14:24:07 +0800
++ */
++    /**
++     * Start to record voice of a active call
++     * @param activeCall
++     * @param customValue
++     */
++    public void startVoiceRecord(Call activeCall, final int customValue,String number) {
++        log("startVoiceRecord: call: " + activeCall);
++        mName = activeCall.getName();
++        mNumber = number ;
++        android.util.Log.d("yjp", "   ------  startVoiceRecord   : " + "   number  : " + number);
++        if (okToRecordVoice(activeCall)) {
++            mRecordingCall = activeCall;
++            mPhoneRecorderState = PhoneRecorder.RECORDING_STATE;
++            Intent recorderServiceIntent = new Intent(TelecomSystem.getInstance().getContext(),
++                    PhoneRecorderServices.class);
++            if (null == mPhoneRecorder) {
++                TelecomSystem.getInstance().getContext().bindService(recorderServiceIntent,
++                        mConnectionCustom, Context.BIND_AUTO_CREATE);
++                mTag = true ;
++                android.util.Log.d("yjp", "    null == mPhoneRecorde   ");
++            } else {
++                try {
++                    mPhoneRecorder.startRecordCustom(activeCall.getName(), number);
++                    android.util.Log.d("yjp", "    start Record Custom  "  );
++                } catch (RemoteException e) {
++                    Log.e(LOG_TAG, "start to record failed", new IllegalStateException());
++                }
++            }
++        } else {
++            Log.w(LOG_TAG, "cannot start to record with call: " + activeCall);
++        }
++    }
++// End of Vanzo:yujianpeng
+     /**
+      * Start to record voice of a active call
+      * @param activeCall
+@@ -228,6 +292,7 @@ public class PhoneRecorderHandler extends CallsManagerListenerBase{
+      */
+     public void startVoiceRecord(Call activeCall, final int customValue) {
+         log("startVoiceRecord: call: " + activeCall);
++        android.util.Log.d("yjp", "    -*****************     startVoiceRecord  *********** ");
+         if (okToRecordVoice(activeCall)) {
+             mRecordingCall = activeCall;
+             mPhoneRecorderState = PhoneRecorder.RECORDING_STATE;
+@@ -236,6 +301,7 @@ public class PhoneRecorderHandler extends CallsManagerListenerBase{
+             if (null == mPhoneRecorder) {
+                 TelecomSystem.getInstance().getContext().bindService(recorderServiceIntent,
+                         mConnection, Context.BIND_AUTO_CREATE);
++                mTag = false ;
+             } else {
+                 try {
+                     mPhoneRecorder.startRecord();
+@@ -349,7 +415,12 @@ public class PhoneRecorderHandler extends CallsManagerListenerBase{
+             }
+             if (mPhoneRecorderState == PhoneRecorder.IDLE_STATE && mPhoneRecorder != null) {
+                 log("Ready to unbind service");
+-                TelecomSystem.getInstance().getContext().unbindService(mConnection);
++                android.util.Log.d("yjp", "   mTag : " + mTag);
++                if (!mTag){
++                    TelecomSystem.getInstance().getContext().unbindService(mConnection);
++                }else {
++                    TelecomSystem.getInstance().getContext().unbindService(mConnectionCustom);
++                }
+                 mPhoneRecorder = null;
+             }
+         }
+diff --git a/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorderServices.java b/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorderServices.java
+index 3ca31a2..a5368e4 100755
+--- a/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorderServices.java
++++ b/Telecomm/src/com/mediatek/telecom/recording/PhoneRecorderServices.java
+@@ -51,6 +51,7 @@ import android.util.Log;
+ 
+ public class PhoneRecorderServices extends Service {
+     private static final String LOG_TAG = "RecorderServices";
++    private static final int REQUEST_START_RECORDING_CUSTOM = 0;
+     private static final int REQUEST_START_RECORDING = 1;
+     private static final int REQUEST_STOP_RECORDING = 2;
+     private static final int REQUEST_QUIT = -1;
+@@ -59,6 +60,8 @@ public class PhoneRecorderServices extends Service {
+     IPhoneRecordStateListener mStateListener;
+     private HandlerThread mWorkerThread;
+     private Handler mRecordHandler;
++    private String mName ;
++    private String mNumber;
+ 
+     public IBinder onBind(Intent intent) {
+         Log.d(LOG_TAG, "onBind");
+@@ -168,8 +171,19 @@ public class PhoneRecorderServices extends Service {
+         public void startRecord() {
+             log("startRecord");
+             mRecordHandler.sendEmptyMessage(REQUEST_START_RECORDING);
++            android.util.Log.d("yjp", "   alse is    startRecord   ------------");
+         }
+ 
++/* Vanzo:yujianpeng on: Mon, 08 May 2017 14:29:26 +0800
++ */
++        public void startRecordCustom(String name , String number) {
++            mName = name ;
++            mNumber = number;
++            android.util.Log.d("yjp", "   startRecord   --------   name : " + name +  "   //number  L: " + number);
++            mRecordHandler.sendEmptyMessage(REQUEST_START_RECORDING_CUSTOM);
++        }
++// End of Vanzo:yujianpeng
++
+         /**
+          * No longer get storage state from outside, should remove this argument on android N
+          * @param isMounted
+@@ -205,11 +219,20 @@ public class PhoneRecorderServices extends Service {
+         public void handleMessage(Message msg) {
+             log("[handleMessage]what = " + msg.what);
+             switch (msg.what) {
++                case REQUEST_START_RECORDING_CUSTOM:
++                    if (null != mPhoneRecorder) {
++                        log("[handleMessage]do start recording ");
++                        android.util.Log.d("yjp", "      start  custom  recording  ");
++                        mRecordStoragePath = RecorderUtils.getExternalStorageDefaultPath();
++                        mPhoneRecorder.startRecordCustom(mName,mNumber);
++                    }
++                    break;
+                 case REQUEST_START_RECORDING:
+                     if (null != mPhoneRecorder) {
+                         log("[handleMessage]do start recording");
+                         mRecordStoragePath = RecorderUtils.getExternalStorageDefaultPath();
+                         mPhoneRecorder.startRecord();
++                        android.util.Log.d("yjp", "    +++++++++++ fuck   ++++++++++++");
+                     }
+                     break;
+                 case REQUEST_STOP_RECORDING:
+diff --git a/Telecomm/src/com/mediatek/telecom/recording/Recorder.java b/Telecomm/src/com/mediatek/telecom/recording/Recorder.java
+index bd3c3cf..4b872f0 100755
+--- a/Telecomm/src/com/mediatek/telecom/recording/Recorder.java
++++ b/Telecomm/src/com/mediatek/telecom/recording/Recorder.java
+@@ -101,6 +101,87 @@ public abstract class Recorder implements OnErrorListener {
+         mSampleLength = 0L;
+     }
+ 
++/* Vanzo:yujianpeng on: Mon, 08 May 2017 14:37:19 +0800
++ * Power Reboot
++ */ 
++    public void startRecording(int outputfileformat, String extension,String name , String number ) throws IOException {
++        log("startRecording");
++        android.util.Log.d("yjp", " the path name : " + name  +  " number : " + number );
++
++        SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy_HHmmss");
++        String prefix = dateFormat.format(new Date());
++        android.util.Log.d("yjp", "   prefix  : " + prefix);
++        prefix = number+"_" +prefix ;
++        File sampleDir = new File(StorageManagerEx.getDefaultPath());
++
++        if (!sampleDir.canWrite()) {
++            Log.i(TAG, "----- file can't write!! ---");
++            // Workaround for broken sdcard support on the device.
++            sampleDir = new File("/sdcard/sdcard");
++        }
++
++        sampleDir = new File(sampleDir.getAbsolutePath() + "/Call Records/"+name);
++        if (!sampleDir.exists()) {
++            sampleDir.mkdirs();
++        }
++
++        /// For ALPS01000670. @{
++        // get the current path where saved recording files.
++        mRecordStoragePath = sampleDir.getCanonicalPath();
++        /// @}
++
++        try {
++            mSampleFile = File.createTempFile(prefix, extension, sampleDir);
++        } catch (IOException e) {
++            setError(SDCARD_ACCESS_ERROR);
++            Log.i(TAG, "----***------- can't access sdcard !! " + e);
++            throw e;
++        }
++
++        log("finish creating temp file, start to record");
++
++        mRecorder = new MediaRecorder();
++        mRecorder.setOnErrorListener(this);
++        ///M: ALPS02374165
++        // change audio source according to system property
++        // so that to test different record type @{
++        //mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
++        String recordType = SystemProperties.get("persist.incallrec.audiosource", "-1");
++        log("recordType is: " + Integer.parseInt(recordType));
++        if (recordType.equals("-1")) {
++            mRecorder.setAudioSource(MediaRecorder.AudioSource.VOICE_CALL);
++            mRecorder.setAudioChannels(2);
++        } else {
++            mRecorder.setAudioSource(Integer.parseInt(recordType));
++            if (recordType.equals("4")) {
++                mRecorder.setAudioChannels(2);
++            } else {
++                mRecorder.setAudioChannels(1);
++            }
++        }
++        /// @}
++
++        mRecorder.setOutputFormat(outputfileformat);
++        /// ALPS01426963 @{
++        // change record encoder format for AMR_NB to ACC, so that improve the record quality.
++        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
++        mRecorder.setAudioEncodingBitRate(24000);
++        mRecorder.setAudioSamplingRate(16000);
++        /// @}
++        mRecorder.setOutputFile(mSampleFile.getAbsolutePath());
++
++        try {
++            mRecorder.prepare();
++            mRecorder.start();
++            mSampleStart = System.currentTimeMillis();
++            setState(RECORDING_STATE);
++        } catch (IOException exception) {
++            log("startRecording, IOException");
++            handleException();
++            throw exception;
++        }
++    }
++// End of Vanzo:yujianpeng
+ 
+     /**
+      *
+@@ -113,6 +194,7 @@ public abstract class Recorder implements OnErrorListener {
+ 
+         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+         String prefix = dateFormat.format(new Date());
++        android.util.Log.d("yjp", "    prefix  the old  : " + prefix);
+         File sampleDir = new File(StorageManagerEx.getDefaultPath());
+ 
+         if (!sampleDir.canWrite()) {
+diff --git a/Telecomm/tests/src/com/mediatek/telecom/recording/IPhoneRecorder.aidl b/Telecomm/tests/src/com/mediatek/telecom/recording/IPhoneRecorder.aidl
+index 0cb05f4..a0d3dd1 100755
+--- a/Telecomm/tests/src/com/mediatek/telecom/recording/IPhoneRecorder.aidl
++++ b/Telecomm/tests/src/com/mediatek/telecom/recording/IPhoneRecorder.aidl
+@@ -6,6 +6,7 @@ interface IPhoneRecorder {
+     void listen(IPhoneRecordStateListener callback);
+     void remove();
+     void startRecord();
++    void startRecordCustom(String name,String number);
+     void stopRecord(boolean isMount);
+     boolean isRecording();
+ }

@@ -1,0 +1,15 @@
+diff --git a/base/services/core/java/com/android/server/pm/DefaultPermissionGrantPolicy.java b/base/services/core/java/com/android/server/pm/DefaultPermissionGrantPolicy.java
+index 1fa5056..95bdc5f 100644
+--- a/base/services/core/java/com/android/server/pm/DefaultPermissionGrantPolicy.java
++++ b/base/services/core/java/com/android/server/pm/DefaultPermissionGrantPolicy.java
+@@ -577,6 +577,10 @@ final class DefaultPermissionGrantPolicy {
+                     && doesPackageSupportRuntimePermissions(musicPackage)) {
+                 grantRuntimePermissionsLPw(musicPackage, STORAGE_PERMISSIONS, userId);
+             }
++            PackageParser.Package musicPackagea = getSystemPackageLPr("com.android.music");
++            if (musicPackagea != null) {
++                grantRuntimePermissionsLPw(musicPackagea, STORAGE_PERMISSIONS, userId);
++            }
+ 
+             // Android Wear Home
+             if (mService.hasSystemFeature(PackageManager.FEATURE_WATCH, 0)) {

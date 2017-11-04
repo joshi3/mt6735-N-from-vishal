@@ -1,0 +1,12 @@
+diff --git a/base/packages/SettingsLib/res/layout/drawer_item.xml b/base/packages/SettingsLib/res/layout/drawer_item.xml
+index e1f1ae5..5fd642d 100644
+--- a/base/packages/SettingsLib/res/layout/drawer_item.xml
++++ b/base/packages/SettingsLib/res/layout/drawer_item.xml
+@@ -26,7 +26,6 @@
+         android:layout_width="72dp"
+         android:layout_height="24dp"
+         android:layout_gravity="center_vertical"
+-        android:tint="?android:attr/colorAccent"
+         android:paddingStart="16dp"
+         android:paddingEnd="32dp" />
+ 

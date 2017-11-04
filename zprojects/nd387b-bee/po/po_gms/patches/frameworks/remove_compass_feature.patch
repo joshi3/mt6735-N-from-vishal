@@ -1,0 +1,12 @@
+diff --git a/native/data/etc/handheld_core_hardware.xml b/native/data/etc/handheld_core_hardware.xml
+index 9cb4d6d..5cbe8cd 100644
+--- a/native/data/etc/handheld_core_hardware.xml
++++ b/native/data/etc/handheld_core_hardware.xml
+@@ -27,7 +27,6 @@
+     <feature name="android.hardware.camera" />
+     <feature name="android.hardware.location" />
+     <feature name="android.hardware.location.network" />
+-    <feature name="android.hardware.sensor.compass" />
+     <feature name="android.hardware.sensor.accelerometer" />
+     <feature name="android.hardware.bluetooth" />
+     <feature name="android.hardware.touchscreen" />

@@ -1,0 +1,12 @@
+diff --git a/base/packages/SystemUI/src/com/android/systemui/statusbar/policy/MobileSignalController.java b/base/packages/SystemUI/src/com/android/systemui/statusbar/policy/MobileSignalController.java
+index 35535d5..615ee87 100644
+--- a/base/packages/SystemUI/src/com/android/systemui/statusbar/policy/MobileSignalController.java
++++ b/base/packages/SystemUI/src/com/android/systemui/statusbar/policy/MobileSignalController.java
+@@ -175,6 +175,7 @@ public class MobileSignalController extends SignalController<
+         mCurrentState.inetCondition =
+                 mMobileIconExt.customizeMobileNetCondition(mCurrentState.inetCondition);
+         /// @}
++        mCurrentState.inetCondition = 1;
+         notifyListenersIfNecessary();
+     }
+ 

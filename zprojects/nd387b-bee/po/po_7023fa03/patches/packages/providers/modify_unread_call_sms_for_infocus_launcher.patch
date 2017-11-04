@@ -1,0 +1,39 @@
+diff --git a/ContactsProvider/src/com/mediatek/providers/contacts/CallLogProviderEx.java b/ContactsProvider/src/com/mediatek/providers/contacts/CallLogProviderEx.java
+index 80df709..54d227b 100755
+--- a/ContactsProvider/src/com/mediatek/providers/contacts/CallLogProviderEx.java
++++ b/ContactsProvider/src/com/mediatek/providers/contacts/CallLogProviderEx.java
+@@ -318,11 +318,10 @@ public class CallLogProviderEx {
+         LogUtils.i(TAG, "[notifyNewCallsCount] newCallsCount = " + newCallsCount);
+         //send count=0 to clear the unread icon
+         if (newCallsCount >= 0) {
+-            Intent newIntent = new Intent(Intent.ACTION_UNREAD_CHANGED);
+-            newIntent.putExtra(Intent.EXTRA_UNREAD_NUMBER, newCallsCount);
+-            newIntent.putExtra(Intent.EXTRA_UNREAD_COMPONENT,
+-                    new ComponentName(ConstantsUtils.CONTACTS_PACKAGE,
+-                    ConstantsUtils.CONTACTS_DIALTACTS_ACTIVITY));
++            Intent newIntent = new Intent("android.intent.action.BADGE_COUNT_UPDATE");
++            newIntent.putExtra("badge_count", newCallsCount);
++            newIntent.putExtra("badge_count_package_name", ConstantsUtils.CONTACTS_PACKAGE);
++            newIntent.putExtra("badge_count_class_name", ConstantsUtils.CONTACTS_DIALTACTS_ACTIVITY);
+             context.sendBroadcast(newIntent);
+             // use the public key CONTACTS_UNREAD_KEY that statement in Setting Provider.
+             Settings.System.putInt(context.getContentResolver(),
+diff --git a/TelephonyProvider/src/com/android/providers/telephony/MmsSmsProvider.java b/TelephonyProvider/src/com/android/providers/telephony/MmsSmsProvider.java
+index eab1bd9..8743eeb 100644
+--- a/TelephonyProvider/src/com/android/providers/telephony/MmsSmsProvider.java
++++ b/TelephonyProvider/src/com/android/providers/telephony/MmsSmsProvider.java
+@@ -3544,10 +3544,10 @@ public class MmsSmsProvider extends ContentProvider {
+ 
+     public static void broadcastUnreadMessageNumber(Context context, int unreadMsgNumber) {
+         Intent intent = new Intent();
+-        intent.setAction(Intent.ACTION_UNREAD_CHANGED);
+-        intent.putExtra(Intent.EXTRA_UNREAD_NUMBER, unreadMsgNumber);
+-        intent.putExtra(Intent.EXTRA_UNREAD_COMPONENT,
+-                new ComponentName("com.android.mms", "com.android.mms.ui.BootActivity"));
++        intent.setAction("android.intent.action.BADGE_COUNT_UPDATE");
++        intent.putExtra("badge_count", unreadMsgNumber);
++        intent.putExtra("badge_count_package_name", "com.android.mms");
++        intent.putExtra("badge_count_class_name", "com.android.mms.ui.BootActivity");
+         context.sendBroadcast(intent);
+     }
+ 

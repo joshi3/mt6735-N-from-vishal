@@ -1,0 +1,103 @@
+diff --git a/mediatek/proprietary/factory/src/test/ftm_camera.cpp b/mediatek/proprietary/factory/src/test/ftm_camera.cpp
+index eb9787e..9cbdac2 100755
+--- a/mediatek/proprietary/factory/src/test/ftm_camera.cpp
++++ b/mediatek/proprietary/factory/src/test/ftm_camera.cpp
+@@ -163,6 +163,7 @@ typedef struct
+ pthread_t camera_flash_thread_handle = 0;
+ //FLASHLIGHT_TYPE_ENUM eFlashSupport = FLASHLIGHT_NONE;
+ MUINT32 srcDev = 0;
++MUINT32 cam2Dev = 0;
+ static int g_previewStop = MFALSE;
+ 
+ static MBOOL gCapCBDone = MFALSE;
+@@ -2271,7 +2272,55 @@ int camera_entry(struct ftm_param *param, void *priv)
+             {
+                 capture_done = MFALSE;
+                 g_previewStop = MFALSE;
++                if(cam2Dev)
++                {
++                    init_text(&cam ->left_btn, "", COLOR_YELLOW);
++                    init_text(&cam ->center_btn, uistr_camera_capture, COLOR_YELLOW);
++                    //init_text(&cam ->center_btn, "", COLOR_YELLOW);
++                    init_text(&cam ->right_btn, uistr_camera_back, COLOR_YELLOW);
+ 
++                    FTM_CAMERA_DBG("main2_sensor_test srcDev %d\n", srcDev);
++                    FILE *pfd;
++                    int main2_sensor_bv = 0;
++                    int i=0;
++                    MINT32 sensorIdx = 2;
++
++                    tv = &cam->tv;
++                    ui_init_textview(tv, NULL, (void*)cam );
++                    tv->set_title(tv, &cam->title);
++                    tv->set_text(tv, &cam->text);
++                    tv->set_btn(tv, &cam->left_btn, &cam->center_btn, &cam->right_btn);
++                    tv->redraw(tv);
++
++                    while (i++<2) {
++                        pfd = fopen("sys/bus/platform/drivers/image_sensor/cam2", "r");
++                        FTM_CAMERA_DBG("main2_sensor_bv test 2\n");
++                        if (pfd==NULL) continue;
++                        FTM_CAMERA_DBG("main2_sensor_bv first %d\n", main2_sensor_bv);
++                        usleep(1000000);
++                        if ((fscanf(pfd, "%d",&main2_sensor_bv) > 0)&&(main2_sensor_bv>0)) {
++                            g_previewStop = MTRUE;
++                            gPinError_pass = MTRUE;
++                            fclose(pfd);
++                            FTM_CAMERA_DBG("main2_sensor_bv %d\n", main2_sensor_bv);
++                            break;
++                        }
++                        FTM_CAMERA_DBG("main2_sensor_bv non %d\n", main2_sensor_bv);
++                        fclose(pfd);
++                        if (i >= 2) {
++                            g_previewStop = MTRUE;
++
++                        }
++                    }
++                    memset(cam->info, 0, 1024);
++                    iv->set_text(iv, &cam->text);
++                    iv->redraw(iv);
++
++                    isTestDone = 1;
++
++                }
++                else
++                {
+                 if(0 != acdkIFInit())
+                 {
+                     FTM_CAMERA_ERR("acdkIFInit() Fail\n");
+@@ -2353,6 +2402,7 @@ int camera_entry(struct ftm_param *param, void *priv)
+                     isTestDone = 1;
+                 }
+             }
++            }
+ 
+             if(g_previewStop == MTRUE)
+             {
+@@ -2607,6 +2657,8 @@ Exit:
+ int camera_main_preview_entry(struct ftm_param *param, void *priv)
+ {
+     srcDev = 0x01; //main sensor
++    cam2Dev = 0;
++    FTM_CAMERA_DBG("camera_main_preview_entry srcDev cam2Dev %d %d\n", srcDev,cam2Dev);
+     return camera_entry(param,priv);
+ }
+ 
+@@ -2616,6 +2668,8 @@ int camera_main_preview_entry(struct ftm_param *param, void *priv)
+ int camera_main2_preview_entry(struct ftm_param *param, void *priv)
+ {
+     srcDev = 0x08; //main2 sensor
++    cam2Dev = 1;
++    FTM_CAMERA_DBG("camera_main_preview_entry srcDev cam2Dev %d %d\n", srcDev,cam2Dev);
+     return camera_entry(param,priv);
+ }
+ 
+@@ -2626,6 +2680,8 @@ int camera_main2_preview_entry(struct ftm_param *param, void *priv)
+ int camera_sub_preview_entry(struct ftm_param *param, void *priv)
+ {
+     srcDev = 0x02; //sub sensor
++    cam2Dev = 0;
++    FTM_CAMERA_DBG("camera_main_preview_entry srcDev cam2Dev %d %d\n", srcDev,cam2Dev);
+     return camera_entry(param,priv);
+ }
+ 

@@ -1,0 +1,32 @@
+diff --git a/mediatek/proprietary/custom/mt6735/hal/D1/imgsensor_src/cfg_setting_imgsensor.cpp b/mediatek/proprietary/custom/mt6735/hal/D1/imgsensor_src/cfg_setting_imgsensor.cpp
+index 86e32d4..8f5b9bb 100644
+--- a/mediatek/proprietary/custom/mt6735/hal/D1/imgsensor_src/cfg_setting_imgsensor.cpp
++++ b/mediatek/proprietary/custom/mt6735/hal/D1/imgsensor_src/cfg_setting_imgsensor.cpp
+@@ -219,9 +219,9 @@ SensorViewAngle_T const&
+ getSensorViewAngle()
+ {
+     static SensorViewAngle_T const inst = {
+-        MainSensorHorFOV  : 62,
++        MainSensorHorFOV  : 69,
+         MainSensorVerFOV  : 49,
+-        SubSensorHorFOV  : 71,
++        SubSensorHorFOV  : 64,
+         SubSensorVerFOV  : 40,
+         Main2SensorHorFOV  : 0,   //not support
+         Main2SensorVerFOV  : 0,
+diff --git a/mediatek/proprietary/custom/mt6735/hal/D2/imgsensor_src/cfg_setting_imgsensor.cpp b/mediatek/proprietary/custom/mt6735/hal/D2/imgsensor_src/cfg_setting_imgsensor.cpp
+index c32428f..709e399 100644
+--- a/mediatek/proprietary/custom/mt6735/hal/D2/imgsensor_src/cfg_setting_imgsensor.cpp
++++ b/mediatek/proprietary/custom/mt6735/hal/D2/imgsensor_src/cfg_setting_imgsensor.cpp
+@@ -208,9 +208,9 @@ SensorViewAngle_T const&
+ getSensorViewAngle()
+ {
+     static SensorViewAngle_T const inst = {
+-        MainSensorHorFOV  : 63,
++        MainSensorHorFOV  : 69,
+         MainSensorVerFOV  : 49,
+-        SubSensorHorFOV  : 71,
++        SubSensorHorFOV  : 64,
+         SubSensorVerFOV  : 40,
+         Main2SensorHorFOV  : 0,   //not support
+         Main2SensorVerFOV  : 0,

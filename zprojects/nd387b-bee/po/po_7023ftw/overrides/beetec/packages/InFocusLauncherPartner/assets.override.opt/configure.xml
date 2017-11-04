@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configure>
+    <style default_type="one_layer" can_change="true">
+        <one_layer screenCount="3" mainScreen="0" pluginEnable="2"/>
+        <two_layer screenCount="1" mainScreen="0" pluginEnable="2"/>
+    </style>
+    <one_layer_special_hotseat iconCount="4"/>
+    <quick_search_bar hide="true"/>
+</configure>

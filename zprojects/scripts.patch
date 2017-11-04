@@ -1,0 +1,27 @@
+diff --git a/zprojects/scripts/plugins/CheckNeedRebuildChrome.py b/zprojects/scripts/plugins/CheckNeedRebuildChrome.py
+index a34408a..a50a0b7 100644
+--- a/zprojects/scripts/plugins/CheckNeedRebuildChrome.py
++++ b/zprojects/scripts/plugins/CheckNeedRebuildChrome.py
+@@ -12,6 +12,7 @@ class CheckNeedRebuildChrome(BasePlugin):
+         self.chrome_prebuilt_time = "Wed Jun 24 12:00:00 2015"
+         self.chrome_prebuilt_time2 = time.strptime(self.chrome_prebuilt_time)
+     def process(self,config_map):
++	return 0,None
+         if "VANZO_INNER_PROJECT_NAME" not in config_map:
+             return -1,"VANZO_INNER_PROJECT_NAME must be exist"
+ 
+diff --git a/zprojects/scripts/plugins/CustomBatteryMeter.py b/zprojects/scripts/plugins/CustomBatteryMeter.py
+index 6ce613e..84be09d 100644
+--- a/zprojects/scripts/plugins/CustomBatteryMeter.py
++++ b/zprojects/scripts/plugins/CustomBatteryMeter.py
+@@ -27,8 +27,8 @@ class CustomBatteryMeter(BasePlugin):
+             assert len(dst_dirs) > 0
+             dst_dir = dst_dirs[0]
+ 
+-        if "cust_battery_meter" in commands.getstatusoutput("cd {0};git status | grep cust_battery_meter".format(dst_dir))[1]:
+-            return 0, None
++#        if "cust_battery_meter" in commands.getstatusoutput("cd {0};git status | grep cust_battery_meter".format(dst_dir))[1]:
++#            return 0, None
+ 
+         for file_name in ("cust_battery_meter.h", "cust_battery_meter_table.h"):
+             if is_batthv:

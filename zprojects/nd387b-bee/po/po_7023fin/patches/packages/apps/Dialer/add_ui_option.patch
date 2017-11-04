@@ -1,0 +1,101 @@
+diff --git a/res/values-zh-rCN/strings.xml b/res/values-zh-rCN/strings.xml
+index 200b6fe..655cd50 100644
+--- a/res/values-zh-rCN/strings.xml
++++ b/res/values-zh-rCN/strings.xml
+@@ -271,4 +271,5 @@
+     <string name="toast_cannot_write_system_settings" msgid="5614246168296606709">"电话应用不具备写入系统设置的权限。"</string>
+     <string name="blocked_number_call_log_label" msgid="8912042441473014712">"已屏蔽"</string>
+     <string name="accessibility_call_is_active" msgid="2297282583928508760">"正在与<xliff:g id="NAMEORNUMBER">^1</xliff:g>通话"</string>
++    <string name="vibrate_when_the_other_side_answer_title">去电接通振动</string>
+ </resources>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index cb85684..bd7a78d 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -1063,4 +1063,5 @@
+ 
+     <!-- Accessibility announcement to indicate which call is active -->
+     <string name="accessibility_call_is_active"><xliff:g id="nameOrNumber">^1</xliff:g> is active</string>
++    <string name="vibrate_when_the_other_side_answer_title">vibrate when the other side answer</string>
+ </resources>
+diff --git a/res/xml/sound_settings.xml b/res/xml/sound_settings.xml
+index 1cddee8..33a6055 100644
+--- a/res/xml/sound_settings.xml
++++ b/res/xml/sound_settings.xml
+@@ -30,7 +30,11 @@
+         android:title="@string/vibrate_on_ring_title"
+         android:persistent="false"
+         android:defaultValue="false" />
+-
++    <CheckBoxPreference
++        android:key="vibrate_when_the_other_side_answer_key"
++        android:title="@string/vibrate_when_the_other_side_answer_title"
++        android:persistent="false"
++        android:defaultValue="false"/>
+ <!--* Vanzo:yujianpeng on: Fri, 25 Mar 2016 17:03:29 +0800
+  * vibrate when answering
+ -->
+diff --git a/src/com/android/dialer/settings/SoundSettingsFragment.java b/src/com/android/dialer/settings/SoundSettingsFragment.java
+index 16d2496..5f70735 100644
+--- a/src/com/android/dialer/settings/SoundSettingsFragment.java
++++ b/src/com/android/dialer/settings/SoundSettingsFragment.java
+@@ -66,6 +66,10 @@ public class SoundSettingsFragment extends PreferenceFragment
+ // End of Vanzo:yujianpeng
+     private CheckBoxPreference mPlayDtmfTone;
+     private ListPreference mDtmfToneLength;
++    
++    private static final String KEY_VIBRATE_THE_OTHER_SIDE_ANSWER = "vibrate_when_the_other_side_answer_key";
++    private static final String VIBRATE_THE_OTHER_SIDE_ANSWERED_FLAG ="persist.sys.vibrate_the_other_side_answered";
++    private CheckBoxPreference mVibrateTheOther;
+ 
+     private final Runnable mRingtoneLookupRunnable = new Runnable() {
+         @Override
+@@ -112,6 +116,14 @@ public class SoundSettingsFragment extends PreferenceFragment
+             mVibrateOnOutgoing = null;
+         }
+ // End of Vanzo:yujianpeng
++        
++        mVibrateTheOther = (CheckBoxPreference) findPreference(KEY_VIBRATE_THE_OTHER_SIDE_ANSWER);
++        if (hasVibrator()) {
++            mVibrateTheOther.setOnPreferenceChangeListener(this);
++        } else {
++            getPreferenceScreen().removePreference(mVibrateTheOther);
++            mVibrateTheOther = null;
++        }
+         mPlayDtmfTone = (CheckBoxPreference) findPreference(
+                 context.getString(R.string.play_dtmf_preference_key));
+         mDtmfToneLength = (ListPreference) findPreference(
+@@ -165,7 +177,9 @@ public class SoundSettingsFragment extends PreferenceFragment
+             shouldVibrateOnOutgoing();
+         }
+ // End of Vanzo:yujianpeng
+-
++        if (mVibrateTheOther != null) {
++            shouldVibrateOtherSideAnswered();
++        }
+         // Lookup the ringtone name asynchronously.
+         new Thread(mRingtoneLookupRunnable).start();
+     }
+@@ -204,6 +218,10 @@ public class SoundSettingsFragment extends PreferenceFragment
+             int index = mDtmfToneLength.findIndexOfValue((String) objValue);
+             Settings.System.putInt(getActivity().getContentResolver(),
+                     Settings.System.DTMF_TONE_TYPE_WHEN_DIALING, index);
++        } else if (preference == mVibrateTheOther) {
++            boolean b = (Boolean) objValue;
++            Settings.System.putInt(getActivity().getContentResolver(),
++                    VIBRATE_THE_OTHER_SIDE_ANSWERED_FLAG, b ? 1 : 0);
+         }
+         return true;
+     }
+@@ -265,6 +283,11 @@ public class SoundSettingsFragment extends PreferenceFragment
+         }
+     }
+ // End of Vanzo:yujianpeng
++
++    private void shouldVibrateOtherSideAnswered() {
++        int i = Settings.System.getInt(getActivity().getContentResolver(),VIBRATE_THE_OTHER_SIDE_ANSWERED_FLAG,0);
++        mVibrateTheOther.setChecked(i == 1 ? true : false);
++    }
+     /**
+      * Obtains the value for dialpad/DTMF tones. The default value is true.
+      */

@@ -1,0 +1,29 @@
+diff --git a/drivers/misc/mediatek/video/mt6735/disp_lcm.c b/drivers/misc/mediatek/video/mt6735/disp_lcm.c
+index 8f9a5f9..cecb9d3 100644
+--- a/drivers/misc/mediatek/video/mt6735/disp_lcm.c
++++ b/drivers/misc/mediatek/video/mt6735/disp_lcm.c
+@@ -890,7 +890,7 @@ void load_lcm_resources_from_DT(LCM_DRIVER *lcm_drv)
+ 		pr_err("LCM set_params not implemented!!!\n");
+ }
+ #endif
+-
++int is_jd9365 = 0;
+ disp_lcm_handle *disp_lcm_probe(char *plcm_name, LCM_INTERFACE_ID lcm_id, int is_lcm_inited)
+ {
+ 	int lcmindex = 0;
+@@ -962,6 +962,15 @@ disp_lcm_handle *disp_lcm_probe(char *plcm_name, LCM_INTERFACE_ID lcm_id, int is
+ 			for (i = 0; i < _lcm_count(); i++) {
+ 				lcm_drv = lcm_driver_list[i];
+ 				if (!strcmp(lcm_drv->name, plcm_name)) {
++                                    //printk("lcm driver name %s %s\n",lcm_drv->name,plcm_name);
++                                    
++                                    if (!strcmp(lcm_drv->name, "jd9365_ivo50_zgd_hd")) {
++                                        is_jd9365 = 1;
++                                    }
++                                    else
++                                    {
++                                        is_jd9365 = 0;
++                                    }
+ 					isLCMFound = true;
+ 					isLCMInited = true;
+ 					lcmindex = i;

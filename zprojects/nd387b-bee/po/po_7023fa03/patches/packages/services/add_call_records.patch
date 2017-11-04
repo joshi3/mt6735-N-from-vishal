@@ -1,0 +1,26 @@
+diff --git a/Telecomm/src/com/android/server/telecom/CallLogManager.java b/Telecomm/src/com/android/server/telecom/CallLogManager.java
+index 59a2c7b..925f7c7 100644
+--- a/Telecomm/src/com/android/server/telecom/CallLogManager.java
++++ b/Telecomm/src/com/android/server/telecom/CallLogManager.java
+@@ -331,7 +331,7 @@ public final class CallLogManager extends CallsManagerListenerBase {
+ 
+         sendAddCallBroadcast(callType, duration);
+ 
+-        if (isOkToLogThisCall) {
++      //  if (isOkToLogThisCall) {
+             Log.d(TAG, "Logging Calllog entry: " + callerInfo + ", "
+                     + Log.pii(number) + "," + presentation + ", " + callType
+                     + ", " + start + ", " + duration + ", " + conferenceCallLogId);
+@@ -340,9 +340,9 @@ public final class CallLogManager extends CallsManagerListenerBase {
+                     dataUsage, initiatingUser, logCallCompletedListener,
+                     conferenceCallLogId /* M: For Conference call */);
+             logCallAsync(args);
+-        } else {
+-          Log.d(TAG, "Not adding emergency call to call log.");
+-        }
++     //   } else {
++     //     Log.d(TAG, "Not adding emergency call to call log.");
++     //   }
+     }
+ 
+     /**

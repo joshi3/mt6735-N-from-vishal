@@ -1,0 +1,25 @@
+diff --git a/packages/FactoryMode/src/com/mediatek/factorymode/fp/FpTest.java b/packages/FactoryMode/src/com/mediatek/factorymode/fp/FpTest.java
+index 560368a..3fb14f0 100644
+--- a/packages/FactoryMode/src/com/mediatek/factorymode/fp/FpTest.java
++++ b/packages/FactoryMode/src/com/mediatek/factorymode/fp/FpTest.java
+@@ -195,12 +195,20 @@ public class FpTest extends Activity implements OnClickListener {
+  * modify AndroidM common fingerprint test
+  */
+         if (requestCode == START_REQUEST_CODE) {
++/*
+             int userId = ActivityManager.getCurrentUser();
+             fingerprintCount_new = fpm.getEnrolledFingerprints(userId).size();
+             String result = (fingerprintCount_new > fingerprintCount) ? "PASS" : "FAIL";
+             if ("PASS".equals(result)) {
+                 mBtOk.setEnabled(true);
+             }
++*/
++            if( intent != null) {
++                String result = intent.getStringExtra("result");
++                if ("PASS".equals(result)) {
++                    mBtOk.setEnabled(true);
++                }
++            }
+         }
+ // End of Vanzo:zhangweipeng
+     }

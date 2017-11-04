@@ -1,0 +1,12 @@
+diff --git a/Telephony/src/com/android/phone/CallFeaturesSetting.java b/Telephony/src/com/android/phone/CallFeaturesSetting.java
+index 6c600f3..a74e133 100644
+--- a/Telephony/src/com/android/phone/CallFeaturesSetting.java
++++ b/Telephony/src/com/android/phone/CallFeaturesSetting.java
+@@ -399,6 +399,7 @@ public class CallFeaturesSetting extends PreferenceActivity
+             }
+             wifiCallingSettings.setSummary(resId);
+         }
++        prefSet.removePreference(wifiCallingSettings);
+ 
+         ///M: Add for CDG OMH @{
+         addOmhItems(prefSet);

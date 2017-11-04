@@ -1,0 +1,90 @@
+diff --git a/res/xml/device_info_settings.xml b/res/xml/device_info_settings.xml
+index 38e636b..b96eed5 100644
+--- a/res/xml/device_info_settings.xml
++++ b/res/xml/device_info_settings.xml
+@@ -17,6 +17,8 @@
+ <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+         android:title="@string/about_settings">
+ 
++        <PreferenceScreen android:title="APR"
++                      android:key="apr_item" />
+         <!-- System update settings - launches activity -->
+         <PreferenceScreen android:key="system_update_settings"
+                 android:title="@string/system_update_settings_list_item_title"
+diff --git a/src/com/android/settings/DeviceInfoSettings.java b/src/com/android/settings/DeviceInfoSettings.java
+index a807bb7..2e3f5f0 100644
+--- a/src/com/android/settings/DeviceInfoSettings.java
++++ b/src/com/android/settings/DeviceInfoSettings.java
+@@ -64,6 +64,11 @@ import android.content.SharedPreferences;
+ import android.content.pm.PackageInfo;
+ import com.android.featureoption.FeatureOption;
+ // End of Vanzo:tanglei
++import android.content.ComponentName;
++import android.content.pm.ActivityInfo;
++import android.content.pm.PackageInfo;
++import android.content.pm.PackageManager;
++import android.support.v7.preference.PreferenceScreen;
+ 
+ public class DeviceInfoSettings extends SettingsPreferenceFragment implements Indexable {
+ 
+@@ -113,6 +118,11 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
+ 
+     private DeviceInfoSettingsExts mExts;
+ 
++    private static final String KEY_APR_ITEM = "apr_item";
++    private PreferenceScreen mAPR;
++    private static final String PACKAGENAME_APR_UPLOAD_SERVICE = "com.evenwell.AprUploadService";
++    private static final String CLASSNAME_APR_UPLOAD_SERVICE = "com.fihtdc.AprUploadService.activity.SettingPage";
++
+     @Override
+     protected int getMetricsCategory() {
+         return MetricsEvent.DEVICEINFO;
+@@ -238,6 +248,36 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
+         ///M:
+         mExts = new DeviceInfoSettingsExts(getActivity(), this);
+         mExts.initMTKCustomization(getPreferenceScreen());
++
++        PackageManager pm = getPackageManager();
++        mAPR = (PreferenceScreen) findPreference(KEY_APR_ITEM);
++        String[] mVersionNameTemp = null;
++        String mVersionName = "";
++        try {
++            PackageInfo pInfoAPR = pm.getPackageInfo(PACKAGENAME_APR_UPLOAD_SERVICE,PackageManager.GET_ACTIVITIES);
++
++            ComponentName componentName = new ComponentName(PACKAGENAME_APR_UPLOAD_SERVICE, CLASSNAME_APR_UPLOAD_SERVICE);
++            int iAPRState = pm.getComponentEnabledSetting(componentName);
++            if ( iAPRState == PackageManager.COMPONENT_ENABLED_STATE_DISABLED ) {
++                getPreferenceScreen().removePreference(mAPR);
++            } else {
++                String emptyStr = "";
++                ActivityInfo activityInfo = pm.getActivityInfo(componentName, 0);
++                String labelStr = activityInfo.loadLabel(pm).toString();
++                if( null != mAPR ) {
++                    if( null == labelStr || emptyStr.equals(labelStr) ) {
++                        mAPR.setTitle(pm.getApplicationLabel(pInfoAPR.applicationInfo));
++                    } else {
++                        mAPR.setTitle(labelStr);
++                    }
++                }
++                Log.w(LOG_TAG, "mAPR.setTitle pm.getApplicationLabel(pInfoAPR.applicationInfo) = "+pm.getApplicationLabel(pInfoAPR.applicationInfo));
++            }
++        } catch (PackageManager.NameNotFoundException nfe) {
++            getPreferenceScreen().removePreference(mAPR);
++            Log.w(LOG_TAG, "NameNotFoundException"+nfe.toString());
++        }
++
+         //fota start
+         if(!isApkExist(act, "com.adups.fota")){
+             if(findPreference("adupsfota_software_update") != null){
+@@ -355,6 +395,11 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
+             if (b.getBoolean(CarrierConfigManager.KEY_CI_ACTION_ON_SYS_UPDATE_BOOL)) {
+                 ciActionOnSysUpdate(b);
+             }
++        } else if( preference == mAPR ) {
++            Intent intent = new Intent();
++            intent.setClassName(PACKAGENAME_APR_UPLOAD_SERVICE, CLASSNAME_APR_UPLOAD_SERVICE);
++            startActivity(intent);
++            //Log.i(LOG_TAG, "onPreferenceTreeClick preference == mAPR end");
+         }
+         /// M:
+         mExts.onCustomizedPreferenceTreeClick(preference);

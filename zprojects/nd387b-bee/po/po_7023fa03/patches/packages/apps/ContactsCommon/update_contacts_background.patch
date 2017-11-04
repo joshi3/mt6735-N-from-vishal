@@ -1,0 +1,38 @@
+diff --git a/src/com/android/contacts/common/lettertiles/LetterTileDrawable.java b/src/com/android/contacts/common/lettertiles/LetterTileDrawable.java
+index cdc99f6..ac30717 100644
+--- a/src/com/android/contacts/common/lettertiles/LetterTileDrawable.java
++++ b/src/com/android/contacts/common/lettertiles/LetterTileDrawable.java
+@@ -187,14 +187,21 @@ public class LetterTileDrawable extends Drawable {
+     /**
+      * Returns a deterministic color based on the provided contact identifier string.
+      */
+-    private int pickColor(final String identifier) {
++    private int pickColor(final String identifier,final String displayName) {
++        final int color;
+         if (TextUtils.isEmpty(identifier) || mContactType == TYPE_VOICEMAIL) {
+             return sDefaultColor;
+         }
+         // String.hashCode() implementation is not supposed to change across java versions, so
+         // this should guarantee the same email address always maps to the same color.
+         // The email should already have been normalized by the ContactRequest.
+-        final int color = Math.abs(identifier.hashCode()) % sColors.length();
++        android.util.Log.i("zhangweigang", "----displayName---=:"+displayName);
++        if(displayName != null && displayName.equals("InFocus Helpline")){
++            color = 5;
++        }else{
++            color = Math.abs(identifier.hashCode()) % sColors.length();
++        }
++        android.util.Log.i("zhangweigang", "color=:"+color+"----identifier=:"+identifier);
+         return sColors.getColor(color, sDefaultColor);
+     }
+ 
+@@ -280,7 +287,8 @@ public class LetterTileDrawable extends Drawable {
+         }else{
+             mLetter = null;
+         }
+-        mColor = pickColor(identifier);
++        mColor = pickColor(identifier,displayName);
++        android.util.Log.i("zhangweigang", "mColor===:"+mColor+"---displayName=:"+displayName);
+         return this;
+     }
+ 

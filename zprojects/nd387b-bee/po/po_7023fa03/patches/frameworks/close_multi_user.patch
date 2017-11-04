@@ -1,0 +1,59 @@
+diff --git a/base/core/res/res/values/config.xml b/base/core/res/res/values/config.xml
+index 2aadbff..6a1a690 100644
+--- a/base/core/res/res/values/config.xml
++++ b/base/core/res/res/values/config.xml
+@@ -1830,10 +1830,10 @@ Modify max screen brightness for power saving
+ 
+     <!--  Enable multiuser for CTS Verifier -->
+     <!--  Maximum number of supported users -->
+-    <integer name="config_multiuserMaximumUsers">4</integer>
++    <integer name="config_multiuserMaximumUsers">1</integer>
+ 
+     <!-- Whether UI for multi user should be shown -->
+-    <bool name="config_enableMultiUserUI">true</bool>
++    <bool name="config_enableMultiUserUI">false</bool>
+ 
+     <!-- If true, then we do not ask user for permission for apps to connect to USB devices.
+          Do not set this to true for production devices. Doing so will cause you to fail CTS. -->
+diff --git a/base/packages/SystemUI/res/layout/keyguard_status_bar.xml b/base/packages/SystemUI/res/layout/keyguard_status_bar.xml
+index a2dfc0d..71640ef 100644
+--- a/base/packages/SystemUI/res/layout/keyguard_status_bar.xml
++++ b/base/packages/SystemUI/res/layout/keyguard_status_bar.xml
+@@ -29,6 +29,7 @@
+         android:layout_width="@dimen/multi_user_switch_width_keyguard"
+         android:layout_height="match_parent"
+         android:layout_alignParentEnd="true"
++        android:visibility="gone"
+         android:background="@drawable/ripple_drawable"
+         android:layout_marginEnd="@dimen/multi_user_switch_keyguard_margin">
+         <ImageView android:id="@+id/multi_user_avatar"
+@@ -41,7 +42,7 @@
+     <LinearLayout android:id="@+id/system_icons_super_container"
+         android:layout_width="wrap_content"
+         android:layout_height="@dimen/status_bar_header_height"
+-        android:layout_toStartOf="@id/multi_user_switch"
++        android:layout_alignParentEnd="true"
+         android:layout_alignWithParentIfMissing="true"
+         android:layout_marginStart="@dimen/system_icons_super_container_margin_start"
+         android:paddingEnd="@dimen/system_icons_keyguard_padding_end">
+diff --git a/base/packages/SystemUI/res/layout/status_bar_expanded_header.xml b/base/packages/SystemUI/res/layout/status_bar_expanded_header.xml
+index c5cd65e..5d81a25 100644
+--- a/base/packages/SystemUI/res/layout/status_bar_expanded_header.xml
++++ b/base/packages/SystemUI/res/layout/status_bar_expanded_header.xml
+@@ -33,6 +33,7 @@
+     <com.android.systemui.statusbar.phone.MultiUserSwitch android:id="@+id/multi_user_switch"
+         android:layout_width="@dimen/multi_user_switch_width_collapsed"
+         android:layout_height="@dimen/status_bar_header_height"
++        android:visibility="gone"
+         android:layout_alignParentEnd="true"
+         android:background="@drawable/ripple_drawable" >
+         <ImageView android:id="@+id/multi_user_avatar"
+@@ -48,7 +49,7 @@
+         android:layout_height="@dimen/status_bar_header_height"
+         android:clipChildren="false"
+         android:clipToPadding="false"
+-        android:layout_toStartOf="@id/multi_user_switch">
++        android:layout_alignParentEnd="true">
+ 
+         <com.android.systemui.statusbar.phone.SettingsButton android:id="@+id/settings_button"
+             style="@android:style/Widget.Material.Button.Borderless"

@@ -1,0 +1,159 @@
+diff --git a/mediatek/proprietary/packages/apps/CMASReceiver/ext/src/DefaultCmasMainSettingsExt.java b/mediatek/proprietary/packages/apps/CMASReceiver/ext/src/DefaultCmasMainSettingsExt.java
+index 85ecf69..b2dd475 100755
+--- a/mediatek/proprietary/packages/apps/CMASReceiver/ext/src/DefaultCmasMainSettingsExt.java
++++ b/mediatek/proprietary/packages/apps/CMASReceiver/ext/src/DefaultCmasMainSettingsExt.java
+@@ -32,7 +32,7 @@ public class DefaultCmasMainSettingsExt implements ICmasMainSettingsExt {
+ 
+     public boolean needToaddAlertSoundVolumeAndVibration() {
+         Log.d(TAG, "Default needToaddAlertSoundVolumeAndVibration");
+-        return false;
++        return true;
+     }
+ 
+ 
+diff --git a/mediatek/proprietary/packages/apps/CMASReceiver/res/values/strings.xml b/mediatek/proprietary/packages/apps/CMASReceiver/res/values/strings.xml
+index 6cbb368..667afd5 100755
+--- a/mediatek/proprietary/packages/apps/CMASReceiver/res/values/strings.xml
++++ b/mediatek/proprietary/packages/apps/CMASReceiver/res/values/strings.xml
+@@ -213,13 +213,13 @@
+     <string name="cmas_certainty_likely">Likely</string>
+ 
+     <!-- define for Taiwan PWS Test-->
+-    <string name="cmas_alert_message_chinese">Alert Message</string>
++    <string name="cmas_alert_message_chinese">警訊通知</string>
+     <string name="cmas_alert_message_english">Alert Message</string>
+-    <string name="pws_cmas_presidential_level_alert_chinese">Presidential Alert</string>
++    <string name="pws_cmas_presidential_level_alert_chinese">國家級警報</string>
+     <string name="pws_cmas_presidential_level_alert_english">Presidential Alert</string>
+-    <string name="pws_other_message_identifiers_chinese">Emergency Alert</string>
++    <string name="pws_other_message_identifiers_chinese">緊急警報</string>
+     <string name="pws_other_message_identifiers_english">Emergency Alert</string>
+-    <string name="cmas_required_monthly_test_chinese">Required Monthly Test</string>
++    <string name="cmas_required_monthly_test_chinese">每月測試用訊息</string>
+     <string name="cmas_required_monthly_test_english">Required Monthly Test</string>
+ 
+     <!-- Message delivery time (including colon). [CHAR LIMIT=30] -->
+diff --git a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CMASPresentationService.java b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CMASPresentationService.java
+index 1eb829d..c162470 100755
+--- a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CMASPresentationService.java
++++ b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CMASPresentationService.java
+@@ -113,16 +113,19 @@ public class CMASPresentationService extends Service {
+             audioIntent.putExtra(CellBroadcastAlertAudio.ALERT_AUDIO_ETWS_VIBRATE_EXTRA, true);
+         } else {
+             // For other alerts, vibration can be disabled in app settings.
+-            boolean alertVibrate = true;
++            boolean alertVibrate = prefs.getBoolean(CellBroadcastSettings.KEY_ENABLE_ALERT_VIBRATE, false);
++            int onoff = prefs.getInt("onoff", 1);
++            alertVibrate = (onoff != 0);
+             ICmasMainSettingsExt optAddingAlertVibration = (ICmasMainSettingsExt)
+                     CellBroadcastPluginManager.getCellBroadcastPluginObject(
+                     CellBroadcastPluginManager.CELLBROADCAST_PLUGIN_TYPE_MAIN_SETTINGS);
+             Log.d(TAG, "called Vibration Plugin");
+-
++/*
+             if (optAddingAlertVibration != null) {
+                 alertVibrate = optAddingAlertVibration.getAlertVibration(message.getServiceCategory());
+                 Log.d(TAG, "vibration plugin called:alertVibrate: " + alertVibrate);
+             }
++*/
+             audioIntent.putExtra(CellBroadcastAlertAudio.ALERT_AUDIO_VIBRATE_EXTRA, alertVibrate);
+         }
+ 
+diff --git a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastAlertAudio.java b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastAlertAudio.java
+index 9101909..7f22a23 100755
+--- a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastAlertAudio.java
++++ b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastAlertAudio.java
+@@ -344,7 +344,6 @@ public class CellBroadcastAlertAudio extends Service implements TextToSpeech.OnI
+ 
+         mEnableVibrate = intent.getBooleanExtra(ALERT_AUDIO_VIBRATE_EXTRA, true);
+         boolean forceVibrate = intent.getBooleanExtra(ALERT_AUDIO_ETWS_VIBRATE_EXTRA, false);
+-
+         switch (mAudioManager.getRingerMode()) {
+             case AudioManager.RINGER_MODE_SILENT:
+                 if (DBG) log("Ringer mode: silent");
+@@ -363,7 +362,7 @@ public class CellBroadcastAlertAudio extends Service implements TextToSpeech.OnI
+                 /// M: add to distinguish general and outdoor mode. Do not vibrate
+                 // in general mode. @{
+                 if (!mAudioManager.shouldVibrate(AudioManager.VIBRATE_TYPE_NOTIFICATION)) {
+-                    mEnableVibrate = forceVibrate;
++//                    mEnableVibrate = forceVibrate;
+                 }
+                 /// @}
+                 mEnableAudio = true;
+diff --git a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastAlertService.java b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastAlertService.java
+index f7e6ca6..4cbb345 100755
+--- a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastAlertService.java
++++ b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastAlertService.java
+@@ -419,7 +419,7 @@ public class CellBroadcastAlertService extends Service {
+         } else {
+             // For other alerts, vibration can be disabled in app settings.
+             audioIntent.putExtra(CellBroadcastAlertAudio.ALERT_AUDIO_VIBRATE_EXTRA,
+-                    prefs.getBoolean(CellBroadcastSettings.KEY_ENABLE_ALERT_VIBRATE, true));
++                    prefs.getBoolean(CellBroadcastSettings.KEY_ENABLE_ALERT_VIBRATE, false));
+         }
+ 
+         String messageBody = message.getMessageBody();
+diff --git a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastMainSettings.java b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastMainSettings.java
+index 66a31d4..3242687 100755
+--- a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastMainSettings.java
++++ b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastMainSettings.java
+@@ -293,8 +293,13 @@ public class CellBroadcastMainSettings extends PreferenceActivity
+                         PreferenceManager.getDefaultSharedPreferences(
+                         CellBroadcastMainSettings.this);
+                 SharedPreferences.Editor editor = prefs.edit();
+-
+-                editor.putBoolean(KEY_ENABLE_ALERT_VIBRATE, value);
++                if(value == false) {
++                    editor.putBoolean(KEY_ENABLE_ALERT_VIBRATE, false);
++                    editor.putInt("onoff", 0);
++                } else {
++                    editor.putBoolean(KEY_ENABLE_ALERT_VIBRATE, true);
++                    editor.putInt("onoff", 1);
++                }
+                 editor.commit();
+                 ICmasMainSettingsExt optAddingAlertVolumeVibration = (ICmasMainSettingsExt)
+                         CellBroadcastPluginManager.getCellBroadcastPluginObject(
+diff --git a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastReceiverApp.java b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastReceiverApp.java
+index 98b8cf3..3eb7d93 100755
+--- a/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastReceiverApp.java
++++ b/mediatek/proprietary/packages/apps/CMASReceiver/src/com/mediatek/cellbroadcastreceiver/CellBroadcastReceiverApp.java
+@@ -39,7 +39,7 @@ public class CellBroadcastReceiverApp extends Application {
+ 
+     private static boolean sInitPlugin = false;
+     // For Chile SAE
+-    private static boolean sIsCellAreaInChile = true;
++    private static boolean sIsCellAreaInChile = false;
+     // For Taiwan PWS
+     private static boolean sIsCellAreaInTw = false;
+ 
+diff --git a/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/cb/cbsettings/CellBroadcastSettings.java b/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/cb/cbsettings/CellBroadcastSettings.java
+index 2feb5ef..8e0885e 100755
+--- a/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/cb/cbsettings/CellBroadcastSettings.java
++++ b/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/cb/cbsettings/CellBroadcastSettings.java
+@@ -432,6 +432,9 @@ public class CellBroadcastSettings extends TimeConsumingPreferenceActivity
+         channelName.setText(cname);
+         channelNum.setText(String.valueOf(cid));
+         channelState.setChecked(checked);
++        if (cid == 4370 || cid == 4383) {
++            channelState.setEnabled(false);
++        }
+         final AlertDialog dialog;
+         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+             public void onClick(DialogInterface dialog, int whichButton) {
+@@ -922,10 +925,12 @@ public class CellBroadcastSettings extends TimeConsumingPreferenceActivity
+             CellBroadcastChannel channel = mChannelArray.get(index);
+             String channelName = channel.getChannelName();
+             menu.setHeaderTitle(channelName);
+-            if (channel.getChannelState()) {
+-                menu.add(0, MENU_CHANNEL_ENABLE_DISABLE, 0, R.string.disable);
+-            } else {
+-                menu.add(0, MENU_CHANNEL_ENABLE_DISABLE, 0, R.string.enable);
++            if ((channel.getChannelId() != 4370) && (channel.getChannelId() != 4383)) {
++                if (channel.getChannelState()) {
++                    menu.add(0, MENU_CHANNEL_ENABLE_DISABLE, 0, R.string.disable);
++                } else {
++                    menu.add(0, MENU_CHANNEL_ENABLE_DISABLE, 0, R.string.enable);
++                }
+             }
+             menu.add(1, MENU_CHANNEL_EDIT, 0, R.string.cb_menu_edit);
+             menu.add(2, MENU_CHANNEL_DELETE, 0, R.string.cb_menu_delete);

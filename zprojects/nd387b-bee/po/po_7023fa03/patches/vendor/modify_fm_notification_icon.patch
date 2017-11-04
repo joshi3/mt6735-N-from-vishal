@@ -1,0 +1,26 @@
+diff --git a/mediatek/proprietary/packages/apps/FMRadio/src/com/android/fmradio/FmRecordActivity.java b/mediatek/proprietary/packages/apps/FMRadio/src/com/android/fmradio/FmRecordActivity.java
+index 43ca5af..825882d 100755
+--- a/mediatek/proprietary/packages/apps/FMRadio/src/com/android/fmradio/FmRecordActivity.java
++++ b/mediatek/proprietary/packages/apps/FMRadio/src/com/android/fmradio/FmRecordActivity.java
+@@ -178,7 +178,7 @@ public class FmRecordActivity extends Activity implements
+                     .setContentText(getText(R.string.record_notification_message))
+                     .setShowWhen(false)
+                     .setAutoCancel(true)
+-                    .setSmallIcon(R.drawable.ic_launcher)
++                    .setSmallIcon(R.drawable.fm_title_icon)
+                     .setLargeIcon(largeIcon)
+                     .addAction(R.drawable.btn_fm_rec_stop_enabled, getText(R.string.stop_record),
+                             pendingIntent);
+diff --git a/mediatek/proprietary/packages/apps/FMRadio/src/com/android/fmradio/FmService.java b/mediatek/proprietary/packages/apps/FMRadio/src/com/android/fmradio/FmService.java
+index f49d25d..672a376 100755
+--- a/mediatek/proprietary/packages/apps/FMRadio/src/com/android/fmradio/FmService.java
++++ b/mediatek/proprietary/packages/apps/FMRadio/src/com/android/fmradio/FmService.java
+@@ -2564,7 +2564,7 @@ public class FmService extends Service implements FmRecorder.OnRecorderStateChan
+ 
+             if (null == mNotificationBuilder) {
+                 mNotificationBuilder = new Notification.Builder(mContext);
+-                mNotificationBuilder.setSmallIcon(R.drawable.ic_launcher);
++                mNotificationBuilder.setSmallIcon(R.drawable.fm_title_icon);
+                 mNotificationBuilder.setShowWhen(false);
+                 mNotificationBuilder.setAutoCancel(true);
+ 

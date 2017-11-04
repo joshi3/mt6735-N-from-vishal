@@ -1,0 +1,28 @@
+diff --git a/lwtg/custom/service/nvram/nvram_data_items.c b/lwtg/custom/service/nvram/nvram_data_items.c
+index 190a9b1..12141f2 100644
+--- a/lwtg/custom/service/nvram/nvram_data_items.c
++++ b/lwtg/custom/service/nvram/nvram_data_items.c
+@@ -6584,8 +6584,8 @@ static kal_uint8 const COMMON_NVRAM_EF_CB_CH_INFO_DEFAULT[] =
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF,/* cbmi_me_mask, default all ME cbmi turn on */ 
+     0xFF, 0xFF, 0xFF, /* cbmi_sim_mask, default all SIM cbmi turn on */
+ #ifndef __CMAS__
+-    0xFF, 0xFF, /* CH 1 , for example:  chanel 50 is 0x00, 0x32 */
+-    0xFF, 0xFF, /* CH 2  */
++    0x00, 0x32, /* CH 1 , for example:  chanel 50 is 0x00, 0x32 */
++    0x00, 0x3c, /* CH 2  */
+     0xFF, 0xFF, /* CH 3  */
+     0xFF, 0xFF, /* CH 4  */
+     0xFF, 0xFF, /* CH 5  */
+diff --git a/lwtg/interface/service/nvram/nvram_editor_data_item.h b/lwtg/interface/service/nvram/nvram_editor_data_item.h
+index 278ec18..5ed2b5e 100644
+--- a/lwtg/interface/service/nvram/nvram_editor_data_item.h
++++ b/lwtg/interface/service/nvram/nvram_editor_data_item.h
+@@ -2857,7 +2857,7 @@
+ #define  NVRAM_EF_CB_DEFAULT_CH_LID_VERNO                    "000"
+ #define  NVRAM_EF_SMSAL_SMSP_LID_VERNO                       "000"
+ 
+-#define  NVRAM_EF_CB_CH_INFO_LID_VERNO                       "003"
++#define  NVRAM_EF_CB_CH_INFO_LID_VERNO                       "004"
+ 
+ #define NVRAM_EF_SMSAL_MWIS_LID_VERNO                        "000"
+ #define  NVRAM_EF_CFU_FLAG_LID_VERNO                         "000"

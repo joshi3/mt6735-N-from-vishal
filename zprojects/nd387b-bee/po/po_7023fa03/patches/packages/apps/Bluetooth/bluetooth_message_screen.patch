@@ -1,0 +1,45 @@
+diff --git a/src/com/android/bluetooth/opp/BluetoothOppNotification.java b/src/com/android/bluetooth/opp/BluetoothOppNotification.java
+index b2c85bc..c75daa4 100644
+--- a/src/com/android/bluetooth/opp/BluetoothOppNotification.java
++++ b/src/com/android/bluetooth/opp/BluetoothOppNotification.java
+@@ -53,6 +53,7 @@ import android.util.Log;
+ import android.os.Handler;
+ import android.os.Message;
+ import android.os.Process;
++import android.os.PowerManager;
+ 
+ import java.util.HashMap;
+ 
+@@ -118,6 +119,8 @@ class BluetoothOppNotification {
+ 
+     private static int mPreparedToCleanedNotificationId = 0;
+     private int mLastProcessIncomingFileId = -1234567;        //using a specail num for inital
++    private PowerManager.WakeLock mWakeLock;
++    private PowerManager pm;
+     /**
+      * This inner class is used to describe some properties for one transfer.
+      */
+@@ -153,6 +156,11 @@ class BluetoothOppNotification {
+         mNotificationMgr = (NotificationManager)mContext
+                 .getSystemService(Context.NOTIFICATION_SERVICE);
+         mNotifications = new HashMap<String, NotificationItem>();
++
++        pm =(PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
++        mWakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP
++                        | PowerManager.ON_AFTER_RELEASE, TAG);
++        mWakeLock.setReferenceCounted(false);
+     }
+ 
+     /**
+@@ -238,6 +246,11 @@ class BluetoothOppNotification {
+     }
+ 
+     private void updateActiveNotification() {
++        boolean ifOpen = pm.isScreenOn();
++        android.util.Log.i("zhangweigang", "oooooo"+"      ifOpen=:"+ifOpen);
++        if(!ifOpen){
++            mWakeLock.acquire(5000); 
++        }
+         if (V)Log.v(TAG, "updateActiveNotification ++");
+         // Active transfers
+         Cursor cursor = null;

@@ -1,0 +1,14 @@
+diff --git a/src/com/mediatek/settings/TetherSettingsExt.java b/src/com/mediatek/settings/TetherSettingsExt.java
+index e4a4001..20eb2a7 100755
+--- a/src/com/mediatek/settings/TetherSettingsExt.java
++++ b/src/com/mediatek/settings/TetherSettingsExt.java
+@@ -330,8 +330,7 @@ public class TetherSettingsExt implements OnPreferenceClickListener,
+  */
+             if (mTetherIpv6 != null && wifiManager != null) {
+ // End of Vanzo:wudu
+-                mTetherIpv6.setEnabled(!usbTether.isChecked() && !bluetoothTether.isChecked()
+-                        && !wifiManager.isWifiApEnabled());
++                mTetherIpv6.setEnabled(false);
+                 if (mConnectService != null) {
+                     int ipv6Value = mConnectService.getTetheringIpv6Enable() ? 1 : 0;
+                     mTetherIpv6.setValueIndex(ipv6Value);

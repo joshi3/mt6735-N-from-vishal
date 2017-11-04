@@ -1,0 +1,24 @@
+diff --git a/mediatek/proprietary/external/EccList/ecc_list.xml b/mediatek/proprietary/external/EccList/ecc_list.xml
+index 38e576f..87e1de1 100755
+--- a/mediatek/proprietary/external/EccList/ecc_list.xml
++++ b/mediatek/proprietary/external/EccList/ecc_list.xml
+@@ -11,14 +11,15 @@
+         - Plmn: ecc for specific operator
+                 format: xxx xx (for specific mnc) or xxx FFF (for all mnc under same mcc)
+     -->
+-    <EccEntry Ecc="112" Category="0" Condition="1" />
+-    <EccEntry Ecc="911" Category="0" Condition="1" />
+     <EccEntry Ecc="000" Category="0" Condition="0" />
+     <EccEntry Ecc="08" Category="0" Condition="0" />
+-    <EccEntry Ecc="110" Category="0" Condition="0" />
+-    <EccEntry Ecc="118" Category="0" Condition="0" />
+     <EccEntry Ecc="119" Category="0" Condition="0" />
+     <EccEntry Ecc="999" Category="0" Condition="0" />
++    <EccEntry Ecc="110" Category="0" Condition="1" />
++    <EccEntry Ecc="112" Category="0" Condition="1" />
++    <EccEntry Ecc="113" Category="0" Condition="1" />
++    <EccEntry Ecc="118" Category="0" Condition="1" />
++    <EccEntry Ecc="911" Category="0" Condition="1" />
+     <!-- Add for Malaysis Digi operator -->
+     <EccEntry Ecc="999" Category="0" Condition="1" Plmn = "502 FFF" />
+ </EccTable>

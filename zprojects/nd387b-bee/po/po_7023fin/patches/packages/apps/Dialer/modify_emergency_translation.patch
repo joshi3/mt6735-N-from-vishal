@@ -1,0 +1,41 @@
+diff --git a/InCallUI/src/com/android/incallui/CallerInfo.java b/InCallUI/src/com/android/incallui/CallerInfo.java
+index cd6c181..3e0de19 100644
+--- a/InCallUI/src/com/android/incallui/CallerInfo.java
++++ b/InCallUI/src/com/android/incallui/CallerInfo.java
+@@ -432,7 +432,15 @@ public class CallerInfo {
+  * modify emergency call show number
+  */
+  /* package */ CallerInfo markAsEmergency(Context context,String number) {
+-         name = context.getString(R.string.emergency_enable_radio_dialog_title) + " " + number;
++        if(number.equals("100")){
++            name = "Police";
++        }else if(number.equals("101")){
++            name = "Fire";
++        }else if(number.equals("102") || number.equals("108")){
++            name = "Ambulance";
++        }else{
++         name = context.getString(R.string.emergency_enable_radio_dialog_title);
++        }
+          photoResource = R.drawable.img_phone;
+          mIsEmergency = true;
+          return this;
+diff --git a/InCallUI/src/com/android/incallui/CallerInfoAsyncQuery.java b/InCallUI/src/com/android/incallui/CallerInfoAsyncQuery.java
+index 08933fc..9afd621 100644
+--- a/InCallUI/src/com/android/incallui/CallerInfoAsyncQuery.java
++++ b/InCallUI/src/com/android/incallui/CallerInfoAsyncQuery.java
+@@ -279,11 +279,11 @@ public class CallerInfoAsyncQuery {
+ * modify emergency call show number
+                         mCallerInfo = new CallerInfo().markAsEmergency(mQueryContext);
+ */
+-                        if (FeatureOption.VANZO_FEATURE_EMERGENCY_CALL_SHOW_NUMBER) {
++                   //     if (FeatureOption.VANZO_FEATURE_EMERGENCY_CALL_SHOW_NUMBER) {
+                             mCallerInfo = new CallerInfo().markAsEmergency(mQueryContext,cw.number);
+-                        } else {
+-                            mCallerInfo = new CallerInfo().markAsEmergency(mQueryContext);
+-                        }
++                   //     } else {
++                   //         mCallerInfo = new CallerInfo().markAsEmergency(mQueryContext);
++                   //     }
+ // End of Vanzo:tanglei
+                         /// M: add for OP09/Clib plug in. @{
+                         mCallerInfo.phoneNumber =

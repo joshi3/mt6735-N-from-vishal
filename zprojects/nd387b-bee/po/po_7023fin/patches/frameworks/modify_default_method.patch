@@ -1,0 +1,28 @@
+diff --git a/base/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java b/base/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
+index 114507d..46c6bef 100644
+--- a/base/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
++++ b/base/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
+@@ -2626,22 +2626,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
+             }
+             String defaultIME = FeatureOption.VANZO_FEATURE_DEFAULT_INPUT_METHOD;
+             Log.i(TAG, "FeatureOption defaultIME : " + defaultIME);
+-            if (defaultIME != null) {
+-                final PackageManager pm = mContext.getPackageManager();
+-                final List<android.content.pm.ResolveInfo> services = pm.queryIntentServices(
+-                        new Intent(android.view.inputmethod.InputMethod.SERVICE_INTERFACE),
+-                        PackageManager.GET_META_DATA);
+-                for (android.content.pm.ResolveInfo resolveInfo : services) {
+-                    android.content.pm.ServiceInfo serviceInfo = resolveInfo.serviceInfo;
+-                    Log.i(TAG, "serviceInfo.name: " + serviceInfo.name);
+-                    if (defaultIME.equals(serviceInfo.name)) {
+-                        String imeId = new ComponentName(serviceInfo.packageName, serviceInfo.name)
+-                            .flattenToShortString();
+-                        Log.i(TAG, "Default IME set: " + imeId);
+-                        loadSetting(stmt, Settings.Secure.DEFAULT_INPUT_METHOD, imeId);
+-                    }
+-                }
+-            }
++                        loadSetting(stmt, Settings.Secure.DEFAULT_INPUT_METHOD, "com.kpt.xploree.app/.KPTAdaptxtIME");
+ // End of Vanzo: yinjun
+             loadStringSetting(stmt, Settings.Secure.IMMERSIVE_MODE_CONFIRMATIONS,
+                         R.string.def_immersive_mode_confirmations);

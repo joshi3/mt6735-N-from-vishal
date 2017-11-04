@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="bookmarks_for_yahoo" translatable="false">
+    </string-array>
+    <string-array name="bookmarks">
+        <item>InFocus Phone</item>
+        <item>http://tw.infocusphone.com</item>
+        <item>InFocus Mobile Fan Page</item>
+        <item>http://www.facebook.com/InFocusMobile</item>
+        <item>Google</item>
+        <item>https://www.google.com</item>
+        <item>Weather Channel</item>
+        <item>http://m.weather.com</item>
+        <item>Picasa</item>
+        <item>https://picasa.google.com</item>
+        <item>Yahoo!</item>
+        <item>https://www.yahoo.com/</item>
+        <item>MSN</item>
+        <item>https://www.msn.com/</item>
+        <item>MySpace</item>
+        <item>https://myspace.com</item>
+        <item>Facebook</item>
+        <item>https://www.facebook.com/</item>
+        <item>Wikipedia</item>
+        <item>https://www.wikipedia.org/</item>
+        <item>eBay</item>
+        <item>https://m.ebay.com</item>
+        <item>CNN</item>
+        <item>http://www.cnn.com/</item>
+        <item>New York Times</item>
+        <item>http://www.nytimes.com/</item>
+        <item>ESPN</item>
+        <item>https://espn.go.com</item>
+        <item>Amazon</item>
+        <item>https://www.amazon.com/</item>
+        <item>BBC</item>
+        <item>https://www.bbc.co.uk/news/</item>
+    </string-array>
+</resources>

@@ -1,0 +1,25 @@
+diff --git a/mediatek/proprietary/packages/apps/Calendar/res/values/strings.xml b/mediatek/proprietary/packages/apps/Calendar/res/values/strings.xml
+index 6763b23..5db3456 100644
+--- a/mediatek/proprietary/packages/apps/Calendar/res/values/strings.xml
++++ b/mediatek/proprietary/packages/apps/Calendar/res/values/strings.xml
+@@ -554,6 +554,7 @@
+     <string name="preferences_default_reminder_dialog">Default reminder time</string>
+     <!-- Default value for the number of reminder minutes -->
+     <string name="preferences_default_reminder_default">10</string>
++    <string name="preferences_default_reminder_default_zero">0</string>
+     <!-- Settings check box label to keep Calendar in a fixed 'home' time zone [CHAR LIMIT = 18] -->
+     <string name="preferences_use_home_tz_title">Use home time zone</string>
+     <!-- Settings description of what setting Calendar to use a fixed 'home' time
+diff --git a/mediatek/proprietary/packages/apps/Calendar/res/xml/general_preferences.xml b/mediatek/proprietary/packages/apps/Calendar/res/xml/general_preferences.xml
+index a0d1577..c9186c3 100644
+--- a/mediatek/proprietary/packages/apps/Calendar/res/xml/general_preferences.xml
++++ b/mediatek/proprietary/packages/apps/Calendar/res/xml/general_preferences.xml
+@@ -76,7 +76,7 @@
+ 
+         <ListPreference
+             android:key="preferences_default_reminder"
+-            android:defaultValue="@string/preferences_default_reminder_default"
++            android:defaultValue="@string/preferences_default_reminder_default_zero"
+             android:title="@string/preferences_default_reminder_title"
+             android:entries="@array/preferences_default_reminder_labels"
+             android:entryValues="@array/preferences_default_reminder_values"

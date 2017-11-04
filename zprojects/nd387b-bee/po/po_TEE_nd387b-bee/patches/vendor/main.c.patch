@@ -1,0 +1,271 @@
+diff --git a/mediatek/proprietary/trustzone/microtrust/source/platform/mt6735/external/teei_daemon/main.c b/mediatek/proprietary/trustzone/microtrust/source/platform/mt6735/external/teei_daemon/main.c
+index c796121..e0dc81f 100755
+--- a/mediatek/proprietary/trustzone/microtrust/source/platform/mt6735/external/teei_daemon/main.c
++++ b/mediatek/proprietary/trustzone/microtrust/source/platform/mt6735/external/teei_daemon/main.c
+@@ -66,23 +66,7 @@ static int do_link(char *fn, char *ln);
+ #  define  LOGE(fmt,...)     \
+     do {KLOG_ERROR(TAG,fmt"\n",##__VA_ARGS__);__android_log_print( ANDROID_LOG_ERROR, TAG, fmt, ##__VA_ARGS__ );} while (0)
+ 
+-#if 0
+-#  define  LOGD(...)     \
+-    do {__android_log_print( ANDROID_LOG_DEBUG, TAG, __VA_ARGS__ ); } while (0)
+-
+-#  define  LOGI(...)     \
+-    do {__android_log_print( ANDROID_LOG_INFO, TAG, __VA_ARGS__ ); } while (0)
+ 
+-#  define  LOGW(...)     \
+-    do {__android_log_print( ANDROID_LOG_WARN, TAG, __VA_ARGS__ ); } while (0)
+-
+-#  define  LOGE(...)     \
+-    do {__android_log_print( ANDROID_LOG_ERROR, TAG, __VA_ARGS__ ); } while (0)
+-#define COPY_FILE(name,to) {char * name []={"","/vendor/thh/"#name,to}; \
+-                                LOGI("copy %s\n",#name); \
+-                                int name##_ret=do_copy(3,name);if(name##_ret < 0) \
+-                                    LOGE("%s copy failed[%d] to %s\n",#name,name##_ret,to);}
+-#endif
+ #define COPY_FILE_FULLPATH(name,from,to) {char * name []={"",from,to}; \
+                                 LOGI("copy %s\n",from); \
+                                 int name##_ret=do_copy(3,name);if(name##_ret < 0) \
+@@ -135,25 +119,7 @@ static int get_ota_status()
+     return ret;
+     //close(logfd);
+ }
+-#if 0
+-static int needUpdate(char * file)
+-{
+-    (void)file;
+-    return 1;
+-}
+-static void do_ota_update()
+-{
+-    if (needUpdate("soter"))
+-    {
+-        COPY_FILE_FULLPATH(soter_raw,"/vendor/thh/soter.raw","/data/thh/vendor/soter.raw");
+-    }
+-    if (needUpdate("alipay"))
+-    {
+-        COPY_FILE(alipayapp,"/data/thh/tee_01/tee");
+-    }
+ 
+-}
+-#endif
+ static void do_ota_cert_update()
+ {
+     // /vendor/thh/cert_update to /data/local/thh_update
+@@ -189,17 +155,6 @@ static void do_ota_cert_update()
+     do_copy(3, tee3SignCert);
+     do_copy(3, tee4SignCert);
+ 
+-    //do_link("/vendor/thh/cert_update/thh.cert","/data/local/thh_update/thh.cert");
+-    //do_link("/vendor/thh/cert_update/tee1/root.cert","/data/local/thh_update/tee1/root.cert");
+-    //do_link("/vendor/thh/cert_update/tee1/sign.cert","/data/local/thh_update/tee1/sign.cert");
+-    //do_link("/vendor/thh/cert_update/tee2/root.cert","/data/local/thh_update/tee2/root.cert");
+-    //do_link("/vendor/thh/cert_update/tee2/sign.cert","/data/local/thh_update/tee2/sign.cert");
+-    //do_link("/vendor/thh/cert_update/tee3/root.cert","/data/local/thh_update/tee3/root.cert");
+-    //do_link("/vendor/thh/cert_update/tee3/sign.cert","/data/local/thh_update/tee3/sign.cert");
+-    //do_link("/vendor/thh/cert_update/tee4/root.cert","/data/local/thh_update/tee4/root.cert");
+-    //do_link("/vendor/thh/cert_update/tee4/sign.cert","/data/local/thh_update/tee4/sign.cert");
+-
+-
+ }
+ 
+ 
+@@ -411,13 +366,7 @@ out:
+         close(fd2);
+     return rc;
+ }
+-#if 0
+-static void copy_files()
+-{
+-    COPY_FILE_FULLPATH(soter_raw,"/vendor/thh/soter.raw","/data/thh/vendor/soter.raw");
+-    COPY_FILE(alipayapp,"/data/thh/tee_01/tee");
+-}
+-#endif
++
+ char * dir5[]={"mkdir","/data/thh","0770"};
+ char * dirs[][3]={{"mkdir","/data/thh/system","0770"},
+ /*char * dir1[]=*/{"mkdir","/data/thh/tee_01","0770"},
+@@ -447,9 +396,6 @@ static void showMD5(unsigned char *data,char * des)
+     char md5[33] = {0};
+     memcpy(md5,data,32);
+     LOGI("[MD5](%s:%s)",des,md5);
+-    //sprintf(md5,"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+-    //        data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],data[11],data[12],data[13],data[14],data[15]);
+-    //LOGI("[%s]",md5);
+ }
+ static int get_image_md5_from_file(char *path, unsigned char *data)
+ {
+@@ -519,7 +465,7 @@ static int is_ota_update()
+     return 1;
+ }
+ 
+-static void create_tee_storage(char *table[], int index)
++static void create_tee_storage(char *table[])
+ {
+     unsigned char md5_ori_image[33]={0};
+     unsigned char ori_file[33]={0};
+@@ -527,64 +473,10 @@ static void create_tee_storage(char *table[], int index)
+     unsigned char md5_cur_file[33] = {0};
+ 
+     LOGI("-----------------------------");
+-    if (is_file_exist(table[IMG_DST_DIR])) {
+-        /* caclulate md5 from file */
+-        LOGI("%s is exists", table[IMG_DST_DIR]);
+-        LOGI("get md5 from image");
+-        if (!get_image_md5(table[IMG_DST_NAME], md5_work)) {
+-            goto restore_image;
+-        }
+-
+-        //showMD5(md5_work,table[IMG_DST_NAME]);
+-        LOGI("get md5 from cur file");
+-        if (!get_image_md5_from_file(table[IMG_MD5_CUR], md5_cur_file)) {
+-            goto restore_image;
+-        }
+-        //showMD5(md5_cur_file,table[IMG_MD5_CUR]);
+-        if (is_equal_md5(md5_work, md5_cur_file)) {
+-            LOGI("md5 == table.cur.md5");
+-            if (is_ota_update()) {
+-               LOGI("OTA == Y");
+-               //showMD5(ori_file,table[IMG_MD5_ORI]);
+-               if (!get_image_md5_from_file(table[IMG_MD5_ORI], ori_file)) {
+-                   goto restore_image;
+-               }
+-               showMD5(ori_file,table[IMG_MD5_ORI]);
+-               if (!get_image_md5(table[IMG_ORI], md5_ori_image)) {
+-                   goto restore_image;
+-               }
+-               showMD5(ori_file, table[IMG_MD5_ORI]);
+-               //showMD5(ori_file,table[IMG_MD5_ORI]);
+-               //showMD5(md5_ori_image,table[IMG_ORI]);
+-               if (is_equal_md5(ori_file, md5_ori_image)) {
+-                   LOGI("*.ori.md5 == *.ori.md5");
+-                   goto creat_done;
+-               } else {
+-                   LOGI("*.ori.md5 != *.ori.md5");
+-                   goto restore_image;
+-               }
+-
+-            } else {
+-                LOGI("OTA == N");
+-                goto creat_done;
+-            }
+-        } else {
+-            LOGI("md5 != table.cur.md5");
+-            goto restore_image;
+-        }
+-
+-    } else {
+-        LOGI("%s is  not exists", table[IMG_DST_DIR]);
+-        goto restore_image;
+-    }
++ 
+ restore_image:
+     LOGI("need restore_images");
+-    do_mkdir(3, dir5);
+-    do_mkdir(3, dirs[index]);
+-    unsigned char md5_src[32] = {0};
+-    get_image_md5(table[IMG_ORI],md5_src);
+-    write_md5_file(table[IMG_MD5_ORI], md5_src);
+-    write_md5_file(table[IMG_MD5_CUR], md5_src);
++
+     COPY_FILE_FULLPATH(image_raw, table[IMG_ORI], table[IMG_DST_NAME]);
+ creat_done:
+     LOGI("-----------------------------");
+@@ -592,38 +484,7 @@ creat_done:
+ 
+ 
+ }
+-#if 0
+-
+-static void creat_tee_storage()
+-{
+-    char * dir5[]={"mkdir","/data/thh","0777"};
+-    char * dir0[]={"mkdir","/data/thh/system","0777"};
+-    char * dir1[]={"mkdir","/data/thh/tee_01","0777"};
+-    char * dir2[]={"mkdir","/data/thh/tee_02","0777"};
+-    char * dir3[]={"mkdir","/data/thh/tee_03","0777"};
+-    char * dir4[]={"mkdir","/data/thh/tee_04","0777"};
+-
+-    int need_copy_files = 0;
+-    do_mkdir(3,dir5);
+-    errno = 0;
+-    mkdir_err_exist = 0;
+-    do_mkdir(3,dir0);
+-    //if thh/system already exists, it is not init stage.
+-    //Do not copy files.
+-    if(mkdir_err_exist)
+-    {
+-        need_copy_files = 0;
+-    }else{
+-        need_copy_files = 1;
+-    }
+-    do_mkdir(3,dir1);
+-    do_mkdir(3,dir2);
+-    do_mkdir(3,dir3);
+-    do_mkdir(3,dir4);
+-    if(need_copy_files)copy_files();
+ 
+-}
+-#endif
+ #if LOAD_TZ_DRIVER
+ static void load_tz_driver()
+ {
+@@ -1149,9 +1010,9 @@ static int loadtee_fn(void)
+ 
+     LOGI("create tee storage ...");
+     /*create_tee_storage(table[0],0);*/
+-    create_tee_storage(table[1], 1);
+-    create_tee_storage(table[2], 5);
+-    create_tee_storage(table[3], 6);
++    create_tee_storage(table[1]);
++    create_tee_storage(table[2]);
++    create_tee_storage(table[3]);
+ 
+     do_mkdir(3, dirs[2]);
+     do_mkdir(3, dirs[3]);
+@@ -1214,45 +1075,6 @@ int main(int argc, char **argv)
+ 
+     //sleep(15);
+ 
+-#if 0
+-    if(0){
+-		int fd = open(check_point,O_RDONLY|O_NONBLOCK);
+-		#if 1
+-		while(fd<=0)
+-		{
+-			sleep(1);
+-		    fd = open(check_point,O_RDONLY|O_NONBLOCK);
+-	    };
+-	    #endif
+-		LOGD("[teei_daemon]fd = %d \n",fd);
+-		char temp[64] = {0};
+-		read(fd,&temp,63);
+-		LOGD("[teei_daemon]read  = %s \n",temp);
+-		close(fd);
+-	}
+-#endif
+-
+-
+-#if 0
+-    LOGI("check ota update ...");
+-    if (get_ota_status() == OTA_REBOOT)
+-    {
+-        do_ota_update();
+-    }
+-#endif
+-
+-    //pthread_create(&ntid, NULL, (void*)init_OS_fn, NULL);
+-
+-#if 0
+-    if (!__teei_debug__)
+-    {
+-        init_TEEI_OS();
+-    }
+-    chmod_dev_node();
+-    LOGI("chmod dev node OK ...");
+-
+-    property_set("soter.teei.init", "INIT_OK");
+-#endif
+ 
+ 
+ 

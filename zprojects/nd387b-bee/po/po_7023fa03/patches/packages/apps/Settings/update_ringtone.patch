@@ -1,0 +1,147 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 4c2b57e..93bcea8 100755
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -1222,6 +1222,13 @@
+                 android:value="true" />
+         </activity>
+ 
++        <receiver android:name=".notification.RingtoneReceiver">
++            <intent-filter>
++                <action android:name="AP_SET_CALL_RINGTONE" />
++            </intent-filter>
++        </receiver>
++
++
+         <activity android:name="Settings$NotificationStationActivity"
+                 android:theme="@style/Theme.NotificationStation"
+                 android:label="@string/notification_log_title"
+diff --git a/res/values-zh-rCN/strings.xml b/res/values-zh-rCN/strings.xml
+index 47cbe80..e0a17ab 100644
+--- a/res/values-zh-rCN/strings.xml
++++ b/res/values-zh-rCN/strings.xml
+@@ -3099,4 +3099,5 @@
+     <string name="bluetooth_talkback_headphone" msgid="26580326066627664">"耳机"</string>
+     <string name="bluetooth_talkback_input_peripheral" msgid="5165842622743212268">"外围输入设备"</string>
+     <string name="bluetooth_talkback_bluetooth" msgid="5615463912185280812">"蓝牙"</string>
++    <string name="ringtone_set">"已将“<xliff:g id="name">%s</xliff:g>”设为手机铃声。"</string>
+ </resources>
+diff --git a/res/values-zh-rTW/strings.xml b/res/values-zh-rTW/strings.xml
+index fd7b9ce..3a5f6b5 100644
+--- a/res/values-zh-rTW/strings.xml
++++ b/res/values-zh-rTW/strings.xml
+@@ -3103,4 +3103,5 @@
+     <string name="bluetooth_talkback_headphone" msgid="26580326066627664">"頭戴式耳機"</string>
+     <string name="bluetooth_talkback_input_peripheral" msgid="5165842622743212268">"周邊輸入裝置"</string>
+     <string name="bluetooth_talkback_bluetooth" msgid="5615463912185280812">"藍牙"</string>
++    <string name="ringtone_set" msgid="5325818347613843130">"已將「<xliff:g id="NAME">%s</xliff:g>」設為手機鈴聲。"</string>
+ </resources>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 38bc124..4048c14 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -7500,4 +7500,5 @@
+ 
+     <!-- Message for telling the user the kind of BT device being displayed in list. -->
+     <string name="bluetooth_talkback_bluetooth">Bluetooth</string>
++    <string name="ringtone_set">\"<xliff:g id="name" example="AlarmBell">%s</xliff:g>\" set as phone ringtone.</string>
+ </resources>
+diff --git a/src/com/android/settings/notification/RingtoneReceiver.java b/src/com/android/settings/notification/RingtoneReceiver.java
+new file mode 100644
+index 0000000..4fbdd16
+--- /dev/null
++++ b/src/com/android/settings/notification/RingtoneReceiver.java
+@@ -0,0 +1,93 @@
++package com.android.settings.notification;
++import android.content.BroadcastReceiver;
++import android.content.ContentResolver;
++import android.content.Context;
++import android.content.Intent;
++import android.provider.Settings;
++import java.io.File;
++import com.android.settings.R;
++import android.content.ContentResolver;
++import android.content.ContentValues;
++import android.net.Uri;
++import android.provider.MediaStore;
++import android.database.Cursor;
++import android.media.RingtoneManager;
++import android.widget.Toast;
++
++public class RingtoneReceiver extends BroadcastReceiver{
++
++    private final String ACTION_BOOT = "AP_SET_CALL_RINGTONE";
++
++    @Override
++        public void onReceive(Context context, Intent intent) {
++            // TODO Auto-generated method stub
++            if (ACTION_BOOT.equals(intent.getAction())){
++                String ringUrl = intent.getStringExtra("callringUri");
++                android.util.Log.i("zhangweigang", "ringUrl==:"+ringUrl);
++                File sdfile = new File(ringUrl);
++                Uri uri=Uri.parse(ringUrl);
++                String title = sdfile.getName();
++                android.util.Log.i("zhangweigang", "uri==:"+uri + "  values==:"+sdfile.getName());
++
++                ContentResolver resolver = context.getContentResolver();
++                try {
++                    ContentValues values = new ContentValues(2);
++                    values.put(MediaStore.Audio.Media.IS_RINGTONE, "1");
++                    values.put(MediaStore.Audio.Media.IS_ALARM, "1");
++                    resolver.update(uri, values, null, null);
++                } catch (UnsupportedOperationException ex) {
++                    // most likely the card just got unmounted
++                    return;
++                }
++
++                String[] cols = new String[] {
++                    MediaStore.Audio.Media._ID,
++                        MediaStore.Audio.Media.DATA,
++                        MediaStore.Audio.Media.TITLE
++                };
++                /// M: use selectionArgs replace set query value in where @{
++                String where = MediaStore.Audio.Media._ID + "=?";
++                String[] whereArgs = new String[]{title};
++                android.util.Log.i("zhangweigang", "whereArgs==:"+whereArgs);
++                Cursor cursor = query(context, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
++                        cols, where , whereArgs, null);
++                /// @}
++                try {
++                    if (cursor != null && cursor.getCount() == 1) {
++                        // Set the system setting to make this the current ringtone
++                        cursor.moveToFirst();
++                        Settings.System.putString(resolver, Settings.System.RINGTONE, uri.toString());
++                        android.util.Log.i("zhangweigang", "cursor.getString(2)  =:"+cursor.getString(2));
++                        String message = context.getString(R.string.ringtone_set, cursor.getString(2));
++                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
++                    }
++                } finally {
++                    if (cursor != null) {
++                        cursor.close();
++                    }
++                }
++
++            }
++        }
++    public static Cursor query(Context context, Uri uri, String[] projection,
++            String selection, String[] selectionArgs, String sortOrder, int limit) {
++        try {
++            ContentResolver resolver = context.getContentResolver();
++            if (resolver == null) {
++                return null;
++            }
++            if (limit > 0) {
++                uri = uri.buildUpon().appendQueryParameter("limit", "" + limit).build();
++            }
++            return resolver.query(uri, projection, selection, selectionArgs, sortOrder);
++        } catch (UnsupportedOperationException ex) {
++            return null;
++        }
++
++    }
++    public static Cursor query(Context context, Uri uri, String[] projection,
++            String selection, String[] selectionArgs, String sortOrder) {
++        return query(context, uri, projection, selection, selectionArgs, sortOrder, 0);
++    }
++}
++

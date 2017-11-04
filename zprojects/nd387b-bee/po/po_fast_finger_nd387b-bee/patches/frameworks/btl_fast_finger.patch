@@ -1,0 +1,3659 @@
+diff --git a/base/Android.mk b/base/Android.mk
+index f70cace..de14077 100755
+--- a/base/Android.mk
++++ b/base/Android.mk
+@@ -175,6 +175,8 @@ LOCAL_SRC_FILES += \
+ 	core/java/android/hardware/display/IVirtualDisplayCallback.aidl \
+ 	core/java/android/hardware/fingerprint/IFingerprintDaemon.aidl \
+ 	core/java/android/hardware/fingerprint/IFingerprintDaemonCallback.aidl \
++	core/java/android/hardware/fingerprint/IFpsFingerClient.aidl \
++	core/java/android/hardware/fingerprint/IFpsFingerManager.aidl \
+ 	core/java/android/hardware/fingerprint/IFingerprintService.aidl \
+ 	core/java/android/hardware/fingerprint/IFingerprintServiceLockoutResetCallback.aidl \
+ 	core/java/android/hardware/fingerprint/IFingerprintServiceReceiver.aidl \
+diff --git a/base/core/java/android/app/ActivityManagerInternal.java b/base/core/java/android/app/ActivityManagerInternal.java
+index 0ab238e..ab3a0f8 100644
+--- a/base/core/java/android/app/ActivityManagerInternal.java
++++ b/base/core/java/android/app/ActivityManagerInternal.java
+@@ -156,4 +156,8 @@ public abstract class ActivityManagerInternal {
+      *  such as Power Save mode.
+      */
+     public abstract void setPendingIntentWhitelistDuration(IIntentSender target, long duration);
++
++	//blestech add
++	public abstract void onWakefulnessAwake();
++	//blestech end
+ }
+diff --git a/base/core/java/android/hardware/fingerprint/FingerprintManager.java b/base/core/java/android/hardware/fingerprint/FingerprintManager.java
+index f17fd55..fcad52c 100644
+--- a/base/core/java/android/hardware/fingerprint/FingerprintManager.java
++++ b/base/core/java/android/hardware/fingerprint/FingerprintManager.java
+@@ -44,6 +44,15 @@ import static android.Manifest.permission.INTERACT_ACROSS_USERS;
+ import static android.Manifest.permission.USE_FINGERPRINT;
+ import static android.Manifest.permission.MANAGE_FINGERPRINT;
+ 
++//blestech add
++import android.content.IntentFilter;
++import android.hardware.fingerprint.IFpsFingerManager;
++import android.content.ServiceConnection;
++import android.content.ComponentName;
++import android.content.BroadcastReceiver;
++import android.content.Intent;
++//blestech end
++
+ /**
+  * A class that coordinates access to the fingerprint hardware.
+  * <p>
+@@ -177,6 +186,148 @@ public class FingerprintManager {
+     private CryptoObject mCryptoObject;
+     private Fingerprint mRemovalFingerprint;
+     private Handler mHandler;
++	//blestech add
++	public static final int BTLFINGERFUN_ENFUN = 0;
++	public static final int BTLFINGERFUN_ISFUN = 1;
++	public static final int BTLFINGERFUN_SETFUN = 2;
++	public static final int BTLFINGERFUN_GETFUN = 3;
++	public static final int BTLFINGERFUN_SETENFUN = 4;
++	public static final int BTLFINGERFUN_BROADCAST = 5;
++	public static final int BTLFINGERFUN_MESSAGE = 6;
++	public static final int BTLFINGERFUN_ISFUNBROAD = 7;
++	public static final int BTLFINGERFUN_NULL = 8;
++	public static final int BTLFINGERFUN_WAIT = 9;
++	public static final int BTLFINGERFUN_SETWAIT = 10;
++	private static boolean IS_BTL_FINGERPRINT_QUICK;
++	private static IFpsFingerManager fm;
++	public static boolean mProximityScreen;
++	public static boolean mWakefulnessTemp;
++	public static final String BTLFINGER_BOOT_ACTION = "com.blestech.fingerprint.boot";
++
++	private ServiceConnection mConnection = new ServiceConnection() {
++        @Override
++        public void onServiceConnected(ComponentName name, IBinder service) {
++            // TODO Auto-generated method stub
++            Log.i(TAG, "on FingerService ServiceConnected");
++            fm = IFpsFingerManager.Stub.asInterface(service);
++			if(fm != null){
++				Log.i(TAG, "on FingerService ServiceConnected0000000000");
++				try {
++					fm.FpEnFun(0);
++					fm.FpEnFun(3);
++					fm.FpEnFun(4);
++					fm.FpEnFun(6);
++				} catch (RemoteException e) {
++					// TODO Auto-generated catch block
++					e.printStackTrace();
++				}
++				
++				IS_BTL_FINGERPRINT_QUICK = true;
++			}
++        }
++
++        @Override
++        public void onServiceDisconnected(ComponentName name) {
++            // TODO Auto-generated method stub
++            Slog.w(TAG, "onServiceDisconnected1111");
++            fm = null;
++			IS_BTL_FINGERPRINT_QUICK = false;
++        }
++    };
++
++	private final BroadcastReceiver mFingerReceiver = new BroadcastReceiver() {
++        @Override
++        public void onReceive(Context context, Intent intent) {
++			Slog.w(TAG, "ACTION_BOOT_COMPLETED00000000");
++			if(fm == null){
++				Intent intent_finger = new Intent();
++			    intent_finger.setAction("com.btlfinger.service");
++			    intent_finger.setPackage("com.btlfinger.fingerprintunlock");
++			    mContext.bindService(intent_finger, mConnection, Context.BIND_AUTO_CREATE);
++			}
++    	}
++    };
++
++	public static boolean isBtlFingerprintQuick() {
++		//Slog.w(TAG, "isBtlFingerprintQuick0000:"+IS_BTL_FINGERPRINT_QUICK);
++        return IS_BTL_FINGERPRINT_QUICK;
++    }
++
++	public static boolean isBtlFingerprintFm() {
++        return fm!=null;
++    }
++
++	public static int fingerFun(int funId, int param) {
++		if(fm != null){
++			//Log.i(TAG, "fingerFun00000:"+funId+":"+param);
++			try {
++				switch (funId) {
++			        case BTLFINGERFUN_ENFUN:
++			            return fm.FpEnFun(param);
++			        case BTLFINGERFUN_ISFUN:
++			            return fm.FpIsFun();
++			        case BTLFINGERFUN_SETFUN:
++			           	return fm.FpSetFun(param);
++			        case BTLFINGERFUN_GETFUN:
++			            return fm.FpGetFun();
++			        case BTLFINGERFUN_SETENFUN:
++			            return fm.FpSetEnFun();
++			        case BTLFINGERFUN_BROADCAST:
++			            return fm.FpBroadcast();
++			        case BTLFINGERFUN_MESSAGE:
++			            return fm.FpMessage();
++					case BTLFINGERFUN_ISFUNBROAD:
++			            return fm.FpIsFunBroad();
++					case BTLFINGERFUN_NULL:
++			            return fm.FpNull();
++					case BTLFINGERFUN_WAIT:
++			            return fm.FpWait();
++					case BTLFINGERFUN_SETWAIT:
++			            return fm.FpSetWait(param);
++			        default:
++			            return -1;
++				}
++			} catch (RemoteException e) {
++				// TODO Auto-generated catch block
++				e.printStackTrace();
++			}
++			
++		}
++        return -1;
++    }
++
++    /**
++     * @hide
++     */
++    public void writeValueToSys(String path, int value) {
++        if (mService != null) {
++            try {
++                mService.writeValueToSys(path, value);
++            } catch (RemoteException e) {
++                throw e.rethrowFromSystemServer();
++            }
++        } else {
++            Log.w(TAG, "writeValueToSys(): Service not connected!");
++        }
++    }
++
++    /**
++     * @hide
++     */
++    public int readValueFromSys(String path) {
++        if (mService != null) {
++            try {
++                return mService.readValueFromSys(path);
++            } catch (RemoteException e) {
++                throw e.rethrowFromSystemServer();
++            }
++        } else {
++            Log.w(TAG, "readValueFromSys(): Service not connected!");
++        }
++
++        return -1;
++    }
++	//blestech end
+ 
+     private class OnEnrollCancelListener implements OnCancelListener {
+         @Override
+@@ -888,6 +1039,10 @@ public class FingerprintManager {
+             Slog.v(TAG, "FingerprintManagerService was null");
+         }
+         mHandler = new MyHandler(context);
++		//blestech add
++		Slog.i(TAG, "FingerprintManager init000000");
++		mContext.registerReceiver(mFingerReceiver, new IntentFilter(BTLFINGER_BOOT_ACTION));
++		//blestech end
+     }
+ 
+     private int getCurrentUserId() {
+@@ -996,7 +1151,7 @@ public class FingerprintManager {
+ 
+         @Override // binder call
+         public void onAuthenticationFailed(long deviceId) {
+-            mHandler.obtainMessage(MSG_AUTHENTICATION_FAILED).sendToTarget();;
++            mHandler.obtainMessage(MSG_AUTHENTICATION_FAILED).sendToTarget();
+         }
+ 
+         @Override // binder call
+diff --git a/base/core/java/android/hardware/fingerprint/IFingerprintService.aidl b/base/core/java/android/hardware/fingerprint/IFingerprintService.aidl
+index a83397a..870742a 100644
+--- a/base/core/java/android/hardware/fingerprint/IFingerprintService.aidl
++++ b/base/core/java/android/hardware/fingerprint/IFingerprintService.aidl
+@@ -79,4 +79,8 @@ interface IFingerprintService {
+ 
+     // Explicitly set the active user (for enrolling work profile)
+     void setActiveUser(int uid);
++    //blestech add
++    void writeValueToSys(String path, int value);
++    int readValueFromSys(String path);
++    //blestech end
+ }
+diff --git a/base/core/java/android/hardware/fingerprint/IFpsFingerClient.aidl b/base/core/java/android/hardware/fingerprint/IFpsFingerClient.aidl
+new file mode 100644
+index 0000000..11253d7
+--- /dev/null
++++ b/base/core/java/android/hardware/fingerprint/IFpsFingerClient.aidl
+@@ -0,0 +1,6 @@
++package android.hardware.fingerprint; 
++
++interface IFpsFingerClient
++{  
++    void getValue(int type, int score);
++}
+diff --git a/base/core/java/android/hardware/fingerprint/IFpsFingerManager.aidl b/base/core/java/android/hardware/fingerprint/IFpsFingerManager.aidl
+new file mode 100644
+index 0000000..2565f5a
+--- /dev/null
++++ b/base/core/java/android/hardware/fingerprint/IFpsFingerManager.aidl
+@@ -0,0 +1,21 @@
++package android.hardware.fingerprint;
++import android.hardware.fingerprint.IFpsFingerClient;
++
++interface IFpsFingerManager  
++{  
++    int SetKeyCode(int keycode);
++    void waitScreenOn();
++    void listen(IFpsFingerClient client);
++    int mmiFpTest();
++    int FpEnFun(int enable);
++    int FpIsFun();
++    int FpSetFun(int enable);
++    int FpGetFun();
++    int FpSetEnFun();
++    int FpBroadcast();
++    int FpMessage();
++    int FpIsFunBroad();
++    int FpNull();
++	int FpWait();
++	int FpSetWait(int wait);
++}
+diff --git a/base/core/java/android/os/IPowerManager.aidl b/base/core/java/android/os/IPowerManager.aidl
+index bb011ac..f3f124c 100755
+--- a/base/core/java/android/os/IPowerManager.aidl
++++ b/base/core/java/android/os/IPowerManager.aidl
+@@ -71,4 +71,8 @@ interface IPowerManager
+ 
+     // sets the attention light (used by phone app only)
+     void setAttentionLight(boolean on, int color);
++    //blestech add
++    boolean isRealInteractive();
++    void onSendInteractiveBroadcast(boolean interactive);
++    //blestech end
+ }
+diff --git a/base/core/java/android/os/PowerManager.java b/base/core/java/android/os/PowerManager.java
+index e218e46..5bfae8e 100644
+--- a/base/core/java/android/os/PowerManager.java
++++ b/base/core/java/android/os/PowerManager.java
+@@ -1487,4 +1487,24 @@ public final class PowerManager {
+         return (int) (Math.pow((float) physicalValue / (float) BRIGHTNESS_ON, dimmingGammaHighInv) *
+                 (float) BRIGHTNESS_ON + 0.5f);
+     }
++
++    //blestech add
++    /** @hide */
++    public boolean isRealInteractive() {
++        try {
++            return mService.isRealInteractive();
++        } catch (RemoteException e) {
++            throw e.rethrowFromSystemServer();
++        }
++    }
++
++    /** @hide */
++    public void onSendInteractiveBroadcast(boolean interactive) {
++        try {
++            mService.onSendInteractiveBroadcast(interactive);
++        } catch (RemoteException e) {
++            throw e.rethrowFromSystemServer();
++        }
++    }
++    //blestech end
+ }
+diff --git a/base/core/java/android/provider/Settings.java b/base/core/java/android/provider/Settings.java
+index 4fa917e..336fd77 100755
+--- a/base/core/java/android/provider/Settings.java
++++ b/base/core/java/android/provider/Settings.java
+@@ -2476,6 +2476,102 @@ public final class Settings {
+          * @hide
+          */
+         public static final String SCREEN_SHOT_UP_PAGE = "screen_shot_up_page";
++		
++		/*[blestech] add begin*/
++        /**
++         *上一个解锁的应用包名
++         * @hide
++         */
++        public static final String BTLFINGER_FINGERPRINT_LAST_PACKAGE_NAME = "com_btlfinger_fingerprint_lastapp_package";
++
++        /**
++         *是否将指纹应用于屏幕解锁
++         * @hide
++         */
++        public static final String BTLFINGER_FINGERPRINT_USEDTO_SCREENLOCK = "com_btlfinger_fingerprint_usedto_screenlock";
++
++        /**
++         *是否将指纹应用于camera
++         * @hide
++         */
++        public static final String BTLFINGER_FINGERPRINT_USEDTO_CAMERA = "com_btlfinger_fingerprint_usedto_camera";
++
++        /**
++         *是否将指纹应用于call
++         * @hide
++         */
++        public static final String BTLFINGER_FINGERPRINT_USEDTO_CALL = "com_btlfinger_fingerprint_usedto_call";
++
++        /**
++         *是否将指纹应用于desktop
++         * @hide
++         */
++        public static final String BTLFINGER_FINGERPRINT_USEDTO_DESKTOP = "com_btlfinger_fingerprint_usedto_desktop";
++
++        /**
++         *是否将指纹应用于music
++         * @hide
++         */
++        public static final String BTLFINGER_FINGERPRINT_USEDTO_MUSIC = "com_btlfinger_fingerprint_usedto_music";
++
++		 /**
++         *应用加密列表
++         * @hide
++         */
++        public static final String BTLFINGER_FINGERPRINT_USEDTO_READER = "com_btlfinger_fingerprint_usedto_reader";
++
++        /**
++         *是否将指纹应用于应用解锁
++         * @hide
++         */
++        public static final String BTLFINGER_FINGERPRINT_USEDTO_APPLOCK = "com_btlfinger_fingerprint_usedto_applock";
++
++        /**
++         *应用加密列表
++         * @hide
++         */
++        public static final String BTLFINGER_FINGERPRINT_NEEDLOCKAPP_PACKAGE_NAME = "com_btlfinger_fingerprint_needlockapp_package";
++
++	    /**
++         * @hide
++         */
++		public static final String BTLFINGER_FINGERPRINT_INITIALIZE_PWD = "com_btlfinger_fingerprint_initialize_pwd";
++
++		/**
++         * @hide
++         */
++		public static final String BTLFINGER_FINGERPRINT_MUSIC_RES1 = null;
++
++		/**
++         * @hide
++         */
++		public static final String BTLFINGER_FINGERPRINT_MUSIC_RES2 = null;
++
++		/**
++         * @hide
++         */
++		public static final String BTLFINGER_FINGERPRINT_MUSIC_RES3 = null;
++
++		/**
++         * @hide
++         */
++		public static final String BTLFINGER_FINGERPRINT_CAMERA_RES1 = null;
++
++		/**
++         * @hide
++         */
++		public static final String BTLFINGER_FINGERPRINT_CAMERA_RES2 = null;
++
++		/**
++         * @hide
++         */
++		public static final String BTLFINGER_FINGERPRINT_CAMERA_RES3 = null;
++		
++		/**
++         * @hide
++         */
++		public static final String BTLFINGER_FINGERPRINT_ROTATION = "com_btlfinger_fingerprint_rotation";
++        /*[blestech] add end*/
+ 
+         /**
+          * @deprecated Use {@link android.provider.Settings.Global#AIRPLANE_MODE_ON} instead
+@@ -3014,6 +3110,7 @@ public final class Settings {
+         public static final String RINGTONE_CACHE = "ringtone_cache";
+         /** {@hide} */
+         public static final Uri RINGTONE_CACHE_URI = getUriFor(RINGTONE_CACHE);
++		
+ 
+         /**
+          * Persistent store for the system-wide default notification sound.
+diff --git a/base/core/java/com/android/internal/policy/IKeyguardService.aidl b/base/core/java/com/android/internal/policy/IKeyguardService.aidl
+index 171a264..bcaec13 100644
+--- a/base/core/java/com/android/internal/policy/IKeyguardService.aidl
++++ b/base/core/java/com/android/internal/policy/IKeyguardService.aidl
+@@ -20,8 +20,8 @@ import com.android.internal.policy.IKeyguardStateCallback;
+ import com.android.internal.policy.IKeyguardExitCallback;
+ 
+ import android.os.Bundle;
+-
+-oneway interface IKeyguardService {
++//blestech add
++interface IKeyguardService {
+ 
+     /**
+      * Sets the Keyguard as occluded when a window dismisses the Keyguard with flag
+@@ -29,14 +29,14 @@ oneway interface IKeyguardService {
+      *
+      * @param isOccluded Whether the Keyguard is occluded by another window.
+      */
+-    void setOccluded(boolean isOccluded);
++    oneway void setOccluded(boolean isOccluded);
+ 
+-    void addStateMonitorCallback(IKeyguardStateCallback callback);
+-    void verifyUnlock(IKeyguardExitCallback callback);
+-    void keyguardDone(boolean authenticated, boolean wakeup);
+-    void dismiss();
+-    void onDreamingStarted();
+-    void onDreamingStopped();
++    oneway void addStateMonitorCallback(IKeyguardStateCallback callback);
++    oneway void verifyUnlock(IKeyguardExitCallback callback);
++    oneway void keyguardDone(boolean authenticated, boolean wakeup);
++    oneway void dismiss();
++    oneway void onDreamingStarted();
++    oneway void onDreamingStopped();
+ 
+     /**
+      * Called when the device has started going to sleep.
+@@ -44,7 +44,7 @@ oneway interface IKeyguardService {
+      * @param why {@link #OFF_BECAUSE_OF_USER}, {@link #OFF_BECAUSE_OF_ADMIN},
+      * or {@link #OFF_BECAUSE_OF_TIMEOUT}.
+      */
+-    void onStartedGoingToSleep(int reason);
++    oneway void onStartedGoingToSleep(int reason);
+ 
+     /**
+      * Called when the device has finished going to sleep.
+@@ -55,33 +55,33 @@ oneway interface IKeyguardService {
+      *                               {@link #onStartedGoingToSleep} and this method; if it's been
+      *                               triggered, we shouldn't lock the device.
+      */
+-    void onFinishedGoingToSleep(int reason, boolean cameraGestureTriggered);
++    oneway void onFinishedGoingToSleep(int reason, boolean cameraGestureTriggered);
+ 
+     /**
+      * Called when the device has started waking up.
+      */
+-    void onStartedWakingUp();
++    oneway void onStartedWakingUp();
+ 
+     /**
+      * Called when the device screen is turning on.
+      */
+-    void onScreenTurningOn(IKeyguardDrawnCallback callback);
++    oneway void onScreenTurningOn(IKeyguardDrawnCallback callback);
+ 
+     /**
+      * Called when the screen has actually turned on.
+      */
+-    void onScreenTurnedOn();
++    oneway void onScreenTurnedOn();
+ 
+     /**
+      * Called when the screen has turned off.
+      */
+-    void onScreenTurnedOff();
++    oneway void onScreenTurnedOff();
+ 
+-    void setKeyguardEnabled(boolean enabled);
+-    void onSystemReady();
+-    void doKeyguardTimeout(in Bundle options);
+-    void setCurrentUser(int userId);
+-    void onBootCompleted();
++    oneway void setKeyguardEnabled(boolean enabled);
++    oneway void onSystemReady();
++    oneway void doKeyguardTimeout(in Bundle options);
++    oneway void setCurrentUser(int userId);
++    oneway void onBootCompleted();
+ 
+     /**
+      * Notifies that the activity behind has now been drawn and it's safe to remove the wallpaper
+@@ -90,11 +90,14 @@ oneway interface IKeyguardService {
+      * @param startTime the start time of the animation in uptime milliseconds
+      * @param fadeoutDuration the duration of the exit animation, in milliseconds
+      */
+-    void startKeyguardExitAnimation(long startTime, long fadeoutDuration);
++    oneway void startKeyguardExitAnimation(long startTime, long fadeoutDuration);
+ 
+     /**
+      * Notifies the Keyguard that the activity that was starting has now been drawn and it's safe
+      * to start the keyguard dismiss sequence.
+      */
+-    void onActivityDrawn();
++    oneway void onActivityDrawn();
++
++    int fingerFun(int temp);
+ }
++//blestech end
+diff --git a/base/core/res/res/values-zh-rCN/strings_custom.xml b/base/core/res/res/values-zh-rCN/strings_custom.xml
+index 0934dd6..1b64a5d 100644
+--- a/base/core/res/res/values-zh-rCN/strings_custom.xml
++++ b/base/core/res/res/values-zh-rCN/strings_custom.xml
+@@ -24,6 +24,7 @@
+     <string name="global_action_reboot">重启</string>
+     <string name="reboot_confirm_question">"您要重启吗？"</string>
+     <string name="reboot_confirm">"您的手机将重启。"</string>
++    <string name="custom_warning_move_toast">重复位置请移动手指!</string>
+     <string name="global_action_shotscreen">截屏</string>
+     <string name="global_actions_toggle_dataconnection_mode">数据连接</string>
+     <string name="global_actions_dataconnection_mode_on_status">数据连接已打开</string>
+diff --git a/base/core/res/res/values/strings_custom.xml b/base/core/res/res/values/strings_custom.xml
+index e164547..ae3b8d6 100644
+--- a/base/core/res/res/values/strings_custom.xml
++++ b/base/core/res/res/values/strings_custom.xml
+@@ -22,6 +22,7 @@
+     <string name="global_action_reboot">Reboot</string>
+     <string name="reboot_confirm_question">Would you like to reboot?</string>
+     <string name="reboot_confirm">Your phone will reboot.</string>
++    <string name="custom_warning_move_toast">Repeat position move your fingers!</string>
+     <string name="global_action_shotscreen">ScreenShot</string>
+     <string name="global_actions_toggle_dataconnection_mode">Data network mode</string>
+     <string name="global_actions_dataconnection_mode_on_status">Data connection is on</string>
+diff --git a/base/core/res/res/values/symbols.xml b/base/core/res/res/values/symbols.xml
+index 4951023..34a30f4 100644
+--- a/base/core/res/res/values/symbols.xml
++++ b/base/core/res/res/values/symbols.xml
+@@ -2400,6 +2400,7 @@
+   <java-symbol type="drawable" name="platlogo_m" />
+ <!--* Vanzo:yujianpeng on: Thu, 07 Jan 2016 14:09:24 +0800-->
+    <!-- For Power Reboot -->
++   <java-symbol type="string" name="custom_warning_move_toast" />
+    <java-symbol type="drawable" name="ic_lock_reboot" />
+    <java-symbol type="string" name="global_action_reboot" />
+    <java-symbol type="string" name="reboot_confirm_question" />
+diff --git a/base/packages/Keyguard/src/com/android/keyguard/KeyguardUpdateMonitor.java b/base/packages/Keyguard/src/com/android/keyguard/KeyguardUpdateMonitor.java
+index 83b5be1..4500797 100644
+--- a/base/packages/Keyguard/src/com/android/keyguard/KeyguardUpdateMonitor.java
++++ b/base/packages/Keyguard/src/com/android/keyguard/KeyguardUpdateMonitor.java
+@@ -227,6 +227,12 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+     private TrustManager mTrustManager;
+     private int mFingerprintRunningState = FINGERPRINT_STATE_STOPPED;
+ 
++	//blestech add
++	private LockPatternUtils mLockPatternUtils;
++    private boolean mOccluded;
++	private boolean mAlarmFlag = false;
++	private boolean mAlarmStart = false;
++	//blestech end
+     // M: modify for mock
+     @VisibleForTesting
+     final Handler mHandler = new Handler() {
+@@ -357,6 +363,10 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+                 }
+             }
+         }
++
++        //blestech add
++        updateFingerprintListeningState();
++        //blestech end
+     }
+ 
+     protected void handleSimSubscriptionInfoChanged() {
+@@ -462,7 +472,16 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+     }
+ 
+     private void onFingerprintAuthenticated(int userId) {
+-        mUserFingerprintAuthenticated.put(userId, true);
++        //blestech add
++		if(FingerprintManager.isBtlFingerprintQuick()){
++			synchronized(this) {
++				mAlarmFlag = false;
++				mUserFingerprintAuthenticated.put(userId, true);
++		    }
++		}else{
++			mUserFingerprintAuthenticated.put(userId, true);
++		}
++		//blestech end
+ 
+         // If fingerprint unlocking is allowed, this event will lead to a Keyguard dismiss or to a
+         // wake-up (if Keyguard is not showing), so we don't need to listen until Keyguard is
+@@ -535,7 +554,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+                 && mFingerprintRunningState == FINGERPRINT_STATE_CANCELLING_RESTARTING) {
+             setFingerprintRunningState(FINGERPRINT_STATE_STOPPED);
+             startListeningForFingerprint();
+-        } else {
++        } else{
+             setFingerprintRunningState(FINGERPRINT_STATE_STOPPED);
+         }
+         for (int i = 0; i < mCallbacks.size(); i++) {
+@@ -620,8 +639,14 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+     }
+ 
+     public boolean isUnlockingWithFingerprintAllowed() {
+-        return mStrongAuthTracker.isUnlockingWithFingerprintAllowed()
+-                && !hasFingerprintUnlockTimedOut(sCurrentUser);
++		//blestech add
++        if(FingerprintManager.isBtlFingerprintQuick()) {
++            return isUnlockingWithFingerprintAuthAllowed();
++        } else {
++            return mStrongAuthTracker.isUnlockingWithFingerprintAllowed()
++                    && !hasFingerprintUnlockTimedOut(sCurrentUser);
++        }
++		//blestech end
+     }
+ 
+     public StrongAuthTracker getStrongAuthTracker() {
+@@ -788,7 +813,23 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+                 }
+                 mHandler.sendMessage(
+                         mHandler.obtainMessage(MSG_SERVICE_STATE_CHANGE, subId, 0, serviceState));
+-            }
++            }//blestech add
++	        else if(action.equals("com.android.deskclock.ALARM_ALERT")){
++				mAlarmStart = true;
++				synchronized (this) {
++					//while(SystemProperties.getBoolean("sys.btl_fingerprint_flag2", false));
++					stopListeningForFingerprint();
++					clearFingerprintRecognized();
++				}
++			}else if(action.equals("com.android.deskclock.ALARM_DONE")){
++				Log.d(TAG, "received broadcast1111111");
++				mAlarmStart = false;
++
++				synchronized (this) {
++					updateFingerprintListeningState();
++				}
++			}
++			//blestech end
+         }
+     };
+ 
+@@ -866,6 +907,13 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+ 
+         @Override
+         public void onAuthenticationError(int errMsgId, CharSequence errString) {
++            //blestech add
++		//	if(FingerprintManager.isBtlFingerprintQuick()
++                //    && errMsgId == FingerprintManager.FINGERPRINT_ERROR_LOCKOUT) {
++                //return;
++            //}
++			//blestech end
++			
+             handleFingerprintError(errMsgId, errString.toString());
+         }
+ 
+@@ -1093,7 +1141,11 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+ 
+     protected void handleStartedWakingUp() {
+         Log.d(TAG, "handleStartedWakingUp");
+-        updateFingerprintListeningState();
++		//blestech add
++		if(!FingerprintManager.isBtlFingerprintQuick()){
++			updateFingerprintListeningState();
++		}
++		//blestech end
+         final int count = mCallbacks.size();
+         for (int i = 0; i < count; i++) {
+             KeyguardUpdateMonitorCallback cb = mCallbacks.get(i).get();
+@@ -1104,7 +1156,15 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+     }
+ 
+     protected void handleStartedGoingToSleep(int arg1) {
+-        clearFingerprintRecognized();
++        //blestech add
++		if(FingerprintManager.isBtlFingerprintQuick()){
++			synchronized (this) {
++				clearFingerprintRecognized();
++			}
++		}else{
++			clearFingerprintRecognized();
++		}
++		//blestech end
+         final int count = mCallbacks.size();
+         for (int i = 0; i < count; i++) {
+             KeyguardUpdateMonitorCallback cb = mCallbacks.get(i).get();
+@@ -1126,7 +1186,11 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+                 cb.onFinishedGoingToSleep(arg1);
+             }
+         }
+-        updateFingerprintListeningState();
++        //blestech add
++        if(!FingerprintManager.isBtlFingerprintQuick()){
++			updateFingerprintListeningState();
++		}
++        //blestech end
+     }
+ 
+     private void handleScreenTurnedOn() {
+@@ -1213,6 +1277,13 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+         /// M: ALPS02139605 It always prompt "incorrect SIM PIN code, you have 3 remaining attempt"
+         filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+ 
++		//blestech add
++		if(FingerprintManager.isBtlFingerprintQuick()){
++			filter.addAction("com.android.deskclock.ALARM_ALERT");
++			filter.addAction("com.android.deskclock.ALARM_DONE");
++		}
++		//blestech end
++
+         context.registerReceiver(mBroadcastReceiver, filter);
+ 
+         final IntentFilter bootCompleteFilter = new IntentFilter();
+@@ -1259,7 +1330,10 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+                 PERMISSION_SELF, null /* handler */);
+         mTrustManager = (TrustManager) context.getSystemService(Context.TRUST_SERVICE);
+         mTrustManager.registerTrustListener(this);
+-        new LockPatternUtils(context).registerStrongAuthTracker(mStrongAuthTracker);
++		//blestech add
++        mLockPatternUtils = new LockPatternUtils(context);
++		//blestech end
++        mLockPatternUtils.registerStrongAuthTracker(mStrongAuthTracker);
+ 
+         mFpm = (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
+         updateFingerprintListeningState();
+@@ -1290,9 +1364,26 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+     }
+ 
+     private boolean shouldListenForFingerprint() {
+-        return (mKeyguardIsVisible || !mDeviceInteractive || mBouncer || mGoingToSleep)
++        //blestech add
++        if(FingerprintManager.isBtlFingerprintQuick()) {
++            Log.i(TAG, "shouldListenForFingerprint():" + mKeyguardIsVisible + ":"
++                    + !mFingerprintAlreadyAuthenticated + ":" + mAlarmFlag + ":"
++                    + !mSwitchingUser + ":" + (mPhoneState == TelephonyManager.CALL_STATE_IDLE)
++                    + ":" + !mAlarmStart + ":" + mOccluded + ":"
++                    + !isFingerprintDisabled(getCurrentUser())+":"+!getUserHasTrust(getCurrentUser()));
++            boolean ret = (mKeyguardIsVisible || mAlarmFlag) && !mSwitchingUser
++                    && mPhoneState != TelephonyManager.CALL_STATE_RINGING
++                    && !mFingerprintAlreadyAuthenticated
++                    && !isFingerprintDisabled(getCurrentUser())
++                    && mLockPatternUtils.isSecure(getCurrentUser())
++                    && !getUserHasTrust(getCurrentUser());
++            return ret;
++        }else{
++			return (mKeyguardIsVisible || !mDeviceInteractive || mBouncer || mGoingToSleep)
+                 && !mSwitchingUser && !mFingerprintAlreadyAuthenticated
+                 && !isFingerprintDisabled(getCurrentUser());
++		}
++		//blestech end
+     }
+ 
+     private void startListeningForFingerprint() {
+@@ -1300,9 +1391,20 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+             setFingerprintRunningState(FINGERPRINT_STATE_CANCELLING_RESTARTING);
+             return;
+         }
++
++		//blestech add
++        if(FingerprintManager.isBtlFingerprintQuick() && mFingerprintRunningState==FINGERPRINT_STATE_CANCELLING_RESTARTING) {
++			Log.i(TAG, "startListeningForFingerprint() FINGERPRINT_STATE_CANCELLING_RESTARTING");
++            return;
++        }
++		//blestech end
++
+         if (DEBUG) Log.v(TAG, "startListeningForFingerprint()");
+         int userId = ActivityManager.getCurrentUser();
+         if (isUnlockWithFingerprintPossible(userId)) {
++			//blestech add
++			clearFingerprintRecognizedSync();
++			//blestech end
+             if (mFingerprintCancelSignal != null) {
+                 mFingerprintCancelSignal.cancel();
+             }
+@@ -1498,11 +1600,29 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+             } else if (callState == TelephonyManager.CALL_STATE_RINGING
+                     && mPhoneState == TelephonyManager.CALL_STATE_IDLE) {
+                 mPhoneState = callState;
++				//blestech add
++				if(FingerprintManager.isBtlFingerprintQuick()) {
++					Log.d(TAG, "handlePhoneStateChanged2222222222");
++					synchronized (this) {
++						stopListeningForFingerprint();
++						clearFingerprintRecognized();
++					}
++				}
++				//blestech end
+             }
+         }
+-
+         Log.d(TAG, "handlePhoneStateChanged() - mPhoneState = " + mPhoneState);
+ 
++		//blestech add
++		
++		if(FingerprintManager.isBtlFingerprintQuick() && mPhoneState!=TelephonyManager.CALL_STATE_RINGING){
++			Log.d(TAG, "handlePhoneStateChanged1111111111");
++			synchronized (this) {
++				updateFingerprintListeningState();
++			}
++		}
++		//blestech end
++
+         for (int i = 0; i < mCallbacks.size(); i++) {
+             KeyguardUpdateMonitorCallback cb = mCallbacks.get(i).get();
+             if (cb != null) {
+@@ -1691,7 +1811,15 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+         if (!showing) {
+             mFingerprintAlreadyAuthenticated = false;
+         }
+-        updateFingerprintListeningState();
++		//blestech add
++		if(FingerprintManager.isBtlFingerprintQuick()){
++			synchronized (this) {
++				updateFingerprintListeningState();
++			}
++		}else{
++		    updateFingerprintListeningState();
++		}
++		//blestech end
+     }
+ 
+     /**
+@@ -1699,7 +1827,15 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+      */
+     private void handleKeyguardReset() {
+         if (DEBUG) Log.d(TAG, "handleKeyguardReset");
+-        updateFingerprintListeningState();
++        //blestech add
++		if(FingerprintManager.isBtlFingerprintQuick()){
++			synchronized (this) {
++				updateFingerprintListeningState();
++			}
++		}else{
++			updateFingerprintListeningState();
++		}
++		//blestech end
+     }
+ 
+     /**
+@@ -1950,6 +2086,11 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+     public void clearFailedUnlockAttempts() {
+         mFailedAttempts.delete(sCurrentUser);
+         mFailedBiometricUnlockAttempts = 0;
++		//blestech add
++		if(FingerprintManager.isBtlFingerprintQuick()){
++			mFpm.resetTimeout(null);
++		}
++		//blestech end
+     }
+ 
+     public int getFailedUnlockAttempts(int userId) {
+@@ -2628,4 +2769,87 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+     public boolean isScreenOn() {
+         return mScreenOn;
+     }
++	//blestech add
++	public boolean isUnlockingWithFingerprintAuthAllowed() {
++        return mStrongAuthTracker.isUnlockingWithFingerprintAllowed()
++                && mStrongAuthTracker.hasUserAuthenticatedSinceBoot()
++                && !hasFingerprintUnlockTimedOut(sCurrentUser);
++    }
++	
++	public synchronized void setOccluded(boolean isOccluded) {
++        if (DEBUG) Log.d(TAG, "setOccluded " + isOccluded);
++        mOccluded = isOccluded;
++    }
++	
++	public synchronized void fingerDetection(boolean islock){
++		mHandler.post(new Runnable() {
++	        public void run() {
++				Log.d(TAG, "fingerDetection11111111 " + islock);
++				mFingerprintAlreadyAuthenticated = false;
++				mAlarmFlag = true;
++				if(islock){
++					updateFingerprintListeningState();
++				}
++			}
++	    });		
++    }
++
++	public synchronized void clearFingerDetect(boolean stop){
++		mHandler.post(new Runnable() {
++	        public void run() {
++				Log.d(TAG, "clearFingerDetect11111111 " + mAlarmFlag);
++				mAlarmFlag = false;
++				if(stop){
++					updateFingerprintListeningState();
++				}
++			}
++	    });
++    }
++
++	public synchronized void restartFingerDetect(){	
++		mHandler.post(new Runnable() {
++	        public void run() {
++				Log.d(TAG, "restartFingerDetect1111111111 " + mAlarmFlag);
++		        if(mFingerprintCancelSignal != null){
++					mFingerprintCancelSignal.cancel();
++			    	mFingerprintCancelSignal = null;
++				}
++			    
++				setFingerprintRunningState(FINGERPRINT_STATE_STOPPED);
++				clearFingerprintRecognized();
++				mFingerprintAlreadyAuthenticated = false;
++				mAlarmFlag = true;
++
++				updateFingerprintListeningState();
++			}
++	    });	
++    }
++
++	public synchronized void stopFingerDetect(){
++		mHandler.post(new Runnable() {
++	        public void run() {
++				Log.d(TAG, "stopFingerDetect1111111111 " + mAlarmFlag);
++				stopListeningForFingerprint();
++				clearFingerprintRecognized();
++			}
++	    });
++    }
++
++	public synchronized void clearFingerprintRecognizedSync() {
++        mUserFingerprintAuthenticated.clear();
++    }
++
++	public boolean isUnlockingWithFingerprintAuth() {
++        return mStrongAuthTracker.isUnlockingWithFingerprintAllowed()
++                && mStrongAuthTracker.hasUserAuthenticatedSinceBoot();
++    }
++
++	public boolean isOccluded() {
++        return mOccluded;
++    }
++
++	public synchronized void forceFingerprintRunningState(int state) {
++        mFingerprintRunningState = state;
++    }
++	//blestech end
+ }
+diff --git a/base/packages/SystemUI/res/layout/status_bar_no_notifications.xml b/base/packages/SystemUI/res/layout/status_bar_no_notifications.xml
+index 6f87184..48d135f 100644
+--- a/base/packages/SystemUI/res/layout/status_bar_no_notifications.xml
++++ b/base/packages/SystemUI/res/layout/status_bar_no_notifications.xml
+@@ -28,6 +28,8 @@
+             android:paddingTop="28dp"
+             android:gravity="top|center_horizontal"
+             android:textColor="#e6ffffff"
+-            android:textSize="16sp"
+-            android:text="@string/empty_shade_text"/>
++            android:textSize="16sp"/>
++<!-- blestech add-->
++            <!-- android:text="@string/empty_shade_text"/>-->
++<!-- blestech end-->
+ </com.android.systemui.statusbar.EmptyShadeView>
+diff --git a/base/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardService.java b/base/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardService.java
+index 84d3599..d7f75e3 100644
+--- a/base/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardService.java
++++ b/base/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardService.java
+@@ -185,6 +185,14 @@ public class KeyguardService extends Service {
+             checkPermission();
+             mKeyguardViewMediator.onActivityDrawn();
+         }
++
++        //blestech add
++		@Override
++		public int fingerFun(int state) {
++			checkPermission();
++			return mKeyguardViewMediator.fingerFun(state);
++		}
++        //blestech end
+     };
+ }
+ 
+diff --git a/base/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardViewMediator.java b/base/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardViewMediator.java
+old mode 100644
+new mode 100755
+index 10d6f9e..4f3d573
+--- a/base/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardViewMediator.java
++++ b/base/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardViewMediator.java
+@@ -116,6 +116,11 @@ import android.hardware.SensorManager;
+ import android.app.KeyguardManager;
+ // End of Vanzo:tanglei
+ 
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++import android.view.Surface;
++//blestech end
++
+ /**
+  * Mediates requests related to the keyguard.  This includes queries about the
+  * state of the keyguard, power management events that effect whether the keyguard
+@@ -393,6 +398,22 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+ 
+     private boolean mIsPerUserLock;
+ 
++	//blestech add
++	private int mPState = 0;
++	private int mLastShowingSequence = 0;
++	private boolean mEnabledFlag = true;
++	private boolean mUserPresentFlag = false;
++	private boolean mNextLockSoundFlag = false;
++	private boolean mInteractiveFalse = false;
++	private boolean mPendingHide = false;
++	public static final String FINGER_ENROLL_ACTIVITY = "com.android.settings.fingerprint.FingerprintEnrollEnrolling";
++	public static final String FINGER_SETTINGS_ACTIVITY = "com.android.settings.fingerprint.FingerprintSettings";
++	public static final String FINGER_ENROLL_FINISH_ACTIVITY = "com.android.settings.fingerprint.FingerprintEnrollFinish";
++	public static final String FINGER_ENROLL_FIND_ACTIVITY = "com.android.settings.fingerprint.FingerprintEnrollFindSensor";
++    public static final String PPL_LOCK = "com.mediatek.ppl.NOTIFY_LOCK";
++	private ActivityManager mAm;
++	//blestech end
++
+     KeyguardUpdateMonitorCallback mUpdateCallback = new KeyguardUpdateMonitorCallback() {
+ 
+         @Override
+@@ -440,6 +461,9 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+                     /// M: [ALPS02044073] Fix IME is shown above Keyguard
+                     // doKeyguardLocked(null);
+                 }
++				//blestech add
++				mPState = phoneState;
++				//blestech end
+             }
+         }
+ 
+@@ -623,6 +647,28 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+                 mLockPatternUtils.getDevicePolicyManager().reportSuccessfulFingerprintAttempt(
+                         userId);
+             }
++
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				Log.d(TAG, "onFingerprintAuthenticated11111111mShowing: " + mShowing + ", mHiding=" + mHiding);
++
++				if(mUpdateMonitor.isUnlockingWithFingerprintAllowed() && !mShowing  
++					&& TelephonyManager.CALL_STATE_RINGING!=mPState){
++					Log.i(TAG, "onFingerprintAuthenticated22222222222222");
++					synchronized (KeyguardViewMediator.this) {
++						mSuppressNextLockSound = false;
++						playSounds(false);
++					}
++					
++					sendUserPresentBroadcast();
++                    if(mUpdateMonitor.getUserCanSkipBouncer(userId)){
++                        mUpdateMonitor.clearFingerDetect(false);
++						setOccluded(false);
++						FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 4);
++                    }
++				}
++			}
++			//blestech end
+         }
+     };
+ 
+@@ -668,6 +714,21 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+         @Override
+         public void keyguardGone() {
+             // mKeyguardDisplayManager.hide();
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ISFUNBROAD, -1);
++				
++				if(mInteractiveFalse){
++					synchronized (KeyguardViewMediator.this) {
++						mInteractiveFalse = false;
++						mDeviceInteractive = false;
++					}
++				}else{
++					mUpdateMonitor.clearFingerDetect(false);
++				}
++			}
++			//blestech end
++
+             if (mKeyguardDisplayManager != null) {
+                 Log.d(TAG, "keyguard gone, call mKeyguardDisplayManager.hide()");
+                 mKeyguardDisplayManager.hide();
+@@ -838,7 +899,9 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+             filter.addAction("boot_hide_lock_screen");
+         }
+ // End of Vanzo: renmengyang
+-
++        //blestech add
++        filter.addAction(PPL_LOCK) ;
++        //blestech end
+ /* Vanzo:tanglei on: Wed, 28 Jan 2015 10:04:40 +0800
+  * smart wake
+  */
+@@ -866,6 +929,10 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+ 
+         mLockPatternUtils = new LockPatternUtils(mContext);
+         KeyguardUpdateMonitor.setCurrentUser(ActivityManager.getCurrentUser());
++        //blestech add
++        mAm = (ActivityManager)mContext.getSystemService(Context.ACTIVITY_SERVICE);
++        mUpdateMonitor.fingerDetection(false);
++        //blestech end
+ 
+         // Assume keyguard is showing (unless it's disabled) until we know for sure...
+         setShowingLocked(!shouldWaitForProvisioning() && !mLockPatternUtils.isLockScreenDisabled(
+@@ -990,6 +1057,29 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+                     KeyguardPluginFactory.getKeyguardUtilExt(mContext)
+                             .lockImmediatelyWhenScreenTimeout();
+             /// @}
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				mEnabledFlag = mExternallyEnabled;
++                fingerDetectionDelay(0);
++				Log.d(TAG, "onStartedGoingToSleep0000000:"+mShowing+":"+mExternallyEnabled);
++				if(!mShowing && mExternallyEnabled){
++					Log.d(TAG, "onStartedGoingToSleep333333333:"+mShowing);
++					mExternallyEnabled = false;
++				}
++
++				if((why==WindowManagerPolicy.OFF_BECAUSE_OF_TIMEOUT||why==WindowManagerPolicy.OFF_BECAUSE_OF_USER)
++					&& mShowing && mUpdateMonitor.isUnlockingWithFingerprintAuthAllowed()){
++					Log.d(TAG, "onStartedGoingToSleep222222222:"+mShowing);
++					mPendingHide = true;
++					mUpdateMonitor.clearFingerprintRecognizedSync();
++                    fingerDetectionRun(false, 500);
++
++                    fingerBroadcast();
++				}else{
++                    FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 21);
++                }
++			}
++			//blestech end
+ 
+             if (DBG_WAKE) {
+                 Log.d(TAG, "onStartedGoingToSleep(" + why +
+@@ -1016,18 +1106,73 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+             } else if ((why == WindowManagerPolicy.OFF_BECAUSE_OF_TIMEOUT && timeout > 0)
+                     || (why == WindowManagerPolicy.OFF_BECAUSE_OF_USER && !lockImmediately)
+                     && !mIsIPOShutDown) {
+-                doKeyguardLaterLocked(timeout);
+-                mLockLater = true;
++				//blestech add
++				if(FingerprintManager.isBtlFingerprintQuick()){
++					if(!mLockPatternUtils.isLockScreenDisabled(KeyguardUpdateMonitor.getCurrentUser())
++						&& FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==0){
++						doKeyguardLaterLocked();
++					}
++	            }else{
++					doKeyguardLaterLocked(timeout);
++	                mLockLater = true;
++				}
++				//blestech end
+             } else if (why == WindowManagerPolicy.OFF_BECAUSE_OF_PROX_SENSOR) {
+                 // Do not enable the keyguard if the prox sensor forced the screen off.
+                 Log.d(TAG, "Screen off because PROX_SENSOR, do not draw lock view.") ;
+             } else if (!mLockPatternUtils.isLockScreenDisabled(currentUser)) {
+                 mPendingLock = true;
++				//blestech add
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 12);
++				//blestech end
+             }
+ 
+             if (mPendingLock) {
+                 playSounds(true);
+             }
++
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				if(mPendingHide){
++					mPendingHide = false;
++				}else if(!mLockPatternUtils.isLockScreenDisabled(currentUser) && !mShowing
++					&& FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==0){
++					mUpdateMonitor.clearFingerprintRecognizedSync();
++                    fingerDetectionRun(true, 500);
++
++					mHandler.post(new Runnable() {
++				        public void run() {
++							mStatusBarKeyguardViewManager.animateCollapsePanels(1.3f);
++							try {
++			                    ActivityManagerNative.getDefault().closeSystemDialogs("lock");
++			                } catch (RemoteException e) {
++			                    Log.e(TAG, "handleShow() - error in closeSystemDialogs()") ;
++			                }
++						}
++				    });
++
++					if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 13) == 1){
++						ContentResolver res = mContext.getContentResolver();
++						Settings.System.putIntForUser(res,
++			                Settings.System.USER_ROTATION,
++			                Surface.ROTATION_0,
++			                UserHandle.USER_CURRENT);
++			        	Settings.System.putIntForUser(res,
++			                Settings.System.ACCELEROMETER_ROTATION,
++			                0,
++			                UserHandle.USER_CURRENT);
++						try {
++					        //set orientation on WindowManager
++							mWM.updateRotation(false, false);
++					    } catch (RemoteException e) {
++					        // Ignore
++					    }
++					}
++				}else if(mShowing && !mUpdateMonitor.isUnlockingWithFingerprintAuthAllowed()){
++                    fingerDetectionRun(false, 500);
++                }
++			}
++			//blestech end
+         }
+         KeyguardUpdateMonitor.getInstance(mContext).dispatchStartedGoingToSleep(why);
+         notifyStartedGoingToSleep();
+@@ -1060,7 +1205,11 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+             }
+ 
+             if (mPendingLock) {
+-                doKeyguardLocked(null);
++				//blestech add
++				if(!FingerprintManager.isBtlFingerprintQuick() || (!shouldWaitForProvisioning()&&!mUpdateMonitor.isUnlockingWithFingerprintAuthAllowed())){
++					doKeyguardLocked(null);
++				}
++				//blestech end
+                 mPendingLock = false;
+             }
+ 
+@@ -1071,6 +1220,9 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+                 doKeyguardForChildProfilesLocked();
+             }
+ 
++			//blestech add
++		    mExternallyEnabled = mEnabledFlag;
++			//blestech end
+         }
+         KeyguardUpdateMonitor.getInstance(mContext).dispatchFinishedGoingToSleep(why);
+     }
+@@ -1112,8 +1264,24 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+     private void doKeyguardLaterLocked() {
+         long timeout = getLockTimeout(KeyguardUpdateMonitor.getCurrentUser());
+         if (timeout == 0) {
++            //blestech add
++            if(FingerprintManager.isBtlFingerprintQuick()){
++				synchronized (KeyguardViewMediator.this) {
++					mPendingLock = true;
++					FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 12);
++				}
++			}else{
++				mSuppressNextLockSound = true;
++			}
++            //blestech end
+             doKeyguardLocked(null);
+         } else {
++		    //blestech add
++		    synchronized (KeyguardViewMediator.this) {
++		    	FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 13);
++				mLastShowingSequence = mDelayedShowingSequence;
++			}
++			//blestech end
+             doKeyguardLaterLocked(timeout);
+         }
+     }
+@@ -1179,8 +1347,15 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+         // TODO: Rename all screen off/on references to interactive/sleeping
+         synchronized (this) {
+             mDeviceInteractive = true;
+-            cancelDoKeyguardLaterLocked();
+-            cancelDoKeyguardForChildProfilesLocked();
++			//blestech add
++			if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 1) ==1){
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 6);
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 16);
++			}else{
++				cancelDoKeyguardLaterLocked();
++                cancelDoKeyguardForChildProfilesLocked();
++			}
++            //blestech end
+             if (DEBUG) Log.d(TAG, "onStartedWakingUp, seq = " + mDelayedShowingSequence);
+             notifyStartedWakingUp();
+         }
+@@ -1272,6 +1447,9 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+             if (DEBUG) Log.d(TAG, "setKeyguardEnabled(" + enabled + ")");
+ 
+             mExternallyEnabled = enabled;
++			//blestech add
++			mEnabledFlag = enabled;
++			//blestech end
+ 
+             if (!enabled && mShowing) {
+                 if (mExitSecureCallback != null) {
+@@ -1418,6 +1596,12 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+             //if (mOccluded != isOccluded) {
+             //    mOccluded = isOccluded;
+                 mStatusBarKeyguardViewManager.setOccluded(isOccluded);
++				//blestech add
++                if(FingerprintManager.isBtlFingerprintQuick()) {
++                    KeyguardUpdateMonitor updateMonitor = KeyguardUpdateMonitor.getInstance(mContext);
++                    updateMonitor.setOccluded(isOccluded);
++                }
++				//blestech end
+                 updateActivityLockScreenState();
+                 adjustStatusBarLocked();
+             //}
+@@ -1480,8 +1664,38 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+      * Enable the keyguard if the settings are appropriate.
+      */
+     private void doKeyguardLocked(Bundle options) {
++		//blestech add
++		if(FingerprintManager.isBtlFingerprintQuick()){
++			if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 12) == 1){
++				if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 11) == 1){
++					FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 0);
++				}else{
++					synchronized (KeyguardViewMediator.this) {
++						Log.d(TAG, "doKeyguardLocked1111111 mLaterLockedFlag ");
++						cancelDoKeyguardLaterLocked();
++						FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 12);
++						sendUserPresentBroadcast();
++					}
++
++					mUpdateMonitor.clearFingerDetect(true);
++					fpSetEnFun(true);
++				}
++				
++				return;
++			}
++		}
++		//blestech end
++
+         // if another app is disabling us, don't show
+         if (!mExternallyEnabled || PowerOffAlarmManager.isAlarmBoot()) {
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				if(!mPendingLock){
++					fpSetEnFun(true);
++				}
++			}
++			//blestech end
++
+             if (DEBUG) {
+                 Log.d(TAG, "doKeyguard: not showing because externally disabled");
+                 Log.d(TAG, "doKeyguard : externally disabled reason.." +
+@@ -1506,6 +1720,11 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+         // if the keyguard is already showing, don't bother
+         if (mStatusBarKeyguardViewManager.isShowing()) {
+             if (DEBUG) Log.d(TAG, "doKeyguard: not showing because it is already showing");
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				fpSetEnFun(true);
++			}
++			//blestech add
+             resetStateLocked();
+             if (DEBUG) {
+                 Log.d(TAG, "doKeyguard: not showing because it is already showing");
+@@ -1548,12 +1767,22 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+                     Log.d(TAG, "doKeyguard: not showing because device isn't provisioned"
+                         + " and the sim is not locked or missing");
+                 }
++				//blestech add
++				if(FingerprintManager.isBtlFingerprintQuick()){
++					fpSetEnFun(true);
++				}
++				//blestech add
+                 return;
+             }
+ 
+             if (mLockPatternUtils.isLockScreenDisabled(KeyguardUpdateMonitor.getCurrentUser())
+                     && !lockedOrMissing && !antiTheftLocked) {
+                 if (DEBUG) Log.d(TAG, "doKeyguard: not showing because lockscreen is off");
++				//blestech add
++				if(FingerprintManager.isBtlFingerprintQuick()){
++					fpSetEnFun(true);
++				}
++				//blestech add
+                 return;
+             }
+ 
+@@ -1564,6 +1793,11 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+                 setShowingLocked(false);
+                 hideLocked();
+                 mUpdateMonitor.reportSuccessfulStrongAuthUnlockAttempt();
++				//blestech add
++				if(FingerprintManager.isBtlFingerprintQuick()){
++					fpSetEnFun(true);
++				}
++				//blestech add
+                 return;
+             }
+         }
+@@ -1679,7 +1913,11 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+         if (DEBUG) Log.d(TAG, "showLocked");
+         /// M:
+         setReadyToShow(true) ;
+-        updateActivityLockScreenState();
++		//blestech add
++		if(!FingerprintManager.isBtlFingerprintQuick()){
++			updateActivityLockScreenState();
++		}
++		//blestech end
+         // ensure we stay awake until we are finished displaying the keyguard
+         mShowKeyguardWakeLock.acquire();
+         Message msg = mHandler.obtainMessage(SHOW, options);
+@@ -1784,7 +2022,20 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+                 synchronized (KeyguardViewMediator.this) {
+                     if (mDelayedShowingSequence == sequence) {
+                         mSuppressNextLockSound = true;
+-                        doKeyguardLocked(null);
++                        //blestech add
++						if(FingerprintManager.isBtlFingerprintQuick()){
++							mExternallyEnabled = mEnabledFlag;
++							FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 12);
++                            if(!mUpdateMonitor.isUnlockingWithFingerprintAuthAllowed()){
++                                doKeyguardLocked(null);
++                            }
++							//fingerDetectionDelay(0);
++							//mUpdateMonitor.clearFingerprintRecognizedSync();
++							//mUpdateMonitor.fingerDetection(true);
++						}else{
++							doKeyguardLocked(null);
++						}
++						//blestech end
+                     }
+                 }
+             } else if (DELAYED_LOCK_PROFILE_ACTION.equals(intent.getAction())) {
+@@ -1800,7 +2051,15 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+             } else if (PRE_SHUTDOWN.equals(action)) {
+                 /// M: fix 441605, play sound after power off
+                Log.w(TAG, "PRE_SHUTDOWN: " + action);
+-               mSuppressNextLockSound = true;
++			   //blestech add
++			   if(FingerprintManager.isBtlFingerprintQuick()){
++					synchronized (KeyguardViewMediator.this) {
++						mSuppressNextLockSound = true;
++					}
++				}else{
++					mSuppressNextLockSound = true;
++				}
++			   //blestech end
+             /// M: IPO shut down notify
+             } else if (IPO_SHUTDOWN.equals(action)) {
+                Log.w(TAG, "IPO_SHUTDOWN: " + action);
+@@ -1815,6 +2074,16 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+                }
+             }
+             /// @}
++			//blestech add
++            else if(PPL_LOCK.equals(action) && FingerprintManager.isBtlFingerprintQuick()){
++                if (!mShowing) {
++                    Log.d(TAG, "PPL_LOCK.equals  00000000000");
++                    doKeyguardLocked(null);
++                } else {
++                    resetStateLocked();
++                }
++            }
++            //blestech end
+         }
+     };
+ 
+@@ -2080,8 +2349,13 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+         if (authenticated) {
+             mUpdateMonitor.clearFailedUnlockAttempts();
+         }
+-        mUpdateMonitor.clearFingerprintRecognized();
+-
++        //blestech add
++        if(FingerprintManager.isBtlFingerprintQuick()){
++			mUpdateMonitor.clearFingerprintRecognizedSync();
++		}else{
++			mUpdateMonitor.clearFingerprintRecognized();
++		}
++		//blestech end
+         if (mGoingToSleep) {
+             Log.i(TAG, "Device is going to sleep, aborting keyguardDone");
+             return;
+@@ -2098,19 +2372,61 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+             if (authenticated) {
+                 // after succesfully exiting securely, no need to reshow
+                 // the keyguard when they've released the lock
+-                mExternallyEnabled = true;
++                //blestech add
++                synchronized (KeyguardViewMediator.this) {
++                    if(FingerprintManager.isBtlFingerprintQuick()){
++                        mExternallyEnabled = mEnabledFlag;
++					}else{
++						mExternallyEnabled = true;
++					}
++                }
++				//blestech end
+                 mNeedToReshowWhenReenabled = false;
+                 updateInputRestricted();
+             }
+         }
+         ///M: [ALPS00827994] always to play sound for user to unlock keyguard
+-        mSuppressNextLockSound = false;
++        //blestech add
++	    if(FingerprintManager.isBtlFingerprintQuick()){
++			synchronized (KeyguardViewMediator.this) {
++				mSuppressNextLockSound = false;
++			}
++		}else{
++			mSuppressNextLockSound = false;
++		}
++	    //blestech end
+         handleHide();
+     }
+ 
+     private void sendUserPresentBroadcast() {
+         synchronized (this) {
++			//blestech add
++			Log.i(TAG, "sendUserPresentBroadcast111111111111111111:"+mUserPresentFlag);
++			if (mUserPresentFlag && FingerprintManager.isBtlFingerprintQuick()) {
++				mUserPresentFlag = false;
++				return;
++			}
++			//blestech end
++
+             if (mBootCompleted) {
++				//blestech add
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 18);
++				if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 13)==1){
++					ContentResolver res = mContext.getContentResolver();
++					Settings.System.putIntForUser(res,
++			                Settings.System.ACCELEROMETER_ROTATION,
++			                1,
++			                UserHandle.USER_CURRENT);
++				}
++
++				try {
++			        //set orientation on WindowManager
++					mWM.updateRotation(false, false);
++			    } catch (RemoteException e) {
++			        // Ignore
++			    }
++				//blestech end
++				
+                 int currentUserId = KeyguardUpdateMonitor.getCurrentUser();
+                 final UserHandle currentUser = new UserHandle(currentUserId);
+                 final UserManager um = (UserManager) mContext.getSystemService(
+@@ -2148,7 +2464,14 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+     private void playSounds(boolean locked) {
+         // User feedback for keyguard.
+         Log.d(TAG, "playSounds(locked = " + locked
+-            + "), mSuppressNextLockSound =" + mSuppressNextLockSound);
++            + "), mSuppressNextLockSound =" + mSuppressNextLockSound+":"+mNextLockSoundFlag);
++
++		//blestech add
++		if (mNextLockSoundFlag && FingerprintManager.isBtlFingerprintQuick()) {
++			mNextLockSoundFlag = false;
++			return;
++		}
++		//blestech end
+ 
+         if (mSuppressNextLockSound) {
+             mSuppressNextLockSound = false;
+@@ -2218,6 +2541,12 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+                 if (DEBUG) Log.d(TAG, "handleShow");
+             }
+ 
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				mUpdateMonitor.stopFingerDetect();
++			}
++			//blestech end
++
+             setShowingLocked(true);
+             mStatusBarKeyguardViewManager.show(options);
+             mHiding = false;
+@@ -2260,6 +2589,16 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+         } else {
+             Log.d(TAG, "handle show mKeyguardDisplayManager is null") ;
+         }
++		//blestech add
++		if(FingerprintManager.isBtlFingerprintQuick()){
++			mHandler.postDelayed(new Runnable() {
++                public void run() {
++					mUpdateMonitor.fingerDetection(true);
++                    fpSetEnFun(true);
++				}
++            }, 0);
++		}
++		//blestech end
+     }
+ 
+     private final Runnable mKeyguardGoingAwayRunnable = new Runnable() {
+@@ -2366,7 +2705,11 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+             mStatusBarKeyguardViewManager.hide(startTime, fadeoutDuration);
+             resetKeyguardDonePendingLocked();
+             mHideAnimationRun = false;
+-            updateActivityLockScreenState();
++			//blestech add
++			if(!mUserPresentFlag && FingerprintManager.isBtlFingerprintQuick()){
++				updateActivityLockScreenState();
++			}
++			//blestech end
+             adjustStatusBarLocked();
+             sendUserPresentBroadcast();
+         }
+@@ -2734,7 +3077,15 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+ 
+     ///M: to suppress sound when normal boot after power off alarm
+     void setSuppressPlaySoundFlag() {
+-        mSuppressNextLockSound = true;
++        //blestech add
++	    if(FingerprintManager.isBtlFingerprintQuick()){
++			synchronized (KeyguardViewMediator.this) {
++				mSuppressNextLockSound = true;
++			}
++		}else{
++			mSuppressNextLockSound = true;
++		}
++	    //blestech end
+     }
+ 
+     public boolean isKeyguardDoneOnGoing() {
+@@ -2829,4 +3180,183 @@ public class KeyguardViewMediator extends SystemUI implements SensorEventListene
+         return FeatureOption.VANZO_FEATURE_KEYGUARD_GESTURE;
+     }
+ // End of Vanzo: zhongyeqing
++
++	//blestech add
++	private synchronized void pendingOff() {
++		Log.d(TAG, "pendingOff000000:"+mShowing);
++
++        int currentUser = KeyguardUpdateMonitor.getCurrentUser();
++		final boolean lockImmediately = mLockPatternUtils.getPowerButtonInstantlyLocks(currentUser)
++                        || !mLockPatternUtils.isSecure(currentUser);
++		if(!lockImmediately && !mIsIPOShutDown && !mShowing){
++			mEnabledFlag = mExternallyEnabled;
++			mExternallyEnabled = false;
++			doKeyguardLaterLocked();
++			mExternallyEnabled = mEnabledFlag;
++		}else if(!mShowing && !mLockPatternUtils.isLockScreenDisabled(currentUser)){
++			FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 12);
++			mPendingLock = true;
++		}
++
++		if(mShowing){
++			Log.d(TAG, "pendingOff1111111");
++			if(!mUpdateMonitor.isUnlockingWithFingerprintAuthAllowed()){
++                resetStateLocked();
++                mUpdateMonitor.fingerDetection(false);
++            }
++			else{
++				mNextLockSoundFlag = true;
++				mUserPresentFlag = true;
++				mDeviceInteractive = true;
++				mInteractiveFalse = true;
++				mUpdateMonitor.clearFingerprintRecognizedSync();
++				mUpdateMonitor.fingerDetection(false);
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_BROADCAST, -1);				
++			}
++		}else{
++			if(!mLockPatternUtils.isLockScreenDisabled(currentUser)){
++				Log.d(TAG, "pendingOff333333333333:");
++				if(mPendingLock){
++					mPendingLock = false;
++					playSounds(true);
++                    if(!shouldWaitForProvisioning() && !mUpdateMonitor.isUnlockingWithFingerprintAuthAllowed()){
++                        doKeyguardLocked(null);
++                    }
++				}
++				fingerDetectionDelay(500);
++				mUpdateMonitor.forceFingerprintRunningState(0);
++				mUpdateMonitor.clearFingerprintRecognizedSync();
++				mUpdateMonitor.fingerDetection(true);
++			}
++
++			mHandler.post(new Runnable() {
++		        public void run() {
++					mStatusBarKeyguardViewManager.animateCollapsePanels(1.3f);
++					try {
++                        ActivityManagerNative.getDefault().closeSystemDialogs("lock");
++                    } catch (RemoteException e) {
++                        Log.e(TAG, "handleShow() - error in closeSystemDialogs()") ;
++                    }
++				}
++		    });
++		}		
++    }
++
++	public int fingerFun(int state) {
++        Log.d(TAG, "fingerFun00000000000:"+state);
++		if(FingerprintManager.isBtlFingerprintFm()){
++			switch(state){
++				case 0:
++					doKeyguardLocked(null);
++					break;
++				case 1:
++					pendingOff();
++					break;
++				case 2:
++					mUpdateMonitor.restartFingerDetect();
++					break;
++				case 3:
++					mHandler.post(new Runnable() {
++				        public void run() {
++							mHiding = true;
++							try {
++					            ActivityManagerNative.getDefault().keyguardGoingAway(100);
++					        } catch (RemoteException e) {
++					            Log.e(TAG, "Error while calling WindowManager", e);
++					        }
++							handleStartKeyguardExitAnimation(0,0);
++						}
++				    });
++					//hideLocked();
++					break;
++				case 4:
++					//mStatusBarKeyguardViewManager.setNotFisrtShowSinceBoot(false);
++					break;
++				case 5:
++					sendUserPresentBroadcast();
++					mUpdateMonitor.clearFingerDetect(true);
++					break;
++				default:
++					return -1;
++			}
++
++			return 0;
++		}
++		
++		return -1;
++    }
++
++	public void fpSetEnFun(boolean update){
++		Log.d(TAG, "fpSetEnFun11111111:"+update);
++
++		if(FingerprintManager.isBtlFingerprintFm() 
++			&& FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 9)==1){
++			if(update){
++				updateActivityLockScreenState();
++			}	
++			
++			if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5) == 1){
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETENFUN, -1);
++			}else{
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 0);
++			}
++		}
++    }
++
++	public boolean fpGetFun(){
++		if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_GETFUN, -1) == 0){
++			return true;
++		}else{
++			return false;
++		}
++    }
++
++	public int fpEnFun(){
++		return FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 1);
++    }
++
++	public void fingerDetectionDelay(long ms){
++        if(ms == 0){
++            FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 9);
++            return;
++        }
++
++		String runningActivity = mAm.getRunningTasks(1).get(0).topActivity.getClassName();
++		if(runningActivity.equals(FINGER_ENROLL_ACTIVITY) || runningActivity.equals(FINGER_SETTINGS_ACTIVITY)
++			|| runningActivity.equals(FINGER_ENROLL_FINISH_ACTIVITY) || runningActivity.equals(FINGER_ENROLL_FIND_ACTIVITY)){
++			Log.d(TAG, "fingerDetectionDelay:"+runningActivity);
++			try {
++		        Thread.sleep(ms);
++		    } catch (InterruptedException e) {
++		        Thread.currentThread().interrupt();
++		    }
++		}
++    }
++
++    public void fingerBroadcast(){
++        int ret = 0;
++
++        FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 25);
++        ret = FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 18);
++        if(ret != 1){
++            Log.d(TAG, "fingerBroadcast timeout or cancel:"+ret);
++            FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 21);
++            return;
++        }
++
++        mNextLockSoundFlag = true;
++        mUserPresentFlag = true;
++        mDeviceInteractive = true;
++        mInteractiveFalse = true;
++        FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_BROADCAST, -1);
++    }
++
++    public void fingerDetectionRun(boolean update, long delay){
++        mHandler.postDelayed(new Runnable() {
++	        public void run() {
++				mUpdateMonitor.fingerDetection(true);
++			}
++	    }, delay);
++    }
++	//blestech end
+ }
+diff --git a/base/packages/SystemUI/src/com/android/systemui/statusbar/EmptyShadeView.java b/base/packages/SystemUI/src/com/android/systemui/statusbar/EmptyShadeView.java
+index 5db0699..b4472ad 100644
+--- a/base/packages/SystemUI/src/com/android/systemui/statusbar/EmptyShadeView.java
++++ b/base/packages/SystemUI/src/com/android/systemui/statusbar/EmptyShadeView.java
+@@ -33,7 +33,9 @@ public class EmptyShadeView extends StackScrollerDecorView {
+     @Override
+     protected void onConfigurationChanged(Configuration newConfig) {
+         super.onConfigurationChanged(newConfig);
+-        ((TextView) findViewById(R.id.no_notifications)).setText(R.string.empty_shade_text);
++		//blestech add
++        //((TextView) findViewById(R.id.no_notifications)).setText(R.string.empty_shade_text);
++		//blestech end
+     }
+ 
+     @Override
+diff --git a/base/packages/SystemUI/src/com/android/systemui/statusbar/phone/FingerprintUnlockController.java b/base/packages/SystemUI/src/com/android/systemui/statusbar/phone/FingerprintUnlockController.java
+index 1c9d937..32ee644 100644
+--- a/base/packages/SystemUI/src/com/android/systemui/statusbar/phone/FingerprintUnlockController.java
++++ b/base/packages/SystemUI/src/com/android/systemui/statusbar/phone/FingerprintUnlockController.java
+@@ -27,6 +27,9 @@ import com.android.keyguard.KeyguardUpdateMonitor;
+ import com.android.keyguard.KeyguardUpdateMonitorCallback;
+ import com.android.systemui.keyguard.KeyguardViewMediator;
+ 
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++//blestech end
+ /**
+  * Controller which coordinates all the fingerprint unlocking actions with the UI.
+  */
+@@ -169,7 +172,9 @@ public class FingerprintUnlockController extends KeyguardUpdateMonitorCallback {
+         }
+         boolean wasDeviceInteractive = mUpdateMonitor.isDeviceInteractive();
+         mMode = calculateMode();
+-        if (!wasDeviceInteractive) {
++        //blestech add
++        if (!FingerprintManager.isBtlFingerprintQuick() && !wasDeviceInteractive) {
++        // blestech end
+             if (DEBUG_FP_WAKELOCK) {
+                 Log.i(TAG, "fp wakelock: Authenticated, waking up...");
+             }
+@@ -206,10 +211,14 @@ public class FingerprintUnlockController extends KeyguardUpdateMonitorCallback {
+             case MODE_NONE:
+                 break;
+         }
+-        if (mMode != MODE_WAKE_AND_UNLOCK_PULSING) {
+-            mStatusBarWindowManager.setForceDozeBrightness(false);
+-        }
+-        mPhoneStatusBar.notifyFpAuthModeChanged();
++		//blestech add
++		if(!FingerprintManager.isBtlFingerprintQuick()){
++			if (mMode != MODE_WAKE_AND_UNLOCK_PULSING) {
++		        mStatusBarWindowManager.setForceDozeBrightness(false);
++		    }
++		    mPhoneStatusBar.notifyFpAuthModeChanged();
++		}
++		//blestech end
+     }
+ 
+     @Override
+@@ -238,6 +247,7 @@ public class FingerprintUnlockController extends KeyguardUpdateMonitorCallback {
+ 
+     private int calculateMode() {
+         boolean unlockingAllowed = mUpdateMonitor.isUnlockingWithFingerprintAllowed();
++		Log.i(TAG, "calculateMode0000:"+unlockingAllowed);
+         if (!mUpdateMonitor.isDeviceInteractive()) {
+             if (!mStatusBarKeyguardViewManager.isShowing()) {
+                 return MODE_ONLY_WAKE;
+diff --git a/base/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/base/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
+index 9cf7063..e636473 100644
+--- a/base/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
++++ b/base/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
+@@ -229,6 +229,10 @@ import java.text.NumberFormat;
+ import com.android.featureoption.FeatureOption;
+ // End of Vanzo:houcongxi
+ 
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++//blestech end
++
+ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
+         DragDownHelper.DragDownCallback, ActivityStarter, OnUnlockMethodChangedListener,
+         HeadsUpManager.OnHeadsUpChangedListener {
+@@ -1583,13 +1587,19 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
+             return;
+         }
+         boolean isHeadsUped = shouldPeek(shadeEntry);
+-        if (isHeadsUped) {
++		//blestech add
++        if (isHeadsUped && FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 6)!=1) {
++		//blestech end
++			Log.d(TAG, "addNotification0000000000000000000:"+!isHeadsUped);
+             mHeadsUpManager.showNotification(shadeEntry);
+             // Mark as seen immediately
+             setNotificationShown(notification);
+         }
+ 
+-        if (!isHeadsUped && notification.getNotification().fullScreenIntent != null) {
++        //blestech add
++        if ((!isHeadsUped||FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 6)==1) && (notification.getNotification().fullScreenIntent!=null)) {
++		//blestech end
++			Log.d(TAG, "addNotification33333333333333:"+!isHeadsUped+":");
+             if (shouldSuppressFullScreenIntent(notification.getKey())) {
+                 if (DEBUG) {
+                     Log.d(TAG, "No Fullscreen intent: suppressed by DND: " + notification.getKey());
+@@ -4083,6 +4093,11 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
+         }
+         mPendingRemoteInputView = null;
+         mAssistManager.onLockscreenShown();
++        //blestech add
++        if (FingerprintManager.isBtlFingerprintQuick()){
++            mHeadsUpManager.releaseAllImmediately();
++        }
++        //blestech end
+     }
+ 
+     private void onLaunchTransitionFadingEnded() {
+@@ -4437,6 +4452,11 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
+         if (mState == StatusBarState.KEYGUARD || mState == StatusBarState.SHADE_LOCKED) {
+             mWaitingForKeyguardExit = mStatusBarKeyguardViewManager.isShowing();
+             mStatusBarKeyguardViewManager.dismiss();
++            //blestech add
++            if (FingerprintManager.isBtlFingerprintQuick()){
++                mHeadsUpManager.releaseAllImmediately();
++            }
++            //blestech end
+         }
+     }
+ 
+diff --git a/base/services/core/java/com/android/server/GestureLauncherService.java b/base/services/core/java/com/android/server/GestureLauncherService.java
+index 5a90488..4d75cc3 100644
+--- a/base/services/core/java/com/android/server/GestureLauncherService.java
++++ b/base/services/core/java/com/android/server/GestureLauncherService.java
+@@ -42,6 +42,13 @@ import com.android.internal.logging.MetricsLogger;
+ import com.android.internal.logging.MetricsProto.MetricsEvent;
+ import com.android.server.statusbar.StatusBarManagerInternal;
+ 
++//blestech add
++import android.app.ActivityManagerInternal;
++import android.view.WindowManagerPolicy;
++import android.hardware.fingerprint.FingerprintManager;
++import static android.os.PowerManagerInternal.WAKEFULNESS_AWAKE;
++//blestech end
++
+ /**
+  * The service that listens for gestures detected in sensor firmware and starts the intent
+  * accordingly.
+@@ -133,6 +140,12 @@ public class GestureLauncherService extends SystemService {
+             mUserId = ActivityManager.getCurrentUser();
+             mContext.registerReceiver(mUserReceiver, new IntentFilter(Intent.ACTION_USER_SWITCHED));
+             registerContentObservers();
++
++			//blestech add
++			mPowerManager = powerManager;
++			mActivityManagerInternal = LocalServices.getService(ActivityManagerInternal.class);
++			mPolicy = getLocalService(WindowManagerPolicy.class);
++			//blestech end
+         }
+     }
+ 
+@@ -262,12 +275,49 @@ public class GestureLauncherService extends SystemService {
+                     && doubleTapInterval < CAMERA_POWER_DOUBLE_TAP_MAX_TIME_MS) {
+                 launched = true;
+                 intercept = interactive;
+-            }
++			//blestech add
++            }else if(mCameraDoubleTapPowerEnabled && FingerprintManager.isBtlFingerprintQuick()){
++            	if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 7) == 1){
++					mLastLock = true;
++				}else{
++					mLastLock = mPolicy.isKeyguardLocked();
++				}
++			}
++			//blestech end
+             mLastPowerDown = event.getEventTime();
+         }
+         if (launched) {
+             Slog.i(TAG, "Power button double tap gesture detected, launching camera. Interval="
+                     + doubleTapInterval + "ms");
++
++			//blestech add
++			if(!mPowerManager.isRealInteractive()){
++				mPowerManager.wakeUp(SystemClock.uptimeMillis(), "com.android.systemui:CAMERA_GESTURE");
++				try {
++			        Thread.sleep(500);
++			    } catch (InterruptedException e) {
++			        Slog.i(TAG, "InterruptedException: ", e);
++			    }
++			}else if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1 
++				&& FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 1)==0){
++				if(mLastLock){
++					if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_NULL, -1) == 0){
++						mActivityManagerInternal.onWakefulnessAwake();
++						FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 10);
++					}
++					mPolicy.startedWakingUp();
++					mPowerManager.userActivity(SystemClock.uptimeMillis(), false);
++				}else{
++					mActivityManagerInternal.onWakefulnessChanged(WAKEFULNESS_AWAKE);
++					mPolicy.startedWakingUp();
++					mPowerManager.userActivity(SystemClock.uptimeMillis(), false);
++
++					FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETENFUN, -1);
++					FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 3);
++				}
++			}
++			//blestech end
++
+             launched = handleCameraLaunchGesture(false /* useWakelock */,
+                     StatusBarManager.CAMERA_LAUNCH_SOURCE_POWER_DOUBLE_TAP);
+             if (launched) {
+@@ -319,6 +369,13 @@ public class GestureLauncherService extends SystemService {
+         }
+     };
+ 
++	//blestech add
++	private ActivityManagerInternal mActivityManagerInternal;
++	private WindowManagerPolicy mPolicy;
++	private boolean mLastLock;
++	PowerManager mPowerManager;
++	//blestech end
++
+     private final ContentObserver mSettingObserver = new ContentObserver(new Handler()) {
+         public void onChange(boolean selfChange, android.net.Uri uri, int userId) {
+             if (userId == mUserId) {
+diff --git a/base/services/core/java/com/android/server/am/ActivityManagerService.java b/base/services/core/java/com/android/server/am/ActivityManagerService.java
+index fc539f8..a84452c 100644
+--- a/base/services/core/java/com/android/server/am/ActivityManagerService.java
++++ b/base/services/core/java/com/android/server/am/ActivityManagerService.java
+@@ -419,6 +419,10 @@ import com.mediatek.suppression.service.SuppressionInternal;
+ /// M: BMW
+ import com.mediatek.multiwindow.MultiWindowManager;
+ 
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++//blestech end
++
+ public final class ActivityManagerService extends ActivityManagerNative
+         implements Watchdog.Monitor, BatteryStatsImpl.BatteryCallback {
+ 
+@@ -634,6 +638,10 @@ public final class ActivityManagerService extends ActivityManagerNative
+ 
+     BroadcastStats mLastBroadcastStats;
+     BroadcastStats mCurBroadcastStats;
++	//blestech add
++	PowerManager mPm;
++    private boolean mShowing;
++	//blestech end
+ 
+     BroadcastQueue broadcastQueueForIntent(Intent intent) {
+         final boolean isFg = (intent.getFlags() & Intent.FLAG_RECEIVER_FOREGROUND) != 0;
+@@ -2932,6 +2940,10 @@ public final class ActivityManagerService extends ActivityManagerNative
+         PowerManager pm = (PowerManager)mContext.getSystemService(Context.POWER_SERVICE);
+         mVoiceWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "*voice*");
+         mVoiceWakeLock.setReferenceCounted(false);
++
++		//blestech add
++		mPm = pm;
++		//blestech end
+     }
+ 
+     @Override
+@@ -5161,6 +5173,18 @@ public final class ActivityManagerService extends ActivityManagerNative
+                         Slog.i(TAG, "Failed to finish by app-request");
+                     }
+                 }
++
++				//blestech add
++				if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1
++					&& FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 9)==0){
++					mHandler.post(new Runnable() {
++				        @Override
++				        public void run() {
++							onWakefulnessChanged(PowerManagerInternal.WAKEFULNESS_ASLEEP);
++				        }
++				    });
++				}
++				//blestech end
+                 return res;
+             } finally {
+                 Binder.restoreCallingIdentity(origId);
+@@ -7298,15 +7322,33 @@ public final class ActivityManagerService extends ActivityManagerNative
+         try {
+             synchronized (this) {
+                 if (DEBUG_LOCKSCREEN) logLockScreen("");
+-                mWindowManager.keyguardGoingAway(flags);
+-                if (mLockScreenShown == LOCK_SCREEN_SHOWN) {
+-                    mLockScreenShown = LOCK_SCREEN_HIDDEN;
+-                    updateSleepIfNeededLocked();
+-
+-                    // Some stack visibility might change (e.g. docked stack)
+-                    mStackSupervisor.ensureActivitiesVisibleLocked(null, 0, !PRESERVE_WINDOWS);
+-                    applyVrModeIfNeededLocked(mFocusedActivity, true);
+-                }
++				//blestech add
++				if(FingerprintManager.isBtlFingerprintQuick()){
++					if(flags == 100){
++						mLockScreenShown = LOCK_SCREEN_HIDDEN;
++                        mShowing = false;
++						return;
++					}else{
++						mWindowManager.keyguardGoingAway(flags);
++			            if (mLockScreenShown == LOCK_SCREEN_SHOWN) {
++			                mLockScreenShown = LOCK_SCREEN_HIDDEN;
++                            mShowing = false;
++			                // Some stack visibility might change (e.g. docked stack)
++			                mStackSupervisor.ensureActivitiesVisibleLocked(null, 0, !PRESERVE_WINDOWS);
++			                applyVrModeIfNeededLocked(mFocusedActivity, true);
++			            }
++					}
++				}else{
++					mWindowManager.keyguardGoingAway(flags);
++	                if (mLockScreenShown == LOCK_SCREEN_SHOWN) {
++	                    mLockScreenShown = LOCK_SCREEN_HIDDEN;
++						updateSleepIfNeededLocked();
++	                    // Some stack visibility might change (e.g. docked stack)
++	                    mStackSupervisor.ensureActivitiesVisibleLocked(null, 0, !PRESERVE_WINDOWS);
++	                    applyVrModeIfNeededLocked(mFocusedActivity, true);
++	                }
++				}
++				//blestech end
+             }
+         } finally {
+             Binder.restoreCallingIdentity(token);
+@@ -12420,6 +12462,7 @@ public final class ActivityManagerService extends ActivityManagerNative
+     }
+ 
+     void onWakefulnessChanged(int wakefulness) {
++        Slog.v("stenve", "onWakefulnessChanged0000:"+wakefulness+":"+mWakefulness);
+         synchronized(this) {
+             /// M: AMEventHook event @{
+             if ("1".equals(SystemProperties.get("persist.runningbooster.support")) ||
+@@ -12454,12 +12497,14 @@ public final class ActivityManagerService extends ActivityManagerNative
+ 
+     void updateSleepIfNeededLocked() {
+         if (mSleeping && !shouldSleepLocked()) {
++            Slog.v("stenve", "updateSleepIfNeededLocked000000000:");
+             mSleeping = false;
+             startTimeTrackingFocusedActivityLocked();
+             mTopProcessState = ActivityManager.PROCESS_STATE_TOP;
+             mStackSupervisor.comeOutOfSleepIfNeededLocked();
+             updateOomAdjLocked();
+         } else if (!mSleeping && shouldSleepLocked()) {
++            Slog.v("stenve", "updateSleepIfNeededLocked1111111111111111:");
+             mSleeping = true;
+             if (mCurAppTimeTracker != null) {
+                 mCurAppTimeTracker.stop();
+@@ -12482,6 +12527,13 @@ public final class ActivityManagerService extends ActivityManagerNative
+             return false;
+         }
+ 
++		//blestech add
++		if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1
++			&& (mWakefulness==PowerManagerInternal.WAKEFULNESS_DREAMING||mWakefulness==PowerManagerInternal.WAKEFULNESS_DOZING)
++			&& mLockScreenShown==LOCK_SCREEN_HIDDEN){
++			return true;
++		}
++		//blestech end
+         // TODO: Transform the lock screen state into a sleep token instead.
+         switch (mWakefulness) {
+             case PowerManagerInternal.WAKEFULNESS_AWAKE:
+@@ -12489,6 +12541,7 @@ public final class ActivityManagerService extends ActivityManagerNative
+             case PowerManagerInternal.WAKEFULNESS_DOZING:
+                 // Pause applications whenever the lock screen is shown or any sleep
+                 // tokens have been acquired.
++                Slog.v("stenve", "shouldSleepLocked111111:"+mLockScreenShown+":"+!mSleepTokens.isEmpty());
+                 return (mLockScreenShown != LOCK_SCREEN_HIDDEN || !mSleepTokens.isEmpty());
+             case PowerManagerInternal.WAKEFULNESS_ASLEEP:
+             default:
+@@ -12629,6 +12682,9 @@ public final class ActivityManagerService extends ActivityManagerNative
+             long ident = Binder.clearCallingIdentity();
+             try {
+                 if (DEBUG_LOCKSCREEN) logLockScreen(" showing=" + showing + " occluded=" + occluded);
++                //blestech add
++                mShowing = showing;
++                //blestech end
+                 mLockScreenShown = (showing && !occluded) ? LOCK_SCREEN_SHOWN : LOCK_SCREEN_HIDDEN;
+                 if (showing && occluded) {
+                     // The lock screen is currently showing, but is occluded by a window that can
+@@ -22956,6 +23012,16 @@ public final class ActivityManagerService extends ActivityManagerNative
+             }
+         }
+ 
++		//blestech add
++        @Override
++        public void onWakefulnessAwake() {
++            Slog.v("stenve", "onWakefulnessAwake000000000000:"+mWakefulness);
++			synchronized(ActivityManagerService.this) {
++				mWakefulness = PowerManagerInternal.WAKEFULNESS_AWAKE;
++			}
++        }
++		//blestech end
++
+         @Override
+         public void onUserRemoved(int userId) {
+             synchronized (ActivityManagerService.this) {
+@@ -23066,8 +23132,11 @@ public final class ActivityManagerService extends ActivityManagerNative
+         @Override
+         public void release() {
+             synchronized (ActivityManagerService.this) {
+-                if (mSleepTokens.remove(this)) {
+-                    updateSleepIfNeededLocked();
++				//blestech add
++                if (mSleepTokens.remove(this)
++					&& (FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 15)!=0||mShowing==true)) {
++				//blestech end
++					updateSleepIfNeededLocked();
+                 }
+             }
+         }
+diff --git a/base/services/core/java/com/android/server/am/ActivityStackSupervisor.java b/base/services/core/java/com/android/server/am/ActivityStackSupervisor.java
+index 1483b59..960eb31 100644
+--- a/base/services/core/java/com/android/server/am/ActivityStackSupervisor.java
++++ b/base/services/core/java/com/android/server/am/ActivityStackSupervisor.java
+@@ -462,6 +462,12 @@ public final class ActivityStackSupervisor implements DisplayListener {
+      */
+     boolean mIsDockMinimized;
+ 
++	//blestech add
++	public boolean isResumeTopActivity = false;
++	public static boolean isSendScreenONOFF = false;
++	PowerManager mPm;
++	//blestech end
++
+     /**
+      * Description of a request to start a new activity, which has been held
+      * due to app switches being disabled.
+@@ -514,6 +520,10 @@ public final class ActivityStackSupervisor implements DisplayListener {
+         mGoingToSleep = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ActivityManager-Sleep");
+         mLaunchingActivity = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "*launch*");
+         mLaunchingActivity.setReferenceCounted(false);
++
++		//blestech add
++		mPm = pm;
++		//blestech end
+     }
+ 
+     // This function returns a IStatusBarService. The value is from ServiceManager.
+@@ -2864,7 +2874,11 @@ public final class ActivityStackSupervisor implements DisplayListener {
+                 final ActivityStack stack = stacks.get(stackNdx);
+                 stack.awakeFromSleepingLocked();
+                 if (isFocusedStack(stack)) {
+-                    resumeFocusedStackTopActivityLocked();
++                    //resumeFocusedStackTopActivityLocked();
++					//blestech add
++					if(!isResumeTopActivity)
++                        resumeFocusedStackTopActivityLocked();
++					//blestech end
+                 }
+             }
+         }
+diff --git a/base/services/core/java/com/android/server/am/ActivityStarter.java b/base/services/core/java/com/android/server/am/ActivityStarter.java
+index 725778a..c074e70 100644
+--- a/base/services/core/java/com/android/server/am/ActivityStarter.java
++++ b/base/services/core/java/com/android/server/am/ActivityStarter.java
+@@ -122,7 +122,9 @@ import com.android.server.am.ActivityStackSupervisor.PendingActivityLaunch;
+ import com.android.server.wm.WindowManagerService;
+ 
+ import java.util.ArrayList;
+-
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++//blestech end
+ /**
+  * Controller for interpreting how and then launching activities.
+  *
+@@ -696,6 +698,42 @@ class ActivityStarter {
+         if (intent != null && intent.hasFileDescriptors()) {
+             throw new IllegalArgumentException("File descriptors passed in Intent");
+         }
++
++		//blestech add
++		if(FingerprintManager.isBtlFingerprintQuick()
++			&& intent!=null && intent.getComponent()!=null && intent.getComponent().getClassName()!=null
++			&& (intent.getComponent().getClassName().equals("com.tencent.news.push.alive.offactivity.HollowActivity")
++			||(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1
++			&&intent.getComponent().getClassName().equals("com.android.settings.applock.AppLockPasswordActivity")))){
++			Slog.v(TAG, "startActivityMayWait22222222:"+intent.getComponent().getClassName());
++			//if(callingPackage!=null)
++				//Slog.v(TAG, "startActivityMayWait0000000:"+callingPackage+":"+mService.mPm.isInteractive());
++			//else
++				//Slog.v("stenve", "startActivityMayWait111111:"+mService.mPm.isInteractive());
++	        return 0;
++		}
++
++		if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1 && mService.mPm.isRealInteractive()
++			&& callingPackage!=null && !callingPackage.equals("com.android.systemui")){
++			if(intent!=null && intent.getComponent()!=null && intent.getComponent().getClassName()!=null)
++				//Slog.v(TAG, "startActivityMayWait22222222:"+intent.getComponent().getClassName());
++			mService.mHandler.post(new Runnable() {
++		        @Override
++		        public void run() {
++                    //if(callingPackage!=null)
++						//Slog.v(TAG, "startActivityMayWait3333333:"+callingPackage);
++					//else
++						//Slog.v(TAG, "startActivityMayWait4444444:");
++					synchronized(mService) {
++						mSupervisor.isResumeTopActivity = true;
++		            	mService.onWakefulnessChanged(1);
++						mSupervisor.isResumeTopActivity = false;
++					}
++		        }
++		    });
++		}
++		//blestech end
++
+         mSupervisor.mActivityMetricsLogger.notifyActivityLaunching();
+         boolean componentSpecified = intent.getComponent() != null;
+ 
+@@ -731,7 +769,12 @@ class ActivityStarter {
+         }
+         // Collect information about the target of the Intent.
+         ActivityInfo aInfo = mSupervisor.resolveActivity(intent, rInfo, startFlags, profilerInfo);
+-
++		//blestech add
++		if((FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1||!mSupervisor.mPm.isRealInteractive()) && aInfo!=null && aInfo.taskAffinity!=null && (aInfo.taskAffinity.equals("com.tencent.qqVideo")||aInfo.taskAffinity.equals("com.tencent.mobileqq"))){
++			mSupervisor.isSendScreenONOFF = true;
++			Slog.e("stenve", "startActivityMayWait11111111: " + mSupervisor.isSendScreenONOFF);
++		}
++		//blestech end
+         ActivityOptions options = ActivityOptions.fromBundle(bOptions);
+         ActivityStackSupervisor.ActivityContainer container =
+                 (ActivityStackSupervisor.ActivityContainer)iContainer;
+diff --git a/base/services/core/java/com/android/server/display/AutomaticBrightnessController.java b/base/services/core/java/com/android/server/display/AutomaticBrightnessController.java
+index 4395f36..79e53cd 100644
+--- a/base/services/core/java/com/android/server/display/AutomaticBrightnessController.java
++++ b/base/services/core/java/com/android/server/display/AutomaticBrightnessController.java
+@@ -45,6 +45,10 @@ import android.util.TimeUtils;
+ 
+ import java.io.PrintWriter;
+ 
++//blestech add
++import android.os.SystemProperties;
++//belstech end
++
+ class AutomaticBrightnessController {
+     private static final String TAG = "AutomaticBrightnessController";
+ 
+@@ -566,6 +570,10 @@ class AutomaticBrightnessController {
+                 mCallbacks.updateBrightness();
+             }
+         }
++
++		//blestech add
++		SystemProperties.set("sys.btl_fingerprint_data", Integer.toString(mScreenAutoBrightness));
++		//belstech end
+     }
+ 
+     private int clampScreenBrightness(int value) {
+diff --git a/base/services/core/java/com/android/server/display/DisplayManagerService.java b/base/services/core/java/com/android/server/display/DisplayManagerService.java
+index 81ba824..c10cc63 100644
+--- a/base/services/core/java/com/android/server/display/DisplayManagerService.java
++++ b/base/services/core/java/com/android/server/display/DisplayManagerService.java
+@@ -72,6 +72,10 @@ import java.util.Arrays;
+ import java.util.List;
+ import java.util.concurrent.CopyOnWriteArrayList;
+ 
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++//blestech end
++
+ /**
+  * Manages attached displays.
+  * <p>
+@@ -722,6 +726,11 @@ public final class DisplayManagerService extends SystemService {
+             if (diff == DisplayDeviceInfo.DIFF_STATE) {
+                 Slog.i(TAG, "Display device changed state: \"" + info.name
+                         + "\", " + Display.stateToString(info.state));
++                //blestech add
++                if(info.state==Display.STATE_OFF && FingerprintManager.isBtlFingerprintQuick()){
++                    FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 23);
++                }
++                //blestech end
+             } else if (diff != 0) {
+                 Slog.i(TAG, "Display device changed: " + info);
+             }
+diff --git a/base/services/core/java/com/android/server/fingerprint/FingerprintService.java b/base/services/core/java/com/android/server/fingerprint/FingerprintService.java
+index 1f285d5..d9c3f52 100644
+--- a/base/services/core/java/com/android/server/fingerprint/FingerprintService.java
++++ b/base/services/core/java/com/android/server/fingerprint/FingerprintService.java
+@@ -66,6 +66,19 @@ import static android.Manifest.permission.MANAGE_FINGERPRINT;
+ import static android.Manifest.permission.RESET_FINGERPRINT_LOCKOUT;
+ import static android.Manifest.permission.USE_FINGERPRINT;
+ 
++//blestech add
++import android.app.ActivityManagerInternal;
++import com.android.server.LocalServices;
++import static android.os.PowerManagerInternal.WAKEFULNESS_AWAKE;
++import android.view.WindowManagerPolicy;
++import android.util.Log;
++import java.io.BufferedReader;
++import java.io.BufferedWriter;
++import java.io.FileWriter;
++import java.io.FileReader;
++import java.io.IOException;
++//blestech end
++
+ import java.io.File;
+ import java.io.FileDescriptor;
+ import java.io.PrintWriter;
+@@ -116,6 +129,14 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+  */
+     private static boolean countFlag = true;
+ // End of Vanzo:zhangweipeng
++
++	//blestech add
++	private ActivityManagerInternal mActivityManagerInternal;
++	private WindowManagerPolicy mPolicy;
++	private boolean mRestart = false;
++	private boolean mClientStopping = false;
++	//blestech end
++	
+     private Handler mHandler = new Handler() {
+         @Override
+         public void handleMessage(android.os.Message msg) {
+@@ -173,7 +194,19 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+                     + " failed to respond to cancel, starting client "
+                     + (mPendingClient != null ? mPendingClient.getOwnerString() : "null"));
+             mCurrentClient = null;
+-            startClient(mPendingClient, false);
++
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				if(mPendingClient != null){
++					startClient(mPendingClient, false);
++				}
++					
++				mClientStopping = false;
++				mPendingClient = null;
++			}else{
++				startClient(mPendingClient, false);
++			}
++			//blestech end
+         }
+     };
+ 
+@@ -193,6 +226,10 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+         mContext.registerReceiver(mLockoutReceiver, new IntentFilter("android.intent.action.SETTINGAUTH"));
+ // End of Vanzo:zhangweipeng
+         mUserManager = UserManager.get(mContext);
++		//blestech add
++		mActivityManagerInternal = LocalServices.getService(ActivityManagerInternal.class);
++		mPolicy = getLocalService(WindowManagerPolicy.class);
++		//blestech end
+     }
+ 
+     @Override
+@@ -247,6 +284,10 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+         // This is the magic code that starts the next client when the old client finishes.
+         if (error == FingerprintManager.FINGERPRINT_ERROR_CANCELED) {
+             mHandler.removeCallbacks(mResetClientState);
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick())
++				mClientStopping = false;
++			//blestech end
+             if (mPendingClient != null) {
+                 if (DEBUG) Slog.v(TAG, "start pending client " + mPendingClient.getOwnerString());
+                 startClient(mPendingClient, false);
+@@ -264,6 +305,36 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+ 
+     protected void handleAuthenticated(long deviceId, int fingerId, int groupId) {
+         ClientMonitor client = mCurrentClient;
++
++        //blestech add
++        if(null != client) {
++            if(FingerprintManager.isBtlFingerprintQuick() && isKeyguard(client.getOwnerString())){
++                if(fingerId!=0 && FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 1)==0){
++                    FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETENFUN, -1);
++                    if(mPowerManager.isRealInteractive()){
++                        mActivityManagerInternal.onWakefulnessChanged(WAKEFULNESS_AWAKE);
++                        mPolicy.startedWakingUp();
++                        userActivity();
++                    }else{
++                        FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 7);
++                        FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 17);
++                        mActivityManagerInternal.onWakefulnessChanged(WAKEFULNESS_AWAKE);
++                        mPowerManager.wakeUp(SystemClock.uptimeMillis());
++                    }
++                }
++            }
++
++            List<Fingerprint> fingers = getEnrolledFingerprints(client.getTargetUserId());
++            boolean hasFingerprintsEnrolled = (null != fingers && fingers.size() > 0);
++            if(!hasFingerprintsEnrolled) {
++                removeClient(client);
++                return;
++            }
++        } else{
++            FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_MESSAGE, -1);
++        }
++        //blestech end
++
+         if (client != null && client.onAuthenticated(fingerId, groupId)) {
+             removeClient(client);
+         }
+@@ -364,9 +435,15 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+      */
+     private void startClient(ClientMonitor newClient, boolean initiatedByClient) {
+         ClientMonitor currentClient = mCurrentClient;
+-        if (currentClient != null) {
+-            if (DEBUG) Slog.v(TAG, "request stop current client " + currentClient.getOwnerString());
+-            currentClient.stop(initiatedByClient);
++		//blestech add
++        if (mClientStopping || currentClient!=null) {
++			if(!mClientStopping && currentClient!=null){
++				if (DEBUG) Slog.v(TAG, "request stop current client " + currentClient.getOwnerString());
++				currentClient.stop(initiatedByClient);
++				if(FingerprintManager.isBtlFingerprintQuick())
++					mClientStopping = true;
++			}	
++		//blestech end
+             mPendingClient = newClient;
+             mHandler.removeCallbacks(mResetClientState);
+             mHandler.postDelayed(mResetClientState, CANCEL_TIMEOUT_LIMIT);
+@@ -485,10 +562,12 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+             Slog.w(TAG, "Rejecting " + opPackageName + " ; permission denied");
+             return false;
+         }
+-        if (foregroundOnly && !isForegroundActivity(uid, pid)) {
++		//blestech add
++        if (!FingerprintManager.isBtlFingerprintQuick() && foregroundOnly && !isForegroundActivity(uid, pid)) {
+             Slog.w(TAG, "Rejecting " + opPackageName + " ; not in foreground");
+             return false;
+         }
++		//blestech end
+         return true;
+     }
+ 
+@@ -524,6 +603,14 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+ 
+         if (DEBUG) Slog.v(TAG, "startAuthentication(" + opPackageName + ")");
+ 
++		//blestech add
++		if(FingerprintManager.isBtlFingerprintQuick() && !opPackageName.equals("com.android.systemui")
++			&& mCurrentClient!=null && isKeyguard(mCurrentClient.getOwnerString())){
++			Slog.v(TAG, "startAuthentication00000000000 failed");
++			return;
++		}
++		//blestech end
++
+         AuthenticationClient client = new AuthenticationClient(getContext(), mHalDeviceId, token,
+                 receiver, mCurrentUserId, groupId, opId, restricted, opPackageName) {
+             @Override
+@@ -653,6 +740,9 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+             mHandler.post(new Runnable() {
+                 @Override
+                 public void run() {
++                    if (acquiredInfo == 1) {
++                        Toast.makeText(mContext, mContext.getString(com.android.internal.R.string.custom_warning_move_toast), Toast.LENGTH_SHORT).show();
++                    }
+                     handleAcquired(deviceId, acquiredInfo);
+                 }
+             });
+@@ -797,7 +887,11 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+                     } else {
+                         ClientMonitor client = mCurrentClient;
+                         if (client instanceof AuthenticationClient) {
+-                            if (client.getToken() == token) {
++							//blestech add
++                            if (!mClientStopping && client.getToken()==token) {
++								if(FingerprintManager.isBtlFingerprintQuick())
++									mClientStopping = true;
++							//blestech end
+                                 if (DEBUG) Slog.v(TAG, "stop client " + client.getOwnerString());
+                                 client.stop(client.getToken() == token);
+                             } else {
+@@ -944,6 +1038,44 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+                 }
+             });
+         }
++        //blestech add
++        @Override
++        public void writeValueToSys(String path, int value) {
++            try {
++                Slog.d(TAG, "writeValueToSys111:"+path+":"+value);
++				BufferedWriter writer;
++				writer = new BufferedWriter(new FileWriter(path));
++				writer.write(Integer.toString(value));
++				writer.close();
++			} catch (IOException e) {
++				// TODO Auto-generated catch block
++				e.printStackTrace();
++			}
++        }
++
++        @Override
++        public int readValueFromSys(String path) {
++            int ret = 0;
++			String buffer = null;		
++			try {
++				BufferedReader bufReader = new BufferedReader(new FileReader(path));					
++				buffer = bufReader.readLine();
++				bufReader.close();
++			} catch (IOException e) {
++				// TODO Auto-generated catch block
++				e.printStackTrace();
++			}
++			Slog.d(TAG, "readValueFromSys000:"+path+":"+buffer);
++
++			if(buffer.equals("0")){
++				ret = 0;
++			}else{
++				ret = 1;
++			}	
++				
++			return ret;
++        }
++        //blestech end
+     }
+ 
+     private void dumpInternal(PrintWriter pw) {
+diff --git a/base/services/core/java/com/android/server/lights/LightsService.java b/base/services/core/java/com/android/server/lights/LightsService.java
+index 4ea12e4..a1f27cc 100644
+--- a/base/services/core/java/com/android/server/lights/LightsService.java
++++ b/base/services/core/java/com/android/server/lights/LightsService.java
+@@ -36,6 +36,11 @@ import android.util.Slog;
+  */
+ import android.os.SystemProperties;
+ // End of Vanzo:yujianpeng
++
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++//blestech end
++
+ public class LightsService extends SystemService {
+     static final String TAG = "LightsService";
+     static final boolean DEBUG = false;
+@@ -56,6 +61,13 @@ public class LightsService extends SystemService {
+ 
+         @Override
+         public void setBrightness(int brightness) {
++			//blestech add start
++			if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5) == 1){
++				Slog.v(TAG, "setBrightness111111111111:"+brightness);
++				return;
++			}
++			//blestech add end
++			
+             setBrightness(brightness, BRIGHTNESS_MODE_USER);
+         }
+ 
+diff --git a/base/services/core/java/com/android/server/policy/PhoneWindowManager.java b/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+old mode 100644
+new mode 100755
+index a20358d..aa19303
+--- a/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -43,6 +43,11 @@ import android.app.ActivityManager.StackId;
+ import android.app.ActivityManagerInternal;
+ import android.app.ActivityManagerInternal.SleepToken;
+ import android.app.ActivityManagerNative;
++/*[blestech] add begin */
++import android.hardware.fingerprint.FingerprintManager;
++import static android.os.PowerManagerInternal.WAKEFULNESS_ASLEEP;
++import static android.os.PowerManagerInternal.WAKEFULNESS_AWAKE;
++/*[blestech] add end */
+ import android.app.AppOpsManager;
+ import android.app.IActivityManager;
+ import android.app.IUiModeManager;
+@@ -266,6 +271,15 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     private static final String KEY_FINGERPRINT_VIDEO = "persist.sys.fp_video";
+     private static final int MSG_FINGERPRINT_DOUBLE_CLICK = 112;
+ // End of Vanzo:fenghaitao
++
++	/*[blestech] add begin*/
++	private static final long FINGERPRINT_KEY_DEBOUNCE_DELAY_MILLIS = 250;
++	private long mFingerprintDownKeyTime = 0;
++	private static final int MSG_FINGERPRINT_KEY = 30;
++	PowerManager.WakeLock mFingerPrintWakeLock;
++	private FingerprintManager mFpm;
++	private boolean mlastSetFun = true;	
++	/*[blestech] add end*/
+     /**
+      * These are the system UI flags that, when changing, can cause the layout
+      * of the screen to change.
+@@ -855,6 +869,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 case MSG_DISPOSE_INPUT_CONSUMER:
+                     disposeInputConsumer((InputConsumer) msg.obj);
+                     break;
++				/*[blestech] add begin*/
++                case MSG_FINGERPRINT_KEY:
++				    transferFingerprintKey();
++				    break;
++                /*[blestech] add end*/
+             }
+         }
+     }
+@@ -1132,12 +1151,41 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             if (interactive) {
+                 // When interactive, we're already awake.
+                 // Wait for a long press or for the button to be released to decide what to do.
+-                if (hasLongPressOnPowerBehavior()) {
+-                    Message msg = mHandler.obtainMessage(MSG_POWER_LONG_PRESS);
+-                    msg.setAsynchronous(true);
+-                    mHandler.sendMessageDelayed(msg,
+-                            ViewConfiguration.get(mContext).getDeviceGlobalActionKeyTimeout());
+-                }
++
++				//blestech add
++				if(FingerprintManager.isBtlFingerprintQuick() && isFun()==1){
++					if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 1) == 0){
++						if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_NULL, -1) == 0){
++							Log.d(TAG, "interceptPowerKeyDown1111111111");
++							mActivityManagerInternal.onWakefulnessAwake();
++							FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 10);
++						}
++						startedWakingUp();
++						mPowerManager.userActivity(SystemClock.uptimeMillis(), false);
++					}
++
++					if (mSupportLongPressPowerWhenNonInteractive && hasLongPressOnPowerBehavior()) {
++		                Message msg = mHandler.obtainMessage(MSG_POWER_LONG_PRESS);
++		                msg.setAsynchronous(true);
++		                mHandler.sendMessageDelayed(msg,
++		                        ViewConfiguration.get(mContext).getDeviceGlobalActionKeyTimeout());
++		                mBeganFromNonInteractive = true;
++		            } else {
++		                final int maxCount = getMaxMultiPressPowerCount();
++
++		                if (maxCount <= 1) {
++		                    mPowerKeyHandled = true;
++		                } else {
++		                    mBeganFromNonInteractive = true;
++		                }
++		            }
++				}else if (hasLongPressOnPowerBehavior()) {
++	                Message msg = mHandler.obtainMessage(MSG_POWER_LONG_PRESS);
++	                msg.setAsynchronous(true);
++	                mHandler.sendMessageDelayed(msg,
++	                        ViewConfiguration.get(mContext).getDeviceGlobalActionKeyTimeout());
++	            }
++				//blestech end
+             } else {
+                 wakeUpFromPowerKey(event.getDownTime());
+ 
+@@ -1191,6 +1239,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     }
+ 
+     private void finishPowerKeyPress() {
++        if (FingerprintManager.isBtlFingerprintQuick()) {
++            mPowerKeyPressCounter = 0;
++        }
+         mBeganFromNonInteractive = false;
+         mPowerKeyPressCounter = 0;
+         if (mPowerKeyWakeLock.isHeld()) {
+@@ -1227,20 +1278,35 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             switch (mShortPressOnPowerBehavior) {
+                 case SHORT_PRESS_POWER_NOTHING:
+                     break;
++					//blestech start
+                 case SHORT_PRESS_POWER_GO_TO_SLEEP:
+-                    mPowerManager.goToSleep(eventTime,
++					if(canSetFun()){
++						setFun();
++					}else{
++						mPowerManager.goToSleep(eventTime,
+                             PowerManager.GO_TO_SLEEP_REASON_POWER_BUTTON, 0);
+-                    break;
++					}
++				break;
+                 case SHORT_PRESS_POWER_REALLY_GO_TO_SLEEP:
+-                    mPowerManager.goToSleep(eventTime,
++					if(canSetFun()){
++						Slog.i(TAG, "SHORT_PRESS_POWER_REALLY_GO_TO_SLEEP1111111");
++						setFun();
++					}else{
++						mPowerManager.goToSleep(eventTime,
+                             PowerManager.GO_TO_SLEEP_REASON_POWER_BUTTON,
+                             PowerManager.GO_TO_SLEEP_FLAG_NO_DOZE);
++					}
+                     break;
+                 case SHORT_PRESS_POWER_REALLY_GO_TO_SLEEP_AND_GO_HOME:
+-                    mPowerManager.goToSleep(eventTime,
++					if(canSetFun()){
++						setFun();
++					}else{
++						mPowerManager.goToSleep(eventTime,
+                             PowerManager.GO_TO_SLEEP_REASON_POWER_BUTTON,
+                             PowerManager.GO_TO_SLEEP_FLAG_NO_DOZE);
++					}
+                     launchHomeFromHotKey();
++					//blestech end
+                     break;
+                 case SHORT_PRESS_POWER_GO_HOME:
+                     launchHomeFromHotKey(true /* awakenFromDreams */, false /*respectKeyguard*/);
+@@ -1990,6 +2056,36 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             mWindowGestureManager = new WindowGestureManager(context);
+         }
+ // End of Vanzo:tanglei
++
++		//blestech add
++		mFingerPrintWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
++                "PhoneWindowManager.mFingerPrintWakeLock");
++		mFpm = (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
++
++		ContentResolver res = mContext.getContentResolver();
++		boolean sRestoreRetore = Settings.System.getIntForUser(res,
++                    Settings.System.ACCELEROMETER_ROTATION_RESTORE,
++                    0, UserHandle.USER_CURRENT) != 0;
++		
++		if(sRestoreRetore){
++			Settings.System.putIntForUser(res,
++                    Settings.System.BTLFINGER_FINGERPRINT_ROTATION,
++                    1,
++                    UserHandle.USER_CURRENT);
++		}
++
++		int userRotationMode = Settings.System.getIntForUser(res,
++            Settings.System.ACCELEROMETER_ROTATION, 1, UserHandle.USER_CURRENT);
++		int mode = Settings.System.getIntForUser(res,
++            Settings.System.BTLFINGER_FINGERPRINT_ROTATION, 1, UserHandle.USER_CURRENT);
++
++		if(mode!=userRotationMode && mode==1){
++	        Settings.System.putIntForUser(res,
++	                Settings.System.ACCELEROMETER_ROTATION,
++	                1,
++	                UserHandle.USER_CURRENT);
++		}
++		//blestech end
+     }
+ 
+     /**
+@@ -5626,18 +5722,35 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     private boolean setKeyguardOccludedLw(boolean isOccluded) {
+         boolean wasOccluded = mKeyguardOccluded;
+         boolean showing = mKeyguardDelegate.isShowing();
+-        if (wasOccluded && !isOccluded && showing) {
++        //blestech add
++        if (wasOccluded && !isOccluded && (FingerprintManager.isBtlFingerprintQuick()||showing)) {
++        //blestech end
+             mKeyguardOccluded = false;
+             mKeyguardDelegate.setOccluded(false);
+-            mStatusBar.getAttrs().privateFlags |= PRIVATE_FLAG_KEYGUARD;
+-            return true;
++            //blestech add
++            if(showing){
++                mStatusBar.getAttrs().privateFlags |= PRIVATE_FLAG_KEYGUARD;
++                return true;
++            }else{
++                return false;
++            }
++            //blestech end
+         } else if (!wasOccluded && isOccluded && showing) {
+             mKeyguardOccluded = true;
+             mKeyguardDelegate.setOccluded(true);
+             mStatusBar.getAttrs().privateFlags &= ~PRIVATE_FLAG_KEYGUARD;
+             mStatusBar.getAttrs().flags &= ~FLAG_SHOW_WALLPAPER;
+             return true;
+-        } else {
++		//blestech add
++        } else if (FingerprintManager.isBtlFingerprintQuick() && isOccluded) {
++			mKeyguardOccluded = true;
++            mKeyguardDelegate.setOccluded(true);
++            mStatusBar.getAttrs().privateFlags &= ~PRIVATE_FLAG_KEYGUARD;
++            mStatusBar.getAttrs().flags &= ~FLAG_SHOW_WALLPAPER;
++            return false;
++		}
++		//blestech end
++		else {
+             return false;
+         }
+     }
+@@ -6004,12 +6117,24 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                     + " interactive=" + interactive + " keyguardActive=" + keyguardActive
+                     + " policyFlags=" + Integer.toHexString(policyFlags));
+         }
++		//blestech add start
++		if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1 && ((keyCode==KeyEvent.KEYCODE_HOME)||(keyCode==KeyEvent.KEYCODE_BACK)||(keyCode==KeyEvent.KEYCODE_MENU)||(keyCode==KeyEvent.KEYCODE_APP_SWITCH))){
++			Log.i(TAG, "interceptKeyBeforeQueueing1111111111111:"+keyCode);
++			return 0;
++		}
++		//blestech add end
+ 
+         // Basic policy based on interactive state.
+         int result;
+         boolean isWakeKey = (policyFlags & WindowManagerPolicy.FLAG_WAKE) != 0
+                 || event.isWakeKey();
+-        if (interactive || (isInjected && !isWakeKey)) {
++        //blestech add
++		if(FingerprintManager.isBtlFingerprintQuick() && keyCode==KeyEvent.KEYCODE_BACK){
++			isWakeKey = false;
++		}
++		
++        if ((interactive||(isInjected && !isWakeKey)) && FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)!=1) {
++		//blestech end
+             // When the device is interactive or the key is injected pass the
+             // key to the application.
+             result = ACTION_PASS_TO_USER;
+@@ -6062,10 +6187,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         if(keyCode == KeyEvent.KEYCODE_HOME){
+            mPressHome = true;
+         }
+-
+         if(SystemProperties.getInt("persist.sys.fp_switch", 1) == 1){
+             if ((keyCode == KeyEvent.KEYCODE_F11) && !down && isScreenOn() && !keyguardActive && !mPressHome) {
+-                mFingerLastClickTime = SystemClock.uptimeMillis();
++				mFingerLastClickTime = SystemClock.uptimeMillis();
+                 mHandler.removeMessages(MSG_FINGERPRINT_DOUBLE_CLICK);
+                 mHandler.sendEmptyMessageDelayed(MSG_FINGERPRINT_DOUBLE_CLICK,500);
+             }
+@@ -6165,6 +6289,27 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+         // Handle special keys.
+         switch (keyCode) {
++			/*[blestech] add begin */
++			case KeyEvent.KEYCODE_F10:
++				if(down) {
++				    Log.v("btl_jni", "KEYCODE_F10");
++					mFingerPrintWakeLock.acquire(100);
++
++					final long now = SystemClock.uptimeMillis();
++
++                    if (((now - mFingerprintDownKeyTime) >= FINGERPRINT_KEY_DEBOUNCE_DELAY_MILLIS)
++						|| mFingerprintDownKeyTime == 0){
++				        Message msg = mHandler.obtainMessage(MSG_FINGERPRINT_KEY);
++                        msg.setAsynchronous(true);
++                        msg.sendToTarget();
++						mFingerprintDownKeyTime = now;
++					}
++
++					//mHandler.sendEmptyMessageDelayed(MSG_FINGERPRINT_KEY, 3000);
++					//mBroadcastWakeLock.release();
++				}
++				break;
++            /*[blestech] add end */
+             case KeyEvent.KEYCODE_BACK: {
+                 if (down) {
+                     mBackKeyHandled = false;
+@@ -6407,7 +6552,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             case KeyEvent.KEYCODE_SLEEP: {
+                 result &= ~ACTION_PASS_TO_USER;
+                 isWakeKey = false;
+-                if (!mPowerManager.isInteractive()) {
++                //blestech add
++                if (!mPowerManager.isRealInteractive()){
++                //blestech end
+                     useHapticFeedback = false; // suppress feedback if already non-interactive
+                 }
+                 if (down) {
+@@ -6514,6 +6661,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         }
+ 
+         if (useHapticFeedback) {
++			//blestech add
++			if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 11) == 1){
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 10);
++			}else
++			//blestech end
+             performHapticFeedbackLw(null, HapticFeedbackConstants.VIRTUAL_KEY, false);
+         }
+ 
+@@ -6732,6 +6884,22 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         startActivityAsUser(voiceIntent, UserHandle.CURRENT_OR_SELF);
+         mBroadcastWakeLock.release();
+     }
++	
++	/*[blestech] add begin*/
++	void transferFingerprintKey() {
++        if (!mPowerManager.isRealInteractive()
++                && FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 8)==1
++                && FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_GETFUN, -1)==0) {
++            FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETFUN, 0);
++            FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 7);
++            mPowerManager.wakeUp(SystemClock.uptimeMillis(), "android.policy:POWER");
++            mPowerManager.userActivity(SystemClock.uptimeMillis(), false);
++        }
++
++		//Intent fingerprintIntent = new Intent(FINGER_PRINT_MATCH_ACTION);
++		//mContext.sendBroadcast(fingerprintIntent);
++    }
++  /*[blestech] add end*/
+ 
+ /* Vanzo:yinjun on: Wed, 11 Mar 2015 11:39:30 +0800
+  * for screenshot
+@@ -6988,7 +7156,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+             if (mKeyguardDelegate != null) {
+                 mHandler.removeMessages(MSG_KEYGUARD_DRAWN_TIMEOUT);
+-                mHandler.sendEmptyMessageDelayed(MSG_KEYGUARD_DRAWN_TIMEOUT, 1000);
++				//blestech add
++				if(FingerprintManager.isBtlFingerprintQuick()){
++					mHandler.sendEmptyMessageDelayed(MSG_KEYGUARD_DRAWN_TIMEOUT, 0);
++				}else{
++					mHandler.sendEmptyMessageDelayed(MSG_KEYGUARD_DRAWN_TIMEOUT, 1000);
++				}
++				//blestech end
+                 mKeyguardDelegate.onScreenTurningOn(mKeyguardDrawnCallback);
+             } else {
+                 if (DEBUG_WAKEUP) Slog.d(TAG,
+@@ -7459,6 +7633,15 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+         // mUserRotationMode and mUserRotation will be assigned by the content observer
+         if (mode == WindowManagerPolicy.USER_ROTATION_LOCKED) {
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 14);
++				Settings.System.putIntForUser(res,
++                    Settings.System.BTLFINGER_FINGERPRINT_ROTATION,
++                    0,
++                    UserHandle.USER_CURRENT);
++			}
++			//blestech end
+             Settings.System.putIntForUser(res,
+                     Settings.System.USER_ROTATION,
+                     rot,
+@@ -7468,6 +7651,16 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                     0,
+                     UserHandle.USER_CURRENT);
+         } else {
++			//blestech add
++			if(FingerprintManager.isBtlFingerprintQuick()){
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 15);
++				Settings.System.putIntForUser(res,
++                    Settings.System.BTLFINGER_FINGERPRINT_ROTATION,
++                    1,
++                    UserHandle.USER_CURRENT);
++			}
++			//blestech end
++		
+             Settings.System.putIntForUser(res,
+                     Settings.System.ACCELEROMETER_ROTATION,
+                     1,
+@@ -9099,4 +9292,98 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         }
+     }
+ // End of Vanzo:fenghaitao
++
++	/*[blestech] add begin*/
++	public void enFun(int enable) {
++		//Log.d(TAG, "enFun00000000000:"+enable);
++		if(enable == 1){
++			//Log.d(TAG, "enFun1111111111111:");
++			FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETENFUN, -1);
++			mPowerManager.userActivity(SystemClock.uptimeMillis(), false);
++		}else{
++			FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETFUN, 0);
++            mPowerManager.onSendInteractiveBroadcast(false);
++		}
++    }
++
++	public int isFun() {
++		return FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5);
++    }
++
++	private void setFun(){
++		Log.d(TAG, "setFun11111111");
++
++		if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 1) == 0){
++			if(isFun()==0 && mPowerManager.isRealInteractive()){
++				if(!isKeyguardLocked()){
++					FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 19);
++					if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 13) == 1){
++						ContentResolver res = mContext.getContentResolver();
++						Settings.System.putIntForUser(res,
++				                Settings.System.USER_ROTATION,
++				                Surface.ROTATION_0,
++				                UserHandle.USER_CURRENT);
++				        Settings.System.putIntForUser(res,
++				                Settings.System.ACCELEROMETER_ROTATION,
++				                0,
++				                UserHandle.USER_CURRENT);
++						try {
++					        //set orientation on WindowManager
++							mWindowManager.updateRotation(false, false);
++							if(mWindowManager.getRotation() != Surface.ROTATION_0){
++								try {
++						            Thread.sleep(1000);
++						        } catch (InterruptedException e) {
++						            Log.d(TAG, "InterruptedException: ", e);
++						        }
++							}
++					    } catch (RemoteException e) {
++					        // Ignore
++					    }
++					}else if(mCurrentAppOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED){
++						try {
++					        //set orientation on WindowManager
++							mWindowManager.updateRotation(false, false);
++							if(mWindowManager.getRotation() != Surface.ROTATION_0){
++								try {
++						            Thread.sleep(1000);
++						        } catch (InterruptedException e) {
++						            Log.d(TAG, "InterruptedException: ", e);
++						        }
++							}
++					    } catch (RemoteException e) {
++					        // Ignore
++					    }
++					}
++				}
++				enFun(0);
++				mPowerManager.userActivity(SystemClock.uptimeMillis(), false);
++				mActivityManagerInternal.onWakefulnessChanged(WAKEFULNESS_ASLEEP);
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_WAIT, -1);
++				FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 0);
++			}else{
++				if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_NULL, -1) == 0){
++					mActivityManagerInternal.onWakefulnessAwake();
++					FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 10);
++				}
++
++				startedWakingUp();
++				mPowerManager.userActivity(SystemClock.uptimeMillis(), false);
++			}
++		}
++	}
++
++	private boolean canSetFun(){ 
++		boolean ret = FingerprintManager.isBtlFingerprintQuick() 
++			&& !FingerprintManager.mProximityScreen;
++
++		if(ret && FingerprintManager.mWakefulnessTemp){
++			FingerprintManager.mWakefulnessTemp = false;
++			ret = false;
++		}
++		
++		return ret;
++	}
++    /*[blestech] add end*/
++
+ }
+diff --git a/base/services/core/java/com/android/server/policy/keyguard/KeyguardServiceWrapper.java b/base/services/core/java/com/android/server/policy/keyguard/KeyguardServiceWrapper.java
+index 57e8857..b3ae1ca 100644
+--- a/base/services/core/java/com/android/server/policy/keyguard/KeyguardServiceWrapper.java
++++ b/base/services/core/java/com/android/server/policy/keyguard/KeyguardServiceWrapper.java
+@@ -224,7 +224,17 @@ public class KeyguardServiceWrapper implements IKeyguardService {
+             Slog.w(TAG , "Remote Exception", e);
+         }
+     }
+-
++    //blestech add
++	@Override // Binder interface
++    public int fingerFun(int state) {
++        try {
++            return mService.fingerFun(state);
++        } catch (RemoteException e) {
++            Slog.w(TAG , "Remote Exception", e);
++			return -1;
++        }
++    }
++    //blestech end
+     @Override // Binder interface
+     public IBinder asBinder() {
+         return mService.asBinder();
+diff --git a/base/services/core/java/com/android/server/power/Notifier.java b/base/services/core/java/com/android/server/power/Notifier.java
+index dc2e4da..0b55a13 100644
+--- a/base/services/core/java/com/android/server/power/Notifier.java
++++ b/base/services/core/java/com/android/server/power/Notifier.java
+@@ -55,6 +55,10 @@ import android.util.Slog;
+ import android.view.WindowManagerPolicy;
+ import android.view.inputmethod.InputMethodManagerInternal;
+ 
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++import android.util.Log;
++//blestech end
+ /**
+  * Sends broadcasts about important power state changes.
+  * <p>
+@@ -308,7 +312,13 @@ final class Notifier {
+         mHandler.post(new Runnable() {
+             @Override
+             public void run() {
+-                mActivityManagerInternal.onWakefulnessChanged(wakefulness);
++                //blestech add
++                if(FingerprintManager.isBtlFingerprintQuick() && !mPolicy.isKeyguardLocked()){
++					mActivityManagerInternal.onWakefulnessAwake();
++				}else{
++					mActivityManagerInternal.onWakefulnessChanged(wakefulness);
++				}
++				//blestech end
+             }
+         });
+ 
+@@ -358,6 +368,12 @@ final class Notifier {
+     private void handleEarlyInteractiveChange() {
+         synchronized (mLock) {
+             if (mInteractive) {
++                //blestech add
++                if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 7) == 1){
++                    FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 24);
++                }
++                //blestech end
++
+                 // Waking up...
+                 mHandler.post(new Runnable() {
+                     @Override
+@@ -375,6 +391,12 @@ final class Notifier {
+                 mPendingWakeUpBroadcast = true;
+                 updatePendingBroadcastLocked();
+             } else {
++                //blestech add
++                if(FingerprintManager.isBtlFingerprintQuick()){
++                    FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 22);
++                }
++                //blestech end
++
+                 // Going to sleep...
+                 // Tell the policy that we started going to sleep.
+                 final int why = translateOffReason(mInteractiveChangeReason);
+@@ -577,8 +599,12 @@ final class Notifier {
+                 mBroadcastedInteractiveState = INTERACTIVE_STATE_AWAKE;
+             } else if (mBroadcastedInteractiveState == INTERACTIVE_STATE_AWAKE) {
+                 // Broadcasted power state is awake.  Send asleep if needed.
+-                if (mPendingWakeUpBroadcast || mPendingGoToSleepBroadcast
++                //blestech add
++                if ((!FingerprintManager.isBtlFingerprintQuick()&&mPendingWakeUpBroadcast) ||  mPendingGoToSleepBroadcast
+                         || mPendingInteractiveState == INTERACTIVE_STATE_ASLEEP) {
++                    if(FingerprintManager.isBtlFingerprintQuick())
++                        mPendingWakeUpBroadcast = false;
++                //blestech end
+                     mPendingGoToSleepBroadcast = false;
+                     mBroadcastedInteractiveState = INTERACTIVE_STATE_ASLEEP;
+                 } else {
+@@ -587,8 +613,12 @@ final class Notifier {
+                 }
+             } else {
+                 // Broadcasted power state is asleep.  Send awake if needed.
+-                if (mPendingWakeUpBroadcast || mPendingGoToSleepBroadcast
++                //blestech add
++                if (mPendingWakeUpBroadcast || (!FingerprintManager.isBtlFingerprintQuick()&&mPendingGoToSleepBroadcast)
+                         || mPendingInteractiveState == INTERACTIVE_STATE_AWAKE) {
++                    if(FingerprintManager.isBtlFingerprintQuick())
++                        mPendingGoToSleepBroadcast = false;
++                //blestech end
+                     mPendingWakeUpBroadcast = false;
+                     mBroadcastedInteractiveState = INTERACTIVE_STATE_AWAKE;
+                 } else {
+@@ -736,4 +766,21 @@ final class Notifier {
+             }
+         }
+     }
++
++    //blestech add
++    public void onSendInteractiveBroadcast(boolean interactive) {
++        Slog.d(TAG, "onSendInteractiveBroadcast0000:"+interactive);
++        synchronized (mLock) {
++            if(interactive) {
++                mPendingInteractiveState = INTERACTIVE_STATE_AWAKE;
++                mPendingWakeUpBroadcast = true;
++                updatePendingBroadcastLocked();
++            }else{
++                mPendingInteractiveState = INTERACTIVE_STATE_ASLEEP;
++                mPendingGoToSleepBroadcast = true;
++                updatePendingBroadcastLocked();
++            }
++        }
++    }
++    //blestech end
+ }
+diff --git a/base/services/core/java/com/android/server/power/PowerManagerService.java b/base/services/core/java/com/android/server/power/PowerManagerService.java
+old mode 100644
+new mode 100755
+index d7e75d7..2cfc759
+--- a/base/services/core/java/com/android/server/power/PowerManagerService.java
++++ b/base/services/core/java/com/android/server/power/PowerManagerService.java
+@@ -102,6 +102,13 @@ import static android.os.PowerManagerInternal.WAKEFULNESS_DREAMING;
+ /*
+ import com.mediatek.aal.AalUtils;
+ */
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++import android.app.ActivityManagerInternal;
++import android.util.Log;
++import com.android.server.LocalServices;
++import com.android.server.am.ActivityStackSupervisor;
++//blestech end
+ 
+ /**
+  * The power manager service is responsible for coordinating power management
+@@ -550,6 +557,13 @@ public final class PowerManagerService extends SystemService
+     private static native void nativeSendPowerHint(int hintId, int data);
+     private static native void nativeSetFeature(int featureId, int data);
+ 
++    //blestech add
++	private int mWakefulnessTmp = 0;
++	private boolean mShowKeyguard = false;
++	ActivityManagerInternal mActivityManagerInternal;
++	private static final int MSG_FINGERPRINGT = 4;
++    //blestech end
++
+     public PowerManagerService(Context context) {
+         super(context);
+         mContext = context;
+@@ -623,6 +637,10 @@ public final class PowerManagerService extends SystemService
+             mScreenBrightnessSettingMaximum = pm.getMaximumScreenBrightnessSetting();
+             mScreenBrightnessSettingDefault = pm.getDefaultScreenBrightnessSetting();
+ 
++			//blestech add
++			mActivityManagerInternal = LocalServices.getService(ActivityManagerInternal.class);
++			//blestech end
++
+             if (DEBUG_SPEW) {
+                 Slog.d(TAG, "mScreenBrightnessSettingMinimum = " + mScreenBrightnessSettingMinimum +
+                     " mScreenBrightnessSettingMinimum = " + mScreenBrightnessSettingMaximum +
+@@ -1141,6 +1159,12 @@ public final class PowerManagerService extends SystemService
+     }
+ 
+     private void removeWakeLockLocked(WakeLock wakeLock, int index) {
++		//blestech add
++		if((wakeLock.mFlags&PowerManager.WAKE_LOCK_LEVEL_MASK)==PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK
++			&& FingerprintManager.mProximityScreen)
++			FingerprintManager.mProximityScreen = false;
++		//blestech end
++		
+         mWakeLocks.remove(index);
+         notifyWakeLockReleasedLocked(wakeLock);
+ 
+@@ -1399,11 +1423,57 @@ public final class PowerManagerService extends SystemService
+             }
+         }
+ 
+-        if (eventTime < mLastSleepTime || mWakefulness == WAKEFULNESS_AWAKE
++		//blestech add
++        if (eventTime < mLastSleepTime
+                 || !mBootCompleted || !mSystemReady) {
+             return false;
+         }
+ 
++		mWakefulnessTmp = mWakefulness;
++		mHandler.post(new Runnable() {
++	        public void run() {
++				if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 1) == 0){
++                    if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_NULL, -1) == 0){
++                        if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1){
++                            if(mWakefulnessTmp == WAKEFULNESS_AWAKE){
++                                if(!mPolicy.isKeyguardLocked()){
++                                    if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 1) == 0){
++                                        mActivityManagerInternal.onWakefulnessAwake();
++                                        onScreenChange();
++                                        mPolicy.startedWakingUp();
++                                    }
++                                }else{
++                                    if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 1) == 0){
++                                        mActivityManagerInternal.onWakefulnessAwake();
++                                        mPolicy.startedWakingUp();
++                                        FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETENFUN, -1);
++                                    }
++                                }
++                            }else{
++                                if(!mPolicy.isKeyguardLocked()){
++                                    mShowKeyguard = true;
++                                }else{
++									if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 1) == 0){
++                                        FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETENFUN, -1);
++                                    }									
++								}
++                            }
++                        }else if(mWakefulnessTmp != WAKEFULNESS_AWAKE){
++                            if(!mPolicy.isKeyguardLocked()){
++                                FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 14);
++                                mShowKeyguard = true;
++                            }
++						}
++                    }
++                }
++			}
++	    });
++		
++        if (mWakefulness == WAKEFULNESS_AWAKE) {
++            return false;
++        }
++		//blestech end
++
+         Trace.traceBegin(Trace.TRACE_TAG_POWER, "wakeUp");
+         try {
+             switch (mWakefulness) {
+@@ -1684,6 +1754,15 @@ public final class PowerManagerService extends SystemService
+         } finally {
+             Trace.traceEnd(Trace.TRACE_TAG_POWER);
+         }
++
++		//blestech add
++		if(FingerprintManager.isBtlFingerprintQuick() && mShowKeyguard){
++			mShowKeyguard = false;
++			Message msg = mHandler.obtainMessage(MSG_FINGERPRINGT);
++	        msg.setAsynchronous(true);
++	        mHandler.sendMessage(msg);
++		}
++		//blestech end
+     }
+ 
+     /**
+@@ -1836,6 +1915,12 @@ public final class PowerManagerService extends SystemService
+                         break;
+                     case PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK:
+                         mWakeLockSummary |= WAKE_LOCK_PROXIMITY_SCREEN_OFF;
++						//blestech add
++						if(FingerprintManager.isBtlFingerprintQuick()){
++							FingerprintManager.mProximityScreen = true;
++							FingerprintManager.mWakefulnessTemp = true;
++						}
++						//blestech end
+                         break;
+                     case PowerManager.DOZE_WAKE_LOCK:
+                         mWakeLockSummary |= WAKE_LOCK_DOZE;
+@@ -1851,8 +1936,11 @@ public final class PowerManagerService extends SystemService
+                 mWakeLockSummary &= ~(WAKE_LOCK_DOZE | WAKE_LOCK_DRAW);
+             }
+             if (mWakefulness == WAKEFULNESS_ASLEEP
+-                    || (mWakeLockSummary & WAKE_LOCK_DOZE) != 0) {
+-                mWakeLockSummary &= ~(WAKE_LOCK_SCREEN_BRIGHT | WAKE_LOCK_SCREEN_DIM
++                    || (mWakeLockSummary & WAKE_LOCK_DOZE) != 0
++            //blestech add
++                    || FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1) {
++			//blestech end
++				mWakeLockSummary &= ~(WAKE_LOCK_SCREEN_BRIGHT | WAKE_LOCK_SCREEN_DIM
+                         | WAKE_LOCK_BUTTON_BRIGHT);
+                 if (mWakefulness == WAKEFULNESS_ASLEEP) {
+                     /* Power Key Force Wakeup to Keep Proximity Wakelock */
+@@ -2541,7 +2629,12 @@ public final class PowerManagerService extends SystemService
+         @Override
+         public String toString() {
+             synchronized (this) {
+-                return "state=" + Display.stateToString(mDisplayState);
++                //blestech add
++                if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1)
++                    return "state=OFF";
++                else
++                    return "state=" + Display.stateToString(mDisplayState);
++                //blestech end
+             }
+         }
+     };
+@@ -3377,6 +3470,13 @@ public final class PowerManagerService extends SystemService
+                 case MSG_SCREEN_BRIGHTNESS_BOOST_TIMEOUT:
+                     handleScreenBrightnessBoostTimeout();
+                     break;
++				//blestech add
++				case MSG_FINGERPRINGT:
++					if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 1) == 0){
++						onScreenChange();
++					}
++                    break;
++				//blestech end
+             }
+         }
+     }
+@@ -3770,7 +3870,10 @@ public final class PowerManagerService extends SystemService
+         public boolean isInteractive() {
+             final long ident = Binder.clearCallingIdentity();
+             try {
+-                return isInteractiveInternal();
++                //blestech add
++                return isInteractiveInternal()&&(!FingerprintManager.isBtlFingerprintQuick()
++                ||FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==0);
++                //blestech end
+             } finally {
+                 Binder.restoreCallingIdentity(ident);
+             }
+@@ -4093,13 +4196,55 @@ public final class PowerManagerService extends SystemService
+                 mBacklight.setBrightness(0);
+             } else {
+                 if (mWfdShouldBypass != true) {
+-                    Slog.d(TAG, "setBacklightOffForWfd false");
+-                    mBacklight.setBrightness(mScreenBrightnessSetting);
++					//blestech add					
++					if(FingerprintManager.isBtlFingerprintQuick()){
++						int isAutoBrightness = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, 0);
++						int ret = 0;
++						if(isAutoBrightness==1){
++							String brightness = SystemProperties.get("sys.btl_fingerprint_data");
++							if(brightness!=null && !brightness.equals("")){
++								ret = Integer.parseInt(brightness);
++							}else{
++								ret = mScreenBrightnessSetting;
++							}
++							if(ret < 0){
++								ret = mScreenBrightnessSetting;
++							}
++						}else
++							ret = mScreenBrightnessSetting; 
++
++						ret--;
++						if(ret == 0){
++							ret = 1;
++						}	
++						
++						mBacklight.setBrightness(ret);
++					}else{
++						mBacklight.setBrightness(mScreenBrightnessSetting);
++					}
++					//blestech end
+                 } else {
+                     Slog.d(TAG, "setBacklightOffForWfd false ignored due to screen is off by power key");
+                 }
+             }
+         }
++
++        //blestech add
++        @Override // Binder call
++        public boolean isRealInteractive() {
++            final long ident = Binder.clearCallingIdentity();
++            try {
++                return isInteractiveInternal();
++            } finally {
++                Binder.restoreCallingIdentity(ident);
++            }
++        }
++
++        @Override // Binder call
++        public void onSendInteractiveBroadcast(boolean interactive) {
++            mNotifier.onSendInteractiveBroadcast(interactive);
++        }
++        //blestech end
+     }
+ 
+     private final class LocalService extends PowerManagerInternal {
+@@ -4202,4 +4347,24 @@ public final class PowerManagerService extends SystemService
+             powerHintInternal(hintId, data);
+         }
+     }
++
++	//blestech add
++	private void onScreenChange() {
++		if(ActivityStackSupervisor.isSendScreenONOFF){
++			ActivityStackSupervisor.isSendScreenONOFF = false;
++            mNotifier.onSendInteractiveBroadcast(true);
++            mNotifier.onSendInteractiveBroadcast(false);
++			try {
++		        Thread.sleep(5000);
++		    } catch (InterruptedException e) {
++		        Thread.currentThread().interrupt();
++		    }
++            mNotifier.onSendInteractiveBroadcast(true);
++		}
++
++		if(FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_NULL, -1) == 0){
++			FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 10);
++		}
++	}
++	//blestech end
+ }
+diff --git a/base/services/core/java/com/android/server/wm/WindowManagerService.java b/base/services/core/java/com/android/server/wm/WindowManagerService.java
+index 4eef585..7afc10c 100644
+--- a/base/services/core/java/com/android/server/wm/WindowManagerService.java
++++ b/base/services/core/java/com/android/server/wm/WindowManagerService.java
+@@ -271,6 +271,10 @@ import static com.android.server.wm.WindowManagerDebugConfig.DEBUG_WALLPAPER;
+ import static com.android.server.wm.WindowManagerDebugConfig.DEBUG_TASK_MOVEMENT;
+ import static com.android.server.wm.WindowManagerDebugConfig.DEBUG_LAYOUT_REPEATS;
+ 
++//blestech add
++import android.hardware.fingerprint.FingerprintManager;
++//blestech end
++
+ 
+ /** {@hide} */
+ public class WindowManagerService extends IWindowManager.Stub
+@@ -3272,8 +3276,10 @@ public class WindowManagerService extends IWindowManager.Stub
+             winAnimator.mEnterAnimationPending = true;
+         }
+         winAnimator.mEnteringAnimation = true;
+-        if ((result & WindowManagerGlobal.RELAYOUT_RES_FIRST_TIME) != 0) {
+-            win.prepareWindowToDisplayDuringRelayout(outConfig);
++		//blestech add
++        if (FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 5)==1 || (result&WindowManagerGlobal.RELAYOUT_RES_FIRST_TIME)!=0) {
++		//blestech end
++			win.prepareWindowToDisplayDuringRelayout(outConfig);
+         }
+         if ((attrChanges & LayoutParams.FORMAT_CHANGED) != 0) {
+             // If the format can't be changed in place, preserve the old surface until the app draws
+@@ -6890,6 +6896,17 @@ public class WindowManagerService extends IWindowManager.Stub
+             return false;
+         }
+ 
++		//blestech add
++        if (FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 16) == 1) {
++			mForcedAppOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
++			FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_ENFUN, 20);
++        }else if(mRotation==Surface.ROTATION_0
++        	&& FingerprintManager.fingerFun(FingerprintManager.BTLFINGERFUN_SETWAIT, 16)==2){
++            // No change.
++            return false;
++		}
++		//blestech end
++
+         // TODO: Implement forced rotation changes.
+         //       Set mAltOrientation to indicate that the application is receiving
+         //       an orientation that has different metrics than it expected.
+diff --git a/base/services/core/jni/com_android_server_input_InputManagerService.cpp b/base/services/core/jni/com_android_server_input_InputManagerService.cpp
+index bd5f4ab..0366047 100644
+--- a/base/services/core/jni/com_android_server_input_InputManagerService.cpp
++++ b/base/services/core/jni/com_android_server_input_InputManagerService.cpp
+@@ -123,7 +123,12 @@ static struct {
+     jmethodID getAffineTransform;
+ } gTouchCalibrationClassInfo;
+ 
+-
++//blestech add
++static struct {
++    jclass clazz;
++    jmethodID fingerFun;
++} gBtlFingerprint;
++//blestech end
+ 
+ // --- Global functions ---
+ 
+@@ -963,6 +968,33 @@ void NativeInputManager::interceptMotionBeforeQueueing(nsecs_t when, uint32_t& p
+             policyFlags |= POLICY_FLAG_PASS_TO_USER;
+         }
+     }
++	/*[blestech] add begin*/
++	JNIEnv* env = jniEnv();
++	if(gBtlFingerprint.clazz == NULL){
++		ALOGE("com/btlfinger/service/FingerService000000000000000000000000000000");
++
++		gBtlFingerprint.clazz = env->FindClass("android/hardware/fingerprint/FingerprintManager");
++		if(gBtlFingerprint.clazz == NULL){
++			ALOGE("android/hardware/fingerprint/FingerprintManager!!!!!!!");
++			return;
++		}	
++		gBtlFingerprint.clazz = jclass(env->NewGlobalRef(gBtlFingerprint.clazz));
++		gBtlFingerprint.fingerFun = env->GetStaticMethodID(gBtlFingerprint.clazz, "fingerFun", "(II)I");
++		if(gBtlFingerprint.fingerFun == NULL){
++			ALOGE("android/hardware/fingerprint/FingerprintManager fingerFun!!!!!!!");
++			return;
++		}
++	}
++
++	if(gBtlFingerprint.fingerFun == NULL){
++		return;
++	}
++
++	int btlFingerprintFlag = env->CallStaticIntMethod(gBtlFingerprint.clazz, gBtlFingerprint.fingerFun, 10, 5);
++	if(btlFingerprintFlag == 1){
++		policyFlags &= ~POLICY_FLAG_PASS_TO_USER;
++	}
++	/*[blestech] add end*/
+ }
+ 
+ void NativeInputManager::handleInterceptActions(jint wmActions, nsecs_t when,
+@@ -1701,6 +1733,19 @@ int register_android_server_InputManager(JNIEnv* env) {
+     GET_METHOD_ID(gTouchCalibrationClassInfo.getAffineTransform, gTouchCalibrationClassInfo.clazz,
+             "getAffineTransform", "()[F");
+ 
++	//blestech add
++	gBtlFingerprint.clazz = env->FindClass("android/hardware/fingerprint/FingerprintManager");
++	if(gBtlFingerprint.clazz == NULL){
++		ALOGE("android/hardware/fingerprint/FingerprintManager!!!!!!!");
++		return 0;
++	}	
++	gBtlFingerprint.clazz = jclass(env->NewGlobalRef(gBtlFingerprint.clazz));
++	gBtlFingerprint.fingerFun = env->GetStaticMethodID(gBtlFingerprint.clazz, "fingerFun", "(II)I");
++	if(gBtlFingerprint.fingerFun == NULL){
++		ALOGE("android/hardware/fingerprint/FingerprintManager fingerFun!!!!!!!");
++	}
++	//blestech end
++
+     return 0;
+ }
+ 

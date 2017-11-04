@@ -1,0 +1,26 @@
+diff --git a/mediatek/proprietary/packages/apps/Mms/res/xml/generalslotpreference.xml b/mediatek/proprietary/packages/apps/Mms/res/xml/generalslotpreference.xml
+index e5ff096..e9604a1 100755
+--- a/mediatek/proprietary/packages/apps/Mms/res/xml/generalslotpreference.xml
++++ b/mediatek/proprietary/packages/apps/Mms/res/xml/generalslotpreference.xml
+@@ -127,7 +127,7 @@
+             android:summary="@string/pref_summary_vibrate" />
+         <CheckBoxPreference
+             android:layout="?android:attr/preferenceLayoutChild"
+-            android:defaultValue="true"
++            android:defaultValue="false"
+             android:key="pref_key_popup_notification"
+             android:dependency="pref_key_enable_notifications"
+             android:title="@string/pref_popup_notification"
+diff --git a/mediatek/proprietary/packages/apps/Mms/res/xml/notificationpreferences.xml b/mediatek/proprietary/packages/apps/Mms/res/xml/notificationpreferences.xml
+index 71acd24..52169c1 100755
+--- a/mediatek/proprietary/packages/apps/Mms/res/xml/notificationpreferences.xml
++++ b/mediatek/proprietary/packages/apps/Mms/res/xml/notificationpreferences.xml
+@@ -33,7 +33,7 @@
+             android:dependency="pref_key_enable_notifications" android:title="@string/pref_vibrate"
+             android:summary="@string/pref_summary_vibrate" />
+         <CheckBoxPreference android:layout="?android:attr/preferenceLayoutChild"
+-            android:defaultValue="true" android:key="pref_key_popup_notification"
++            android:defaultValue="false" android:key="pref_key_popup_notification"
+             android:dependency="pref_key_enable_notifications" android:title="@string/pref_popup_notification"
+             android:summary="@string/pref_summary_popup_notification" />
+     </PreferenceCategory>

@@ -1,0 +1,13 @@
+diff --git a/mediatek/mt6735/device.mk b/mediatek/mt6735/device.mk
+index 84180dd..1748b3b 100644
+--- a/mediatek/mt6735/device.mk
++++ b/mediatek/mt6735/device.mk
+@@ -1608,7 +1608,7 @@ endif
+ ifeq ($(strip $(VANZO_BLESTECH_FP32)), yes)
+     PRODUCT_COPY_FILES += $(call add-to-product-copy-files-if-exists,frameworks/native/data/etc/android.hardware.fingerprint.xml:system/etc/permissions/android.hardware.fingerprint.xml)
+     PRODUCT_PACKAGES += fingerprintd
+-    PRODUCT_COPY_FILES +=vendor/mediatek/proprietary/external/blestech/fingerprint.default.so:system/lib/hw/fingerprint.default.so
++    PRODUCT_COPY_FILES +=vendor/mediatek/proprietary/external/blestech/blestech.fingerprint.default.so:system/lib/hw/blestech.fingerprint.default.so
+     PRODUCT_COPY_FILES +=vendor/mediatek/proprietary/external/blestech/libBtlAlgo.so:system/lib/libBtlAlgo.so
+     PRODUCT_COPY_FILES +=vendor/mediatek/proprietary/external/blestech/libBtlFpHal.so:system/lib/libBtlFpHal.so
+     PRODUCT_COPY_FILES +=vendor/mediatek/proprietary/external/blestech/libxuFPAlg.so:system/lib/libxuFPAlg.so

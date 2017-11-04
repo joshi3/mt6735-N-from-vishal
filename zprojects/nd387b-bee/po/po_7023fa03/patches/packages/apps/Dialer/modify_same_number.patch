@@ -1,0 +1,16 @@
+diff --git a/src/com/mediatek/dialer/dialersearch/DialerSearchHelper.java b/src/com/mediatek/dialer/dialersearch/DialerSearchHelper.java
+index b569208..3d09ed8 100644
+--- a/src/com/mediatek/dialer/dialersearch/DialerSearchHelper.java
++++ b/src/com/mediatek/dialer/dialersearch/DialerSearchHelper.java
+@@ -255,6 +255,11 @@ public class DialerSearchHelper {
+      * @param query
+      */
+     public Cursor getSmartDialerSearchResults(String query, DialerSearchNameMatcher dsnm) {
++        if(query.startsWith("+91")){
++            query = query.substring(3);
++        }else if(query.startsWith("0")){
++            query = query.substring(1);
++        }
+         /** Loads results from the database helper. */
+         final DialerDatabaseHelperEx dialerDatabaseHelper = DatabaseHelperManager
+                 .getDialerSearchDbHelper(mContext);

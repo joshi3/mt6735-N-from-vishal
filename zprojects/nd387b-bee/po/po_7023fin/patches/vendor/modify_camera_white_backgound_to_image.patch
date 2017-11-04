@@ -1,0 +1,70 @@
+diff --git a/mediatek/proprietary/packages/apps/Camera/res/drawable-xhdpi/aa.png b/mediatek/proprietary/packages/apps/Camera/res/drawable-xhdpi/aa.png
+new file mode 100644
+index 0000000..a4273cb
+Binary files /dev/null and b/mediatek/proprietary/packages/apps/Camera/res/drawable-xhdpi/aa.png differ
+diff --git a/mediatek/proprietary/packages/apps/Camera/res/drawable-xhdpi/aaa.png b/mediatek/proprietary/packages/apps/Camera/res/drawable-xhdpi/aaa.png
+new file mode 100644
+index 0000000..f9e26d8
+Binary files /dev/null and b/mediatek/proprietary/packages/apps/Camera/res/drawable-xhdpi/aaa.png differ
+diff --git a/mediatek/proprietary/packages/apps/Camera/res/layout/view_layers.xml b/mediatek/proprietary/packages/apps/Camera/res/layout/view_layers.xml
+index c8ab4c7..96f8a37 100755
+--- a/mediatek/proprietary/packages/apps/Camera/res/layout/view_layers.xml
++++ b/mediatek/proprietary/packages/apps/Camera/res/layout/view_layers.xml
+@@ -41,6 +41,10 @@ Added for Vanzo camera
+         android:layout_height="match_parent"
+         android:splitMotionEvents="false"
+         >
++        <ImageView
++        android:id="@+id/iv_show_img"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent" />
+     </RelativeLayout>
+     <FrameLayout android:id="@+id/view_layer_top"
+         android:layout_width="match_parent"
+diff --git a/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/bridge/CameraAppUiImpl.java b/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/bridge/CameraAppUiImpl.java
+index 6944b57..0b7ee11 100755
+--- a/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/bridge/CameraAppUiImpl.java
++++ b/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/bridge/CameraAppUiImpl.java
+@@ -77,6 +77,7 @@ import android.net.Uri;
+ import android.os.Handler;
+ import android.os.Looper;
+ import android.os.Message;
++import android.graphics.drawable.AnimationDrawable;
+ import android.view.SurfaceView;
+ import android.view.View;
+ import android.view.View.OnClickListener;
+@@ -1422,9 +1423,20 @@ public class CameraAppUiImpl implements ICameraAppUi {
+             final ImageView settingindicator = (ImageView) mCameraActivity.findViewById(R.id.setting_indicator);
+             final ImageView mThumbnail = (ImageView) mCameraActivity.findViewById(R.id.thumbnail);
+             final TextView mTextView = (TextView) mCameraActivity.findViewById(R.id.remaining_view);
++            final ImageView mIvShowimg = (ImageView) mCameraActivity.findViewById(R.id.iv_show_img);
+ 
+             if(FeatureSwitcher.getSupportWhiteBackgroundSwitch() && mCameraActivity.getEnableWhiteBackground() && info.facing == CameraInfo.CAMERA_FACING_FRONT ) {
+-                mViewLayerNormal.setBackgroundColor(Color.WHITE);
++            //    mViewLayerNormal.setBackgroundColor(Color.WHITE);
++                mIvShowimg.setVisibility(View.VISIBLE);
++                AnimationDrawable mAnimationDrawableBg = new AnimationDrawable();
++                mAnimationDrawableBg.addFrame(mCameraActivity.getResources().getDrawable(R.drawable.aa), 200);
++                mAnimationDrawableBg.addFrame(mCameraActivity.getResources().getDrawable(R.drawable.aaa), 200);
++                mAnimationDrawableBg.setOneShot(false);
++                
++                    mIvShowimg.setImageDrawable(mAnimationDrawableBg);
++                if(!mAnimationDrawableBg.isRunning()) {
++                       mAnimationDrawableBg.start();
++                    }
+                 camerashutter.setVisibility(View.INVISIBLE);
+                 screenpickers.setVisibility(View.INVISIBLE);
+                 if (null!=mScrollView) mScrollView.setVisibility(View.INVISIBLE);
+@@ -1440,7 +1452,11 @@ public class CameraAppUiImpl implements ICameraAppUi {
+                 handler.postDelayed(new Runnable() {
+                     @Override
+                     public void run() {
+-                        mViewLayerNormal.setBackgroundColor(Color.TRANSPARENT);
++                    //    mViewLayerNormal.setBackgroundColor(Color.TRANSPARENT);
++                        if(mAnimationDrawableBg.isRunning()) {
++                            mAnimationDrawableBg.stop();
++                            mIvShowimg.setVisibility(View.GONE);
++                        }
+                         camerashutter.setVisibility(View.VISIBLE);
+                         screenpickers.setVisibility(View.VISIBLE);
+                         if (null!=mScrollView) mScrollView.setVisibility(View.VISIBLE);

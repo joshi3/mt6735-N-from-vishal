@@ -1,0 +1,14 @@
+diff --git a/mediatek/proprietary/packages/apps/Mms/res/values/colors.xml b/mediatek/proprietary/packages/apps/Mms/res/values/colors.xml
+index 0758b36..0c9f48a 100644
+--- a/mediatek/proprietary/packages/apps/Mms/res/values/colors.xml
++++ b/mediatek/proprietary/packages/apps/Mms/res/values/colors.xml
+@@ -80,7 +80,7 @@
+     <color name ="item_selector_color">#9933b5e5</color>
+     <color name="group_chat_bg">#f2f2f2</color>
+     
+-    <color name="primary">#76b20e</color>
+-    <color name="primary_dark">#63940f</color>
++    <color name="primary">#0288d1</color>
++    <color name="primary_dark">#0277bd</color>
+         
+ </resources>

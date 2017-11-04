@@ -1,0 +1,29 @@
+diff --git a/drivers/misc/mediatek/video/common/aal20/ddp_pwm.c b/drivers/misc/mediatek/video/common/aal20/ddp_pwm.c
+index 195f491..a85264c 100644
+--- a/drivers/misc/mediatek/video/common/aal20/ddp_pwm.c
++++ b/drivers/misc/mediatek/video/common/aal20/ddp_pwm.c
+@@ -464,6 +464,10 @@ static void disp_pwm_log(int level_1024, int log_type)
+ 
+ }
+ 
++//blestech add
++extern int g_bl229x_enbacklight;
++extern int is_jd9365;
++//blestech end
+ int disp_pwm_set_backlight_cmdq(disp_pwm_id_t id, int level_1024, void *cmdq)
+ {
+ 	unsigned long reg_base;
+@@ -472,6 +476,13 @@ int disp_pwm_set_backlight_cmdq(disp_pwm_id_t id, int level_1024, void *cmdq)
+ 	int abs_diff;
+ 	bool force_update = false;
+ 
++//blestech add
++	if(!g_bl229x_enbacklight)		
++	     return 0;
++        if(!is_jd9365)
++            level_1024 = level_1024*4/5;
++//blestech end
++
+ 	if ((DISP_PWM_ALL & id) == 0) {
+ 		PWM_ERR("[ERROR] disp_pwm_set_backlight_cmdq: invalid PWM ID = 0x%x", id);
+ 		return -EFAULT;

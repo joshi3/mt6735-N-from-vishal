@@ -1,0 +1,13 @@
+diff --git a/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/addition/continuousshot/ContinuousShot.java b/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/addition/continuousshot/ContinuousShot.java
+index ce583f5..9dc7460 100755
+--- a/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/addition/continuousshot/ContinuousShot.java
++++ b/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/addition/continuousshot/ContinuousShot.java
+@@ -330,6 +330,8 @@ public class ContinuousShot extends CameraAddition implements ContinuousShotList
+         } else {
+             // get mMaxCaptureNum from setting controller
+             mMaxCaptureNum = Integer.valueOf(mISettingCtrl
++                    .getSettingValue(SettingConstants.KEY_CONTINUOUS_NUMBER) == null ? mActivity
++                    .getString(R.string.pref_camera_continuous_number_default) : mISettingCtrl
+                     .getSettingValue(SettingConstants.KEY_CONTINUOUS_NUMBER));
+         }
+ 

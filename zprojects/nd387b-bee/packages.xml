@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <packages>
+    <package name="ringtone_7023fa03_bee">
+        <file dst="system/media/audio" src="ringtone_7023fa03_bee/system/media/audio"/>
+    </package>
+    <package name="apk_configuration_common">
+        <file dst="system/etc/permissions/WeatherAgent.xml" src="apk_configuration_common/system/etc/permissions/WeatherAgent.xml"/>
+        <file dst="system/etc/AutoRegConfig.xml" src="apk_configuration_common/system/etc/AutoRegConfig.xml"/>
+        <file dst="system/etc/LoggingControl.xml" src="apk_configuration_common/system/etc/LoggingControl.xml"/>
+        <file dst="system/etc/PMProjectCfgFile.xml" src="apk_configuration_common/system/etc/PMProjectCfgFile.xml"/>
+        <file dst="system/etc/permissions/UploadAgentService.xml" src="apk_configuration_common/system/etc/permissions/UploadAgentService.xml"/>
+        <file dst="system/framework/UploadAgentService.jar" src="apk_configuration_common/system/framework/UploadAgentService.jar"/>
+        <file dst="system/etc/EvenwellCloud.config" src="apk_configuration_common/system/etc/EvenwellCloud.config"/>
+        <file dst="system/etc/permissions/PushLibrary.xml" src="apk_configuration_common/system/etc/permissions/PushLibrary.xml"/>
+        <file dst="system/framework/PushLibrary.jar" src="apk_configuration_common/system/framework/PushLibrary.jar"/>
+    </package>
+    <package name="apk_configuration_in">
+        <file dst="system/etc/AutoRegConfig.xml" src="apk_configuration_in/system/etc/AutoRegConfig.xml"/>
+        <file dst="system/etc/amzn.mshop.properties" src="apk_configuration_in/system/etc/amzn.mshop.properties"/>
+    </package>
+    <package name="apk_configuration_id">
+        <file dst="system/etc/AutoRegConfig.xml" src="apk_configuration_id/system/etc/AutoRegConfig.xml"/>
+    </package>
+    <package name="apk_configuration_vn">
+        <file dst="system/etc/AutoRegConfig.xml" src="apk_configuration_vn/system/etc/AutoRegConfig.xml"/>
+    </package>
+    <package name="apk_configuration_tw">
+        <file dst="system/etc/AutoRegConfig.xml" src="apk_configuration_tw/system/etc/AutoRegConfig.xml"/>
+    </package>
+    <package name="apns_spn_bee">
+        <file dst="system/etc/apns-conf.xml" src="apns_spn_bee/system/etc/apns-conf.xml" />
+        <file dst="system/etc/spn-conf.xml" src="apns_spn_bee/system/etc/spn-conf.xml" />
+    </package>
+    <package name="apns_spn_7023fzx">
+        <file dst="system/etc/apns-conf.xml" src="apns_spn_7023fzx/system/etc/apns-conf.xml" />
+        <file dst="system/etc/spn-conf.xml" src="apns_spn_7023fzx/system/etc/spn-conf.xml" />
+    </package>
+    <package name="animations_infocus_hd">
+        <file dst="system/media/bootanimation.zip" src="animations_infocus_hd/system/media/bootanimation.zip" />
+    </package>
+    <package name="animations_sharp_hd">
+        <file dst="system/media/bootanimation.zip" src="animations_sharp_hd/system/media/bootanimation.zip" />
+        <file dst="system/media/shutanimation.zip" src="animations_sharp_hd/system/media/shutanimation.zip" />
+    </package>
+  </packages>
+

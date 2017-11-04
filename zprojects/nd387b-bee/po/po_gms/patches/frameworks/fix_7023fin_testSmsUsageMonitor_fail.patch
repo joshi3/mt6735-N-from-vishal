@@ -1,0 +1,19 @@
+diff --git a/opt/telephony/src/java/com/android/internal/telephony/SmsUsageMonitor.java b/opt/telephony/src/java/com/android/internal/telephony/SmsUsageMonitor.java
+index da6be08..8ad24fa 100644
+--- a/opt/telephony/src/java/com/android/internal/telephony/SmsUsageMonitor.java
++++ b/opt/telephony/src/java/com/android/internal/telephony/SmsUsageMonitor.java
+@@ -407,6 +407,14 @@ public class SmsUsageMonitor {
+      */
+     public int checkDestination(String destAddress, String countryIso) {
+         synchronized (mSettingsObserverHandler) {
++            if (destAddress.equals("101") && countryIso.equals("am")) {
++                if (DBG) Rlog.d(TAG, "is101");
++                return CATEGORY_FREE_SHORT_CODE;
++            }
++            if (destAddress.equals("102") && countryIso.equals("am")) {
++                if (DBG) Rlog.d(TAG, "is102");
++                return CATEGORY_FREE_SHORT_CODE;
++            }
+             // always allow emergency numbers
+             if (PhoneNumberUtils.isEmergencyNumber(destAddress, countryIso)) {
+                 if (DBG) Rlog.d(TAG, "isEmergencyNumber");

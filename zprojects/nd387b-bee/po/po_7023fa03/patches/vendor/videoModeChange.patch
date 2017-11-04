@@ -1,0 +1,13 @@
+diff --git a/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/mode/VideoMode.java b/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/mode/VideoMode.java
+index adb2441..a0272b4 100755
+--- a/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/mode/VideoMode.java
++++ b/mediatek/proprietary/packages/apps/Camera/src/com/mediatek/camera/mode/VideoMode.java
+@@ -661,7 +661,7 @@ public class VideoMode extends CameraMode implements MediaRecorder.OnErrorListen
+         Log.d(TAG, "[pauseAudioPlayback]");
+         AudioManager am = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
+         if (am != null) {
+-            am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
++            am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+         }
+     }
+ 

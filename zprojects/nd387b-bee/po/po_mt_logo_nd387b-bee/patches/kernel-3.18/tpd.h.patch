@@ -1,0 +1,13 @@
+diff --git a/drivers/input/touchscreen/mediatek/tpd.h b/drivers/input/touchscreen/mediatek/tpd.h
+index 5b44d9a..7a10126 100755
+--- a/drivers/input/touchscreen/mediatek/tpd.h
++++ b/drivers/input/touchscreen/mediatek/tpd.h
+@@ -237,7 +237,7 @@ void _tpd_switch_normal_mode(void);
+ #elif (defined(FHD) || defined(CU_FHD) || defined(CMCC_FHD) || defined(CMCC_LTE_FHD))
+ 
+ #define CFG_TPD_KEY_COUNT           4
+-#define CFG_TPD_KEYS                {KEY_BACK, KEY_HOMEPAGE, KEY_MENU, 0}
++#define CFG_TPD_KEYS                {KEY_MENU, KEY_BACK, KEY_HOMEPAGE, 0}
+ #define CFG_TPD_KEYS_DIM            {{200,2100,100,100},{500,2100,100,100},{800,2100,100,100}}
+ #define CFG_TPD_WIDTH               1080
+ #define CFG_TPD_HEIGHT              1920

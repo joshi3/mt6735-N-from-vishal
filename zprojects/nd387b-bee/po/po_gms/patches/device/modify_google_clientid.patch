@@ -1,0 +1,17 @@
+diff --git a/mediatek/common/device.mk b/mediatek/common/device.mk
+index f63f7cc..6bf3330 100644
+--- a/mediatek/common/device.mk
++++ b/mediatek/common/device.mk
+@@ -440,11 +440,7 @@ endif
+ $(call inherit-product-if-exists, google/products/gms.mk)
+ 
+ PRODUCT_PROPERTY_OVERRIDES += \
+-      ro.com.google.clientidbase=alps-$(TARGET_PRODUCT)-{country} \
+-      ro.com.google.clientidbase.ms=alps-$(TARGET_PRODUCT)-{country} \
+-      ro.com.google.clientidbase.yt=alps-$(TARGET_PRODUCT)-{country} \
+-      ro.com.google.clientidbase.am=alps-$(TARGET_PRODUCT)-{country} \
+-      ro.com.google.clientidbase.gmm=alps-$(TARGET_PRODUCT)-{country}
++      ro.com.google.clientidbase=android-infocus
+ #endif
+ #endif
+ # End of Vanzo:hanshengpeng

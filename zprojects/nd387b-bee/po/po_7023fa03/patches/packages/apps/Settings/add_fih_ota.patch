@@ -1,0 +1,39 @@
+diff --git a/res/xml/device_info_settings.xml b/res/xml/device_info_settings.xml
+index 38e636b..7d69249 100644
+--- a/res/xml/device_info_settings.xml
++++ b/res/xml/device_info_settings.xml
+@@ -42,6 +42,12 @@
+         </PreferenceScreen>
+         <!-- fota end -->
+ <!-- End of Vanzo:tanglei -->
++        <PreferenceScreen android:key="fih_software_update"
++                android:title="Software update">
++            <intent android:targetPackage="com.siui.android.OTAUpdate"
++                    android:targetClass="com.evenwell.OTAUpdate.OTAMainActivity"/>
++        </PreferenceScreen>
++
+ 	<!--///M: MTK_SYSTEM_UPDATE -->
+ 	<PreferenceScreen
+ 	     android:key="mtk_system_update">
+diff --git a/src/com/android/settings/DeviceInfoSettings.java b/src/com/android/settings/DeviceInfoSettings.java
+index a807bb7..928d100 100644
+--- a/src/com/android/settings/DeviceInfoSettings.java
++++ b/src/com/android/settings/DeviceInfoSettings.java
+@@ -250,6 +250,17 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
+ 			}
+ 		}
+         //fota end
++        if(!isApkExist(act, "com.siui.android.OTAUpdate")){
++            if(findPreference("fih_software_update") != null){
++                getPreferenceScreen().removePreference(findPreference("fih_software_update"));
++            }
++        } else {
++            Preference preference = findPreference("fih_software_update");
++            if (preference != null) {
++                preference.setTitle(getAppName(act, "com.siui.android.OTAUpdate"));
++            }
++        }
++
+     }
+ 
+     @Override

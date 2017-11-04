@@ -1,0 +1,6 @@
+diff --git a/base/core/java/com/mediatek/runningbooster/platform_list.txt b/base/core/java/com/mediatek/runningbooster/platform_list.txt
+index e69de29..318fe18 100644
+--- a/base/core/java/com/mediatek/runningbooster/platform_list.txt
++++ b/base/core/java/com/mediatek/runningbooster/platform_list.txt
+@@ -0,0 +1 @@
++com.aptg.gtapp

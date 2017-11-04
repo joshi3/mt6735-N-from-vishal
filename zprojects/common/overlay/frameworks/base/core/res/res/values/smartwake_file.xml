@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <add-resource type="array" name="smart_wake_file"/>
+    <array name="smart_wake_file">
+        <item>"/sys/devices/bus/11008000.i2c/i2c-1/1-0026/"</item>
+        <item>"/sys/devices/bus/11008000.i2c/i2c-1/1-0038/"</item>
+        <item>"/sys/devices/bus/11008000.i2c/i2c-1/1-005d/"</item>
+        <item>"/sys/devices/soc/11008000.i2c/i2c-1/1-005d/"</item>
+    </array>
+
+</resources>

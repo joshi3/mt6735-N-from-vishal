@@ -1,0 +1,13 @@
+diff --git a/Telephony/src/com/android/phone/settings/PhoneAccountSettingsFragment.java b/Telephony/src/com/android/phone/settings/PhoneAccountSettingsFragment.java
+index eea3ca5..1139280 100644
+--- a/Telephony/src/com/android/phone/settings/PhoneAccountSettingsFragment.java
++++ b/Telephony/src/com/android/phone/settings/PhoneAccountSettingsFragment.java
+@@ -187,6 +187,8 @@ public class PhoneAccountSettingsFragment extends PreferenceFragment
+             mSipReceiveCallsPreference.setChecked(
+                     mSipPreferences.isReceivingCallsEnabled());
+             mSipReceiveCallsPreference.setOnPreferenceChangeListener(this);
++            getPreferenceScreen().removePreference(
++                    getPreferenceScreen().findPreference(SIP_SETTINGS_CATEGORY_PREF_KEY));
+         } else {
+             getPreferenceScreen().removePreference(
+                     getPreferenceScreen().findPreference(SIP_SETTINGS_CATEGORY_PREF_KEY));

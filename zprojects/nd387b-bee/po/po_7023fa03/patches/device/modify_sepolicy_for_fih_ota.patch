@@ -1,0 +1,46 @@
+diff --git a/mediatek/mt6735/sepolicy/vanzo/system_app.te b/mediatek/mt6735/sepolicy/vanzo/system_app.te
+index 8166801..544e09e 100644
+--- a/mediatek/mt6735/sepolicy/vanzo/system_app.te
++++ b/mediatek/mt6735/sepolicy/vanzo/system_app.te
+@@ -4,3 +4,12 @@
+ 
+ # smartwake
+ allow system_app sysfs_tp_gesture:file {open getattr read write create};
++
++# ota
++allow system_app cache_file:dir create_dir_perms;
++allow system_app cache_file:file create_file_perms;
++allow system_app cache_recovery_file:dir search;
++allow system_app cache_recovery_file:dir create_file_perms;
++allow system_app cache_recovery_file:file create_file_perms;
++allow system_app cache_recovery_file:dir add_name;
++binder_call(system_app, update_engine);
+diff --git a/mediatek/mt6735/sepolicy/vanzo/uncrypt.te b/mediatek/mt6735/sepolicy/vanzo/uncrypt.te
+new file mode 100755
+index 0000000..223d7ed
+--- /dev/null
++++ b/mediatek/mt6735/sepolicy/vanzo/uncrypt.te
+@@ -0,0 +1,4 @@
++allow uncrypt media_rw_data_file:dir create_dir_perms;
++allow uncrypt media_rw_data_file:file create_file_perms;
++allow uncrypt system_app_data_file:dir create_dir_perms;
++allow uncrypt system_app_data_file:file create_file_perms;
+diff --git a/mediatek/mt6735/sepolicy/vanzo/update_engine.te b/mediatek/mt6735/sepolicy/vanzo/update_engine.te
+new file mode 100755
+index 0000000..81e0200
+--- /dev/null
++++ b/mediatek/mt6735/sepolicy/vanzo/update_engine.te
+@@ -0,0 +1,13 @@
++#============= update_engine ==============
++allow update_engine shell:binder call;
++
++# Allow update_engine to call the callback function provided by system_app.
++binder_call(update_engine, system_app)
++
++# Read OTA zip file at /sdcard/.
++allow update_engine storage_file:file r_file_perms;
++allow update_engine storage_file:dir r_dir_perms;
++allow update_engine fuse:dir create_dir_perms;
++allow update_engine fuse:file create_file_perms;
++allow update_engine system_app_data_file:dir create_dir_perms;
++allow update_engine system_app_data_file:file create_file_perms;

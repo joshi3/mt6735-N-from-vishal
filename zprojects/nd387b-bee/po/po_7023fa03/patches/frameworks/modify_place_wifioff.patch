@@ -1,0 +1,13 @@
+diff --git a/opt/net/wifi/service/java/com/android/server/wifi/WifiController.java b/opt/net/wifi/service/java/com/android/server/wifi/WifiController.java
+index bba1bc0..86caed4 100644
+--- a/opt/net/wifi/service/java/com/android/server/wifi/WifiController.java
++++ b/opt/net/wifi/service/java/com/android/server/wifi/WifiController.java
+@@ -777,7 +777,7 @@ class WifiController extends StateMachine {
+                 case CMD_WIFI_TOGGLED:
+                     if (mSettingsStore.isWifiToggleEnabled()) {
+                         mWifiStateMachine.setHostApRunning(null, false);
+-                        mPendingState = mStaEnabledState;
++                        mPendingState = mDeviceActiveState;
+                     }
+                     break;
+                 case CMD_SET_AP:

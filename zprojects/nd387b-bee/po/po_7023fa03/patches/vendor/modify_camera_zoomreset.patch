@@ -1,0 +1,12 @@
+diff --git a/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/CameraActivity.java b/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/CameraActivity.java
+index dc78004..cfe2488 100755
+--- a/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/CameraActivity.java
++++ b/mediatek/proprietary/packages/apps/Camera/src/com/android/camera/CameraActivity.java
+@@ -1574,6 +1574,7 @@ public class CameraActivity extends ActivityBase implements
+                 }
+                 // reset default focus modes.
+                 notifyOrientationChanged();
++                mCameraAppUi.resetZoom();
+                 mCameraDeviceCtrl.onModeChanged(needRestart);
+                 mIsModeChanged = false;
+             }

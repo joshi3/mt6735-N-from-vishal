@@ -1,0 +1,20 @@
+diff --git a/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/cb/cbsettings/CellBroadcastSettings.java b/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/cb/cbsettings/CellBroadcastSettings.java
+index 2feb5ef..57e4acb 100755
+--- a/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/cb/cbsettings/CellBroadcastSettings.java
++++ b/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/cb/cbsettings/CellBroadcastSettings.java
+@@ -575,6 +575,7 @@ public class CellBroadcastSettings extends TimeConsumingPreferenceActivity
+                 }
+                 String jStr = String.valueOf(j);
+                 CellBroadcastChannel channel = getChannelObjectFromKey(jStr);
++                if (j == 911 || j == 919 || (j >= 4370 && j <= 4380) || (j >= 4383 && j <= 4393)) {
+                 if (channel != null) {
+                     channel.setChannelState(state);
+                 } else {
+@@ -588,6 +589,7 @@ public class CellBroadcastSettings extends TimeConsumingPreferenceActivity
+                     mChannelArray.add(newChannel);
+                     mChannelMap.put(jStr, newChannel);
+                 }
++                }
+             }
+         }
+     }

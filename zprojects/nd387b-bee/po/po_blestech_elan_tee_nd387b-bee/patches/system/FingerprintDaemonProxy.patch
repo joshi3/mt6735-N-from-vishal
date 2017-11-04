@@ -1,0 +1,20 @@
+diff --git a/core/fingerprintd/FingerprintDaemonProxy.cpp b/core/fingerprintd/FingerprintDaemonProxy.cpp
+index 1a5d700..df3cede 100644
+--- a/core/fingerprintd/FingerprintDaemonProxy.cpp
++++ b/core/fingerprintd/FingerprintDaemonProxy.cpp
+@@ -196,10 +196,14 @@ typedef  struct vendor_fingerprint {
+   const char * dev_node;
+   const char * dev_lib;
+ }vendor_fingerprint_t;
+-#define VENDOR_FINGERPRINT_LIST 2	//add 1 if new vendor added    lupu 20170208
++#define VENDOR_FINGERPRINT_LIST 5	//add 1 if new vendor added    lupu 20170208
+ 
+ vendor_fingerprint_t  vendor_fingerprint_list[VENDOR_FINGERPRINT_LIST] ={
+   {"sunwave","/dev/sunwave_fp","sunwave.fingerprint"},
++  {"blestech","/dev/bl229x","blestech.fingerprint"},
++  {"blestech","/dev/blestech_fp","blestech.fingerprint"},
++  {"blestech","/dev/blfp","blestech.fingerprint"},
++  {"elan","/dev/elan_fp","elan.fingerprint"},
+   //add new member here if new vendor added lupu 20170208
+ };
+ int64_t FingerprintDaemonProxy::openHal() {

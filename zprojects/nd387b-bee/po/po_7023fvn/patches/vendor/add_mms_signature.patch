@@ -1,0 +1,220 @@
+diff --git a/mediatek/proprietary/packages/apps/Mms/res/values-zh-rCN/strings_custon_mms_signature.xml b/mediatek/proprietary/packages/apps/Mms/res/values-zh-rCN/strings_custon_mms_signature.xml
+new file mode 100644
+index 0000000..363d268
+--- /dev/null
++++ b/mediatek/proprietary/packages/apps/Mms/res/values-zh-rCN/strings_custon_mms_signature.xml
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<resources xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
++    <string name="signature_text_hint">"请输入签名"</string>
++    
++    <string name="mms_signature_title">"签名设置"</string>
++    <string name="signature_title">"签名选项"</string>
++    <string name="signature_text_title">"短信签名"</string>
++    <string name="mms_signature_summary">"当发送短信时，自动附加短信签名"</string>
++</resources>
+diff --git a/mediatek/proprietary/packages/apps/Mms/res/values-zh-rTW/strings_custon_mms_signature.xml b/mediatek/proprietary/packages/apps/Mms/res/values-zh-rTW/strings_custon_mms_signature.xml
+new file mode 100644
+index 0000000..fc9ca01
+--- /dev/null
++++ b/mediatek/proprietary/packages/apps/Mms/res/values-zh-rTW/strings_custon_mms_signature.xml
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<resources xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
++    <string name="signature_text_hint">"請輸入簽名"</string>
++    
++    <string name="mms_signature_title">"簽名設置"</string>
++    <string name="signature_title">"簽名選項"</string>
++    <string name="signature_text_title">"短信簽名"</string>
++    <string name="mms_signature_summary">"當發送短信時，自動附加短信簽名"</string>
++</resources>
+diff --git a/mediatek/proprietary/packages/apps/Mms/res/values/strings_custon_mms_signature.xml b/mediatek/proprietary/packages/apps/Mms/res/values/strings_custon_mms_signature.xml
+new file mode 100644
+index 0000000..e50ff0b
+--- /dev/null
++++ b/mediatek/proprietary/packages/apps/Mms/res/values/strings_custon_mms_signature.xml
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
++    <string name="signature_text_hint">Please enter a signature</string>
++    <string name="signature_text_default">"Sharp Pi"</string>
++    <string name="mms_signature_title">"Signature Setting"</string>
++    <string name="signature_title">"Add signature"</string>
++    <string name="signature_text_title">"Signature Text"</string>
++    <string name="mms_signature_summary">"include signature in each message"</string>
++</resources>
+diff --git a/mediatek/proprietary/packages/apps/Mms/res/xml/generalpreferences.xml b/mediatek/proprietary/packages/apps/Mms/res/xml/generalpreferences.xml
+index 901c106..c617b62 100755
+--- a/mediatek/proprietary/packages/apps/Mms/res/xml/generalpreferences.xml
++++ b/mediatek/proprietary/packages/apps/Mms/res/xml/generalpreferences.xml
+@@ -45,7 +45,18 @@
+             android:persistent="false">
+         </Preference>
+     </PreferenceCategory>
+-
++    <PreferenceCategory android:title="@string/mms_signature_title"
++        android:key="pref_key_mms_signature_settings">
++        <CheckBoxPreference android:defaultValue="false"
++            android:key="pref_key_signature_switch"
++            android:summary="@string/mms_signature_summary"
++            android:title="@string/signature_title" />
++        <Preference android:key="pref_key_signature_text_editor"
++            android:title="@string/signature_text_title"
++            android:dependency="pref_key_signature_switch"
++            android:summary="@string/signature_text_default"
++            android:persistent="false"/>
++    </PreferenceCategory>
+     <PreferenceCategory android:title="@string/pref_title_wappush_settings"
+         android:key="pref_key_wappush_settings">
+         <CheckBoxPreference android:defaultValue="true"
+diff --git a/mediatek/proprietary/packages/apps/Mms/src/com/android/mms/data/WorkingMessage.java b/mediatek/proprietary/packages/apps/Mms/src/com/android/mms/data/WorkingMessage.java
+index 8e1d6e2..e544a63 100755
+--- a/mediatek/proprietary/packages/apps/Mms/src/com/android/mms/data/WorkingMessage.java
++++ b/mediatek/proprietary/packages/apps/Mms/src/com/android/mms/data/WorkingMessage.java
+@@ -99,6 +99,7 @@ import com.mediatek.mms.folder.util.FolderModeUtils;
+ import com.mediatek.mms.util.FileAttachmentUtils;
+ import com.mediatek.mms.util.MmsSizeUtils;
+ import com.mediatek.opmsg.util.OpMessageUtils;
++import com.mediatek.setting.GeneralPreferenceActivity;
+ import com.mediatek.setting.MmsPreferenceActivity;
+ 
+ import java.util.ArrayList;
+@@ -1973,7 +1974,16 @@ public class WorkingMessage implements IWorkingMessageCallback {
+ 
+         // We need the recipient list for both SMS and MMS.
+         final Conversation conv = mConversation;
+-        final String msgTxt = mText.toString();
++        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mActivity.getApplicationContext());
++        boolean signatureSwitch = sp.getBoolean(GeneralPreferenceActivity.SMS_SIGNATURE_SWITCH, false);
++        android.util.Log.i("jiangyanqing", "    Switch：" + signatureSwitch);
++        StringBuffer addSignature = new StringBuffer(mText.toString());
++        if(signatureSwitch){
++            addSignature.append("\n\n" + sp.getString(GeneralPreferenceActivity.SMS_SIGNATURE_TEXT, "Sharp Pi"));
++            android.util.Log.i("jiangyanqing", "      addSignature  : " + addSignature);
++        }
++
++        final String msgTxt = addSignature + "";
+         final SplitToMmsAndSmsConversation spliter =
+             new SplitToMmsAndSmsConversation(conv, msgTxt);
+ 
+diff --git a/mediatek/proprietary/packages/apps/Mms/src/com/android/mms/transaction/SmsMessageSender.java b/mediatek/proprietary/packages/apps/Mms/src/com/android/mms/transaction/SmsMessageSender.java
+index 6d280ff..14bb9be 100644
+--- a/mediatek/proprietary/packages/apps/Mms/src/com/android/mms/transaction/SmsMessageSender.java
++++ b/mediatek/proprietary/packages/apps/Mms/src/com/android/mms/transaction/SmsMessageSender.java
+@@ -48,7 +48,7 @@ public class SmsMessageSender implements MessageSender {
+     protected final Context mContext;
+     protected final int mNumberOfDests;
+     private final String[] mDests;
+-    protected final String mMessageText;
++    protected String mMessageText;
+     protected final String mServiceCenter;
+     protected final long mThreadId;
+     protected int mSubId;
+diff --git a/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/setting/GeneralPreferenceActivity.java b/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/setting/GeneralPreferenceActivity.java
+index 30daa44..280eb86 100755
+--- a/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/setting/GeneralPreferenceActivity.java
++++ b/mediatek/proprietary/packages/apps/Mms/src/com/mediatek/setting/GeneralPreferenceActivity.java
+@@ -53,7 +53,10 @@ import android.widget.AdapterView.OnItemClickListener;
+ import android.widget.GridView;
+ import android.widget.SimpleAdapter;
+ import android.widget.Toast;
+-
++import android.widget.EditText;
++import android.graphics.Color;
++import android.content.DialogInterface.OnClickListener;
++import android.content.SharedPreferences.Editor;
+ 
+ import com.android.internal.telephony.PhoneConstants;
+ import com.android.mms.MmsConfig;
+@@ -116,6 +119,10 @@ public class GeneralPreferenceActivity extends PreferenceActivity
+ 
+     public static final String WAPPUSH_ENABLED = "pref_key_wappush_enable";
+ 
++    public static final String SMS_SIGNATURE_SWITCH  = "pref_key_signature_switch";
++
++    public static final String SMS_SIGNATURE_TEXT  = "pref_key_signature_text_editor";
++
+     private static final String MAX_SMS_PER_THREAD = "MaxSmsMessagesPerThread";
+ 
+     private static final String MAX_MMS_PER_THREAD = "MaxMmsMessagesPerThread";
+@@ -137,6 +144,10 @@ public class GeneralPreferenceActivity extends PreferenceActivity
+ 
+     private Preference mSmsLimitPref;
+ 
++    private Preference mSmsSignatureTextPref;
++
++    private Preference mSmsSignatureSwitch;
++
+     private Preference mMmsLimitPref;
+ 
+     private Recycler mSmsRecycler;
+@@ -287,7 +298,18 @@ public class GeneralPreferenceActivity extends PreferenceActivity
+                 .getOpGeneralPreferenceActivityExt();
+         mOpGeneralPreferenceActivityExt.setMessagePreferences(
+                 GeneralPreferenceActivity.this, storageCategory);
+-
++        mSmsSignatureTextPref = (Preference) findPreference(SMS_SIGNATURE_TEXT);
++        android.util.Log.i("jiangyanqing", "     signature txt :"+sp.getString(SMS_SIGNATURE_TEXT,""));
++        if(sp.getString(SMS_SIGNATURE_TEXT,"").equals("")){
++            android.util.Log.i("jiangyanqing", "    txt == 空");
++            Editor ed = PreferenceManager.getDefaultSharedPreferences(GeneralPreferenceActivity.this).edit();
++            ed.putString(SMS_SIGNATURE_TEXT, getString(R.string.signature_text_default));
++            ed.commit();
++        }
++        android.util.Log.i("jiangyanqing", "     signature txt 2222:"+sp.getString(SMS_SIGNATURE_TEXT,""));
++        mSmsSignatureTextPref.setSummary(sp.getString(SMS_SIGNATURE_TEXT,""));
++        mSmsSignatureSwitch = (Preference) findPreference(SMS_SIGNATURE_SWITCH);
++        android.util.Log.i("jiangyanqing", "   SMS_SIGNATURE_SWITCH  :"+sp.getBoolean(SMS_SIGNATURE_SWITCH,false));
+         mFontSize = (Preference) findPreference(FONT_SIZE_SETTING);
+         mFontSizeChoices = getResourceArray(R.array.pref_message_font_size_choices);
+         mFontSizeValues = getResourceArray(R.array.pref_message_font_size_values);
+@@ -405,6 +427,38 @@ public class GeneralPreferenceActivity extends PreferenceActivity
+         } else if (preference == mChatWallpaperPref) {
+             pickChatWallpaper();
+         }
++        else if (preference == mSmsSignatureTextPref){
++            android.util.Log.i("jiangyanqing", " >>>>>>>   mSmsSignatureTextPref click");
++            final EditText smsSignatureEdit = new EditText(this);
++            smsSignatureEdit.setHint(R.string.signature_text_hint);
++            smsSignatureEdit.setTextColor(Color.BLACK);
++            smsSignatureEdit.computeScroll();
++            smsSignatureEdit.setPadding(50, 20, 0, 0);
++            if (mSmsSignatureTextPref.getSummary().length() > 0) {
++                smsSignatureEdit.setText(mSmsSignatureTextPref.getSummary());
++                smsSignatureEdit.setSelection(smsSignatureEdit.getText().length());
++            }
++            new AlertDialog.Builder(this)
++                //.setTitle(R.string.signature_text_title)
++                .setTitle(getString(R.string.mms_signature_title))
++                .setView(smsSignatureEdit)
++                .setPositiveButton(R.string.OK, new OnClickListener() {
++                        @Override
++                        public void onClick(DialogInterface dialog, int which) {
++                       String text = smsSignatureEdit.getText().toString();
++                        if (text.length() <= 0) {
++                        text = getResources().getString(R.string.signature_text_default);
++                        }
++                        mSmsSignatureTextPref.setSummary(text);
++                        SharedPreferences.Editor ed = PreferenceManager.getDefaultSharedPreferences(GeneralPreferenceActivity.this).edit();
++                        ed.putString(SMS_SIGNATURE_TEXT, text);
++                        ed.commit();
++                        }
++                        })
++            .setNegativeButton(R.string.Cancel, null)
++                .show();
++        }else if(preference == mSmsSignatureSwitch){
++            android.util.Log.i("jiangyanqing", " >>>   preference == mSmsSignatureSwitch   <<<   Listener  ");}
+         return super.onPreferenceTreeClick(preferenceScreen, preference);
+     }
+ 
+@@ -418,6 +472,8 @@ public class GeneralPreferenceActivity extends PreferenceActivity
+         editor.putInt(MAX_SMS_PER_THREAD, SMS_SIZE_LIMIT_DEFAULT);
+         editor.putInt(MAX_MMS_PER_THREAD, MMS_SIZE_LIMIT_DEFAULT);
+         editor.putBoolean(CELL_BROADCAST, false);
++        editor.putBoolean(SMS_SIGNATURE_SWITCH,true);
++        editor.putString(SMS_SIGNATURE_TEXT,getString(R.string.signature_text_default));
+         /// M: fix bug ALPS00759844, WAPPUSH_ENABLED should be true.
+         editor.putBoolean(WAPPUSH_ENABLED, true);
+         editor.putBoolean(WAPPUSH_AUTO_DOWNLOAD, false);

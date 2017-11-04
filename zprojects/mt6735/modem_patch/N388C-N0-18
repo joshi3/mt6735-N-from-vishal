@@ -1,0 +1,47 @@
+diff --git a/lwtg/custom/modem/el1_rf/MT6735_LTE_MT6169_CUSTOM/lte_custom_rf.h b/lwtg/custom/modem/el1_rf/MT6735_LTE_MT6169_CUSTOM/lte_custom_rf.h
+index cb003a3..083edb7 100644
+--- a/lwtg/custom/modem/el1_rf/MT6735_LTE_MT6169_CUSTOM/lte_custom_rf.h
++++ b/lwtg/custom/modem/el1_rf/MT6735_LTE_MT6169_CUSTOM/lte_custom_rf.h
+@@ -152,21 +152,21 @@
+ /*MT6169*/#define    PDATA_LTE_Band27_PT3     LTE_PDATA_OFF
+ /*MT6169*/
+ /*MT6169*///* ------------- PDATA_BAND28 Start --------------------*/
+-/*MT6169*/#define    PDATA_LTE_Band28_PR1     0x00000825	
+-/*MT6169*/#define    PDATA_LTE_Band28_PR2     0x00000825	
++/*MT6169*/#define    PDATA_LTE_Band28_PR1     0x0000082D	
++/*MT6169*/#define    PDATA_LTE_Band28_PR2     0x0000082D
+ /*MT6169*/#define    PDATA_LTE_Band28_PR3     LTE_PDATA_OFF
+ /*MT6169*/                          
+ /*MT6169*/#define    PDATA_LTE_Band28_PT1     0x00000021	
+-/*MT6169*/#define    PDATA_LTE_Band28_PT2     0x00000021	
++/*MT6169*/#define    PDATA_LTE_Band28_PT2     0x00000029	
+ /*MT6169*/#define    PDATA_LTE_Band28_PT3     LTE_PDATA_OFF
+ /*MT6169*/
+ /*MT6169*///* ------------- PDATA_BAND28_2 Start --------------------*/
+-/*MT6169*/#define    PDATA_LTE_Band28_2_PR1     0x00000821	
+-/*MT6169*/#define    PDATA_LTE_Band28_2_PR2     0x00000821	
++/*MT6169*/#define    PDATA_LTE_Band28_2_PR1     0x00000829	
++/*MT6169*/#define    PDATA_LTE_Band28_2_PR2     0x00000829	
+ /*MT6169*/#define    PDATA_LTE_Band28_2_PR3     LTE_PDATA_OFF
+ /*MT6169*/                          
+ /*MT6169*/#define    PDATA_LTE_Band28_2_PT1     0x00000021	
+-/*MT6169*/#define    PDATA_LTE_Band28_2_PT2     0x00000021	
++/*MT6169*/#define    PDATA_LTE_Band28_2_PT2     0x00000029	
+ /*MT6169*/#define    PDATA_LTE_Band28_2_PT3     LTE_PDATA_OFF
+ /*MT6169*/
+ /*MT6169*///* ------------- PDATA_BAND38 Start --------------------*/
+diff --git a/lwtg/interface/service/nvram/nvram_editor_data_item.h b/lwtg/interface/service/nvram/nvram_editor_data_item.h
+index 46d8a83..1088a47 100644
+--- a/lwtg/interface/service/nvram/nvram_editor_data_item.h
++++ b/lwtg/interface/service/nvram/nvram_editor_data_item.h
+@@ -2572,8 +2572,8 @@
+ #define NVRAM_EF_EL1_AMPRADJTBL_LID_VERNO                       "000"
+ 
+ #define NVRAM_EF_EL1_BAND_INDICATOR_LID_VERNO         "000"
+-#define NVRAM_EF_EL1_RX_PDATABASE_LID_VERNO           "000"
+-#define NVRAM_EF_EL1_TX_PDATABASE_LID_VERNO           "000"
++#define NVRAM_EF_EL1_RX_PDATABASE_LID_VERNO           "001"
++#define NVRAM_EF_EL1_TX_PDATABASE_LID_VERNO           "001"
+ #define NVRAM_EF_EL1_RXON_BPIOFFSET_LID_VERNO         "001"
+ #define NVRAM_EF_EL1_TXON_BPIOFFSET_LID_VERNO         "001"
+ #define NVRAM_EF_EL1_RXOFF_BPIOFFSET_LID_VERNO        "001"

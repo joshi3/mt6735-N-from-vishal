@@ -1,0 +1,39 @@
+diff --git a/packages/FactoryMode/src/com/mediatek/factorymode/gps/GPS.java b/packages/FactoryMode/src/com/mediatek/factorymode/gps/GPS.java
+index eb173d3..b8d20ab 100755
+--- a/packages/FactoryMode/src/com/mediatek/factorymode/gps/GPS.java
++++ b/packages/FactoryMode/src/com/mediatek/factorymode/gps/GPS.java
+@@ -83,7 +83,7 @@ public class GPS extends Activity implements OnClickListener {
+ 
+     public void getSatelliteInfo() {
+         int num = 0;
+-        if ((num = mGpsUtil.getSatelliteNumber()) >= 2) {
++        if ((num = mGpsUtil.getSatelliteNumber()) >= 3) {
+             mHandler.removeMessages(0);
+             mTimeView.stop();
+             mResultView.setText(R.string.GPS_Success);
+diff --git a/packages/FactoryMode/src/com/mediatek/factorymode/gps/GPSThread.java b/packages/FactoryMode/src/com/mediatek/factorymode/gps/GPSThread.java
+index f3af308..5010ef4 100644
+--- a/packages/FactoryMode/src/com/mediatek/factorymode/gps/GPSThread.java
++++ b/packages/FactoryMode/src/com/mediatek/factorymode/gps/GPSThread.java
+@@ -51,7 +51,7 @@ public class GPSThread {
+     };
+ 
+     private void getSatelliteInfo() {
+-        if ((mGpsUtil.getSatelliteNumber()) > 2) {
++        if ((mGpsUtil.getSatelliteNumber()) > 3) {
+             mHandler.removeMessages(0);
+             mIsSuccess = true;
+             closeLocation();
+diff --git a/packages/FactoryMode/src/com/mediatek/factorymode/gps/GpsUtil.java b/packages/FactoryMode/src/com/mediatek/factorymode/gps/GpsUtil.java
+index f7aa0ff..255a3c1 100644
+--- a/packages/FactoryMode/src/com/mediatek/factorymode/gps/GpsUtil.java
++++ b/packages/FactoryMode/src/com/mediatek/factorymode/gps/GpsUtil.java
+@@ -82,7 +82,7 @@ public class GpsUtil {
+             Iterator<GpsSatellite> it = gpsStatus.getSatellites().iterator();
+             float snr = 0;
+             while (it.hasNext()) {
+-                if ((snr = it.next().getSnr()) >= 30) {
++                if ((snr = it.next().getSnr()) >= 35) {
+                     mSatelliteSignal.add(snr);
+                     mSatelliteNum++;
+                 }

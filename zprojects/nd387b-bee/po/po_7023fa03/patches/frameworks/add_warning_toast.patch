@@ -1,0 +1,102 @@
+diff --git a/base/core/res/res/values-zh-rCN/strings_custom.xml b/base/core/res/res/values-zh-rCN/strings_custom.xml
+index 0934dd6..05b47a6 100644
+--- a/base/core/res/res/values-zh-rCN/strings_custom.xml
++++ b/base/core/res/res/values-zh-rCN/strings_custom.xml
+@@ -21,6 +21,7 @@
+ <resources xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+     <!-- For Power Reboot -->
++    <string name="custom_warning_toast">指纹已存在!</string>
+     <string name="global_action_reboot">重启</string>
+     <string name="reboot_confirm_question">"您要重启吗？"</string>
+     <string name="reboot_confirm">"您的手机将重启。"</string>
+diff --git a/base/core/res/res/values-zh-rTW/strings_custom.xml b/base/core/res/res/values-zh-rTW/strings_custom.xml
+index 99ef9db..7e9a944 100644
+--- a/base/core/res/res/values-zh-rTW/strings_custom.xml
++++ b/base/core/res/res/values-zh-rTW/strings_custom.xml
+@@ -32,4 +32,5 @@
+     <string name="global_actions_wifi_mode_on_status">WIFI已打開</string>
+     <string name="global_actions_wifi_mode_off_status">WIFI已關閉</string>
+     <string name="global_actions_toggle_longclick_notice">提示：\n強制關機：長按電源鍵6秒左右，直到手機黑屏。</string>
++    <string name="custom_warning_toast">指紋已存在!</string>
+ </resources>
+diff --git a/base/core/res/res/values/strings_custom.xml b/base/core/res/res/values/strings_custom.xml
+index e164547..be8429a 100644
+--- a/base/core/res/res/values/strings_custom.xml
++++ b/base/core/res/res/values/strings_custom.xml
+@@ -19,6 +19,7 @@
+ -->
+ <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+     <!-- For Power Reboot -->
++    <string name="custom_warning_toast">The fingerprint already exists !</string>
+     <string name="global_action_reboot">Reboot</string>
+     <string name="reboot_confirm_question">Would you like to reboot?</string>
+     <string name="reboot_confirm">Your phone will reboot.</string>
+diff --git a/base/core/res/res/values/symbols.xml b/base/core/res/res/values/symbols.xml
+index 4951023..dc5a06e 100644
+--- a/base/core/res/res/values/symbols.xml
++++ b/base/core/res/res/values/symbols.xml
+@@ -2404,6 +2404,7 @@
+    <java-symbol type="string" name="global_action_reboot" />
+    <java-symbol type="string" name="reboot_confirm_question" />
+    <java-symbol type="string" name="reboot_confirm" />
++   <java-symbol type="string" name="custom_warning_toast" />
+ 
+ <!-- Vanzo:tanglei on: Wed, 21 Jan 2015 11:47:03 +0800
+ -->
+diff --git a/base/services/core/java/com/android/server/fingerprint/FingerprintService.java b/base/services/core/java/com/android/server/fingerprint/FingerprintService.java
+index 1f285d5..e3ed56e 100644
+--- a/base/services/core/java/com/android/server/fingerprint/FingerprintService.java
++++ b/base/services/core/java/com/android/server/fingerprint/FingerprintService.java
+@@ -45,6 +45,7 @@ import android.os.SystemClock;
+ import android.os.UserHandle;
+ import android.os.UserManager;
+ import android.util.Slog;
++import android.widget.Toast;
+ 
+ import com.android.internal.logging.MetricsLogger;
+ import com.android.server.SystemService;
+@@ -654,6 +655,13 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+                 @Override
+                 public void run() {
+                     handleAcquired(deviceId, acquiredInfo);
++/* Vanzo:yujianpeng on: Tue, 27 Dec 2016 11:25:48 +0800
++ */
++                    android.util.Log.d("yjp", "   deviceId, : " + deviceId + "   acquiredInfo : " + acquiredInfo);
++                    if (acquiredInfo  == 10 ) {
++                        Toast.makeText(mContext, mContext.getString(com.android.internal.R.string.custom_warning_toast), Toast.LENGTH_SHORT).show();
++                    }
++// End of Vanzo:yujianpeng
+                 }
+             });
+         }
+@@ -674,6 +682,7 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+                 @Override
+                 public void run() {
+                     handleError(deviceId, error);
++                    android.util.Log.d("yjp", "   onError ");
+                 }
+             });
+         }
+@@ -684,6 +693,7 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+                 @Override
+                 public void run() {
+                     handleRemoved(deviceId, fingerId, groupId);
++                    android.util.Log.d("yjp", "  onRemoved ");
+                 }
+             });
+         }
+@@ -732,6 +742,13 @@ public class FingerprintService extends SystemService implements IBinder.DeathRe
+                 return;
+             }
+ 
++/* Vanzo:yujianpeng on: Wed, 04 Jan 2017 11:30:57 +0800
++ */
++            android.util.Log.d("yjp", "  cryptoToken : "  + cryptoToken);
++            if( cryptoToken == null){
++                return ;
++            }
++// End of Vanzo:yujianpeng
+             final boolean restricted = isRestricted();
+             mHandler.post(new Runnable() {
+                 @Override

@@ -1,0 +1,28 @@
+diff --git a/src/com/android/settings/WirelessSettings.java b/src/com/android/settings/WirelessSettings.java
+index 01b3fd3..1812c0d 100644
+--- a/src/com/android/settings/WirelessSettings.java
++++ b/src/com/android/settings/WirelessSettings.java
+@@ -276,6 +276,7 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
+         mNfcEnabler = new NfcEnabler(activity, nfc, androidBeam);
+ 
+         mButtonWfc = (PreferenceScreen) findPreference(KEY_WFC_SETTINGS);
++        getPreferenceScreen().removePreference(mButtonWfc);
+ 
+         /// M: Uniservice Pack @ {
+         if (!"no".equals(SystemProperties.get("ro.mtk_carrierexpress_pack", "no"))
+@@ -438,6 +439,7 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
+             if (mWfcExt.isWifiCallingProvisioned(context,
+                 SubscriptionManager.getDefaultVoicePhoneId())) {
+                 getPreferenceScreen().addPreference(mButtonWfc);
++                getPreferenceScreen().removePreference(mButtonWfc);
+ 
+                 mButtonWfc.setSummary(WifiCallingSettings.getWfcModeSummary(
+                         context, ImsManager.getWfcMode(context)));
+@@ -687,6 +689,7 @@ public class WirelessSettings extends SettingsPreferenceFragment implements Inde
+                     if (ImsManager.isWfcEnabledByPlatform(context) && !Utils.isMonkeyRunning()) {
+                         Log.d(TAG, "wfc enabled, add WCF setting");
+                         getPreferenceScreen().addPreference(mButtonWfc);
++                        getPreferenceScreen().removePreference(mButtonWfc);
+                         mWfcExt.initPlugin(WirelessSettings.this);
+                         mButtonWfc.setSummary(mWfcExt.getWfcSummary(context,
+                                 WifiCallingSettings.getWfcModeSummary(context,

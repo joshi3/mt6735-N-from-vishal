@@ -1,0 +1,43 @@
+diff --git a/res/values-zh-rCN/strings.xml b/res/values-zh-rCN/strings.xml
+index 47cbe80..b56fc66 100644
+--- a/res/values-zh-rCN/strings.xml
++++ b/res/values-zh-rCN/strings.xml
+@@ -1281,6 +1281,7 @@
+     <string name="about_settings" product="emulator" msgid="221313099578564438">"关于模拟设备"</string>
+     <string name="about_settings_summary" msgid="3371517697156165959">"查看法律信息、状态和软件版本"</string>
+     <string name="legal_information" msgid="5769301644270604095">"法律信息"</string>
++    <string name="phone_name">手机名称</string>
+     <string name="contributors_title" msgid="5917703088825286504">"活动提供商"</string>
+     <string name="manual" msgid="3025943393642974445">"手册"</string>
+     <string name="regulatory_information" msgid="5695464367088752150">"监管信息"</string>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 38bc124..da2c06e 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -2259,6 +2259,8 @@
+     <string name="security_patch">Android security patch level</string>
+     <!-- About phone screen, status item label  [CHAR LIMIT=40] -->
+     <string name="model_number">Model number</string>
++    <string name="phone_name">Phone name</string>
++    <string name="phone_name_value">Sharp Pi</string>
+     <!-- About phone screen, fcc equipment id label  [CHAR LIMIT=40] -->
+     <string name="fcc_equipment_id">Equipment ID</string>
+     <!-- About phone screen,  setting option name  [CHAR LIMIT=40] -->
+diff --git a/res/xml/device_info_settings.xml b/res/xml/device_info_settings.xml
+index 38e636b..4499457 100644
+--- a/res/xml/device_info_settings.xml
++++ b/res/xml/device_info_settings.xml
+@@ -94,6 +94,13 @@
+                 android:title="@string/model_number"
+                 android:summary="@string/device_info_default"/>
+ 
++        <!-- Device hardware manufacturer -->
++        <Preference android:key="phone_name"
++                android:enabled="false"
++                android:shouldDisableView="false"
++                android:title="@string/phone_name"
++                android:summary="@string/phone_name_value"/>
++
+         <!-- Device firmware version -->
+         <Preference android:key="firmware_version"
+                 android:enabled="false"

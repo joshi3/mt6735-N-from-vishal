@@ -1,0 +1,146 @@
+diff --git a/drivers/input/fingerprint/blestech/bl239x.c b/drivers/input/fingerprint/blestech/bl239x.c
+index 1305d8b..3f60518 100644
+--- a/drivers/input/fingerprint/blestech/bl239x.c
++++ b/drivers/input/fingerprint/blestech/bl239x.c
+@@ -96,7 +96,7 @@ Revision: 2.0 modified by sunshizheng@blestech.com
+ 
+ u8 BL229X_HEIGHT = 0;//  FINGER_HEIGHT
+ u8 BL229X_WIDTH  = 0; // FINGER_WIDTH
+-
++extern int have_fp_device;
+ 
+ u32 bl229x_image_size = 0; //(BL229X_HEIGHT * BL229X_WIDTH)
+ #define BL229X_SPI_CLOCK_SPEED 6*1000*1000//6*1000*1000//10*1000*1000
+@@ -142,7 +142,7 @@ if(bl229x_log)\
+ printk("<btl-dbg>[%s:%d]"fmt"\n",__func__, __LINE__, ##arg);\
+ }while(0)
+  */
+-//#define BTL_DEBUG(fmt, args...)  printk("btl-dbg:%5d: <%s>" fmt "\n",  __LINE__, __func__, ##args)
++#define BTL_DEBUG(fmt, args...)  printk("btl-dbg:%5d: <%s>" fmt "\n",  __LINE__, __func__, ##args)
+ #define BTL_DEBUG(fmt, args...)
+ 
+ #define DRIVER_DEBUG            (0)
+@@ -3203,10 +3203,17 @@ static int  mt_spi_init(void)
+ {
+ 	int ret=0;
+ 	BTL_DEBUG("%s",__func__);
++	if(have_fp_device==0)
++	{
+ #if(MTK_ANDROID_L == 1)
+ 	ret=spi_register_board_info(spi_board_bl229x,ARRAY_SIZE(spi_board_bl229x));
+ #endif
+ 	ret=spi_register_driver(&bl229x_driver);
++}
++	else{
++		BTL_DEBUG("fp is exit!\n");
++	
++	}
+ 
+ 	return ret;
+ }
+diff --git a/drivers/input/fingerprint/elan/elan_fp_mtk.c b/drivers/input/fingerprint/elan/elan_fp_mtk.c
+index 4865fc5..135a371 100644
+--- a/drivers/input/fingerprint/elan/elan_fp_mtk.c
++++ b/drivers/input/fingerprint/elan/elan_fp_mtk.c
+@@ -90,7 +90,7 @@ static unsigned char * imagebuffer_RX = NULL; // for SPI Transfer and orginal da
+ 
+ static unsigned char bCMD_REG = 0; // CMD = 0, REG= 1
+ static int image_index = 0;
+-
++int have_fp_device=0;
+ static unsigned char IOIRQ_STATUS = 0;
+ static unsigned int spi_speed = SPI_MAX_SPEED; // 3MHz
+ 
+@@ -1198,13 +1198,15 @@ static int elan_probe(struct spi_device *spi)
+ 	/* Setup SPI */
+ 	spi->mode = SPI_MODE_0; 		// set at spi_board_info
+ 	spi->max_speed_hz = SPI_MAX_SPEED; 	// set at spi_board_info
+-	spi->chip_select = 0; 		// set at spi_board_info
++	spi->chip_select = 2; 		// set at spi_board_info
+ 	spi->bits_per_word = 8;			// do not change
+ 	
+ 	ret = spi_setup(spi);
+-	if(ret < 0)
++	if(ret < 0){
+ 		ELAN_DEBUG("spi_setup failed, ret = %d\n", ret);
+-	
++        return -1;  
++    }
++
+ 	/* Allocate Device Data */
+ 	fp = kzalloc(sizeof(struct elan_data), GFP_KERNEL);
+ 	if(!fp)
+@@ -1305,8 +1307,16 @@ static int elan_probe(struct spi_device *spi)
+ 
+ 	txbuf[0] = 0xc1;
+ 	ret = elan_spi_transfer(spi, txbuf, rxbuf, 6);
+-	if(ret != 0)
++	if(ret != 0){
+ 		ELAN_DEBUG("spi_sync failed, ret = %d\n", ret);
++        //add for debug 7.3
++        misc_deregister(&fp->elan_dev);
++        gpio_free(fp->int_gpio);
++        gpio_free(fp->rst_gpio); 
++        //free_irq(fp->irq, fp);
++        //kfree(fp);
++        return -1;
++    }
+     else
+ 	{
+ 		ELAN_DEBUG("read device %02x %02x %02x %02x.\n", rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5]);
+@@ -1314,6 +1324,19 @@ static int elan_probe(struct spi_device *spi)
+ 		IMG_HEIGHT = (unsigned int)(rxbuf[3] - rxbuf[2] + 1);
+ 		ELAN_DEBUG("WIDTH(Y) = %d, HEIGHT(X) = %d\n", IMG_WIDTH, IMG_HEIGHT);
+ 	}
++  
++    //add for debug 7.3
++    if( (IMG_WIDTH != 80)||(IMG_WIDTH != 80) )   
++    {
++        ELAN_DEBUG("read device %02x %02x %02x %02x.\n", rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5]);
++        misc_deregister(&fp->elan_dev);
++        gpio_free(fp->int_gpio);
++        gpio_free(fp->rst_gpio);
++        //free_irq(fp->irq, fp);
++        //kfree(fp);
++        return -1;
++    }
++	have_fp_device=1;
+ 
+ 	/* Allocate image buffer */
+ 	ret = elan_kmalloc_image();
+@@ -1424,7 +1447,7 @@ static struct spi_board_info elan_spi_board_info[] = {
+ 	[0] = {
+ 		.modalias               = "elan_fp",
+ 		.bus_num                = 0, // change by customer
+-		.chip_select            = 0, // change by customer, usually = 0.
++		.chip_select            = 2, // change by customer, usually = 0.
+ 		.max_speed_hz           = SPI_MAX_SPEED,
+ 		.mode                   = SPI_MODE_0,
+ 		.controller_data        = (void*)&spi_xxxx_conf,
+diff --git a/drivers/spi/mediatek/mt6735/spi.c b/drivers/spi/mediatek/mt6735/spi.c
+index fa99a47..3bbd5c9 100644
+--- a/drivers/spi/mediatek/mt6735/spi.c
++++ b/drivers/spi/mediatek/mt6735/spi.c
+@@ -1389,7 +1389,8 @@ static int __init mt_spi_probe(struct platform_device *pdev)
+ 
+ #endif
+ 	/*hardware can only connect 1 slave.if you want to multiple, using gpio CS */
+-	master->num_chipselect = 2;
++	master->num_chipselect = 4;
++    master->dev.of_node = pdev->dev.of_node; //blestech add
+ 
+ 	master->mode_bits = (SPI_CPOL | SPI_CPHA);
+ 	master->bus_num = pdev->id;
+diff --git a/drivers/spi/spi.c b/drivers/spi/spi.c
+index 34fc546..798d1d2 100644
+--- a/drivers/spi/spi.c
++++ b/drivers/spi/spi.c
+@@ -1512,7 +1512,7 @@ struct spi_master *spi_alloc_master(struct device *dev, unsigned size)
+ 
+ 	device_initialize(&master->dev);
+ 	master->bus_num = -1;
+-	master->num_chipselect = 1;
++	master->num_chipselect = 4;
+ 	master->dev.class = &spi_master_class;
+ 	master->dev.parent = get_device(dev);
+ 	spi_master_set_devdata(master, &master[1]);

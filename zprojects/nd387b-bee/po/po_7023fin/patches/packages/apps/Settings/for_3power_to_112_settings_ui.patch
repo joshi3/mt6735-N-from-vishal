@@ -1,0 +1,368 @@
+diff --git a/res/layout/sos_help_contents.xml b/res/layout/sos_help_contents.xml
+new file mode 100644
+index 0000000..b893f21
+--- /dev/null
++++ b/res/layout/sos_help_contents.xml
+@@ -0,0 +1,18 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:orientation="vertical">
++
++    <TextView
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:text="@string/emergency_help_title_1"
++        style="@style/TextAppearance.AppCompat.Title"/>
++    <TextView
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:textSize="20dp"
++        android:text="@string/emergenry_help_content"
++        style="@style/TextAppearance.AppCompat.Body1"/>
++</LinearLayout>
+diff --git a/res/layout/sos_number_content.xml b/res/layout/sos_number_content.xml
+new file mode 100644
+index 0000000..3af58b4
+--- /dev/null
++++ b/res/layout/sos_number_content.xml
+@@ -0,0 +1,18 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:orientation="vertical">
++
++    <TextView
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content" 
++        android:text="@string/emergency_number_title"
++         style="@style/TextAppearance.AppCompat.Title"/>
++    <TextView
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:textSize="20dp"
++        android:text="@string/emergency_number_content"
++        style="@style/TextAppearance.AppCompat.Body1"/>
++</LinearLayout>
+diff --git a/res/values/arrays.xml b/res/values/arrays.xml
+index 3ebf6a5..2d1d840 100644
+--- a/res/values/arrays.xml
++++ b/res/values/arrays.xml
+@@ -1068,5 +1068,12 @@
+         <item>EE-d-MMM-yyyy</item>
+         <item>yyyy-MMM-d-EE</item>
+     </string-array>
+-
++    <string-array name="emergency_status_contents" translatable="false">
++        <item>On</item>
++        <item>Off</item>
++    </string-array>
++    <string-array name="emergency_status_values" translatable="false">
++        <item>1</item>
++        <item>0</item>
++    </string-array>
+ </resources>
+diff --git a/res/values/strings_custom_sos.xml b/res/values/strings_custom_sos.xml
+index 884b12a..c43f9bf 100755
+--- a/res/values/strings_custom_sos.xml
++++ b/res/values/strings_custom_sos.xml
+@@ -1,8 +1,8 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <resources>
+     <!-- for sos -->
+-    <string name="sos_settings_title">Emergency rescue</string>
+-    <string name="sos_settings_category">Emergency rescue</string>
++    <string name="sos_settings_title">Panic-Button</string>
++    <string name="sos_settings_category">Panic_Button</string>
+     <string name="tv_string">When you are in an emergency,emergency rescue helps you by sending your emergency contacts a message along with your location \n To use emergency rescue during an emergency,Please press and hold the volume up and down keys for 3 seconds.</string>
+     <string name="sos_settings_status_summary">Open/Close emergency rescue</string>
+     <string name="sos_settings_status_title">Emergency rescue</string>
+@@ -30,4 +30,11 @@
+     <string name="dialog_vip_already_exist">The  number already exists, no need to repeat added。</string>
+     <string name="dialog_delete_tips_title">Delete contacts</string>
+     <string name="dialog_delete_tips_text">Are you sure to delete this contact？</string>
++    <string name="emergency_status_title">Status</string>
++    <string name="emergency_status_summary">Off</string>
++    <string name="emergency_number_title">Emergency number</string>
++    <string name="emergency_help_title">Help</string>
++    <string name="emergency_number_content">112</string>
++    <string name="emergency_help_title_1">“HELP” CONTENTS</string>
++    <string name="emergenry_help_content">A Panic – Button is designed to assist in alerting somebody in emergency situations where a threat to a person exists. \n If you are in threat and Panic – Button is enabled,  short press the power Key three times in quick succession, your phone will initiate the call to 112 as Emergency number. \n This function works in locked/unlocked mode without  any passcode such as Pattern, Password, Pin etc.</string>
+ </resources>
+diff --git a/res/xml/v_sos_settings.xml b/res/xml/v_sos_settings.xml
+index d7223c6..ab02020 100644
+--- a/res/xml/v_sos_settings.xml
++++ b/res/xml/v_sos_settings.xml
+@@ -16,36 +16,18 @@
+ 
+ <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+         android:title="@string/sos_settings_category">
+-
+-        <Preference
+-            android:layout="@layout/v_sos_preferece_layout"
+-            />
+-
+-        <Preference android:key="sos_settings_status"
+-                android:summary="@string/sos_settings_status_summary"
+-                android:title="@string/sos_settings_status_title"/>
+-
+-        <PreferenceScreen android:key="sos_settings_message"
+-                android:fragment="com.v.sos.MessageSettings"
+-                android:title="@string/sos_settings_message_title"/>
+-
+-        <Preference android:key="sos_settings_interval"
+-                android:summary="@string/interval_once"
+-                android:title="@string/sos_settings_interval_title"/>
+-
+-        <Preference android:key="sos_settings_contacts"
+-                android:title="@string/sos_settings_contacts_title"/>
+-
+-<!--        <PreferenceCategory 
+-                android:key="sos_settings_contacts"
+-                android:title="@string/sos_settings_contacts_title" >  
+-            <com.v.sos.ContactsSettings  
+-                android:title="@string/sos_settings_contacts_title"   >  
+-            <intent  
+-                android:action="android.intent.action.MAIN"  
+-                android:targetClass="com.v.sos.ContactsSettings"  
+-                android:targetPackage="com.v.sos" />  
+-            </com.v.sos.ContactsSettings>  
+-        </PreferenceCategory> 
+--->
++        
++        <ListPreference android:key="emergency_status_key"
++
++            android:entries="@array/emergency_status_contents"
++            android:entryValues="@array/emergency_status_values"
++            android:title="@string/emergency_status_title"
++            android:summary="@string/emergency_status_summary"/>
++        
++        <Preference android:key="emergency_number_key"
++            android:title="@string/emergency_number_title"/>
++        
++        <Preference android:key="emergency_help_key"
++            android:title="@string/emergency_help_title"/>
++    
+ </PreferenceScreen>
+diff --git a/src/com/v/sos/HelpFragment.java b/src/com/v/sos/HelpFragment.java
+new file mode 100644
+index 0000000..aab9579
+--- /dev/null
++++ b/src/com/v/sos/HelpFragment.java
+@@ -0,0 +1,24 @@
++package com.v.sos;
++
++import android.os.Bundle;
++import com.android.settings.SettingsPreferenceFragment;
++import com.android.settings.R;
++import com.android.internal.logging.MetricsProto.MetricsEvent;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++public class HelpFragment extends SettingsPreferenceFragment {
++
++    @Override
++    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedState) {
++        View view = inflater.inflate(R.layout.sos_help_contents, null);
++        return view;
++    }   
++    @Override
++    protected int getMetricsCategory() {
++        return MetricsEvent.DEVICEINFO;
++    }   
++}   
++
++
+diff --git a/src/com/v/sos/NumberFragment.java b/src/com/v/sos/NumberFragment.java
+new file mode 100644
+index 0000000..d523783
+--- /dev/null
++++ b/src/com/v/sos/NumberFragment.java
+@@ -0,0 +1,22 @@
++package com.v.sos;
++
++import android.os.Bundle;
++import com.android.settings.SettingsPreferenceFragment;
++import com.android.settings.R;
++import com.android.internal.logging.MetricsProto.MetricsEvent;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++
++public class NumberFragment extends SettingsPreferenceFragment {
++    @Override
++    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedState) {
++        View view = inflater.inflate(R.layout.sos_number_content, null);
++        return view;
++    }
++        @Override
++        protected int getMetricsCategory() {
++            return MetricsEvent.DEVICEINFO;
++        }
++    }
+diff --git a/src/com/v/sos/SosSettings.java b/src/com/v/sos/SosSettings.java
+index a06feb9..52dba33 100644
+--- a/src/com/v/sos/SosSettings.java
++++ b/src/com/v/sos/SosSettings.java
+@@ -35,9 +35,12 @@ import android.content.Intent;
+ import android.provider.Contacts;
+ import com.v.sos.Utils;
+ import com.android.internal.logging.MetricsProto.MetricsEvent;
++import android.support.v7.preference.ListPreference;
++import android.support.v7.preference.Preference.OnPreferenceChangeListener;
+ 
+ 
+-public class SosSettings extends SettingsPreferenceFragment implements Preference.OnPreferenceClickListener{
++public class SosSettings extends SettingsPreferenceFragment implements 
++        Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener{
+ 
+     private static final String TAG = "SosSettings";
+ 
+@@ -46,9 +49,6 @@ public class SosSettings extends SettingsPreferenceFragment implements Preferenc
+     private Toast mToast;
+ 
+     private boolean mValidListener = false;
+-    private SwitchBar mSwitchBar; 
+-    private Preference mStatus;
+-    private Preference mMessage;
+     private Preference mInterval;
+     private Preference mContacts;
+     private TextView mText;
+@@ -57,32 +57,31 @@ public class SosSettings extends SettingsPreferenceFragment implements Preferenc
+     private SharedPreferences sharedPreferences;
+     private int selectMode;
+ 
+-    private static final String KEY_SOS_SETTINGS_STATUS = "sos_settings_status";
+-    private static final String KEY_SOS_SETTINGS_MESSAGE = "sos_settings_message";
+-    private static final String KEY_SOS_SETTINGS_INTERVAL = "sos_settings_interval";
+-    private static final String KEY_SOS_SETTINGS_CONTACTS = "sos_settings_contacts";
+     private int selectedFruitIndex = 0; 
+-
+-
++    
++    private static final String EMERGENCY_STATUS_KEY= "emergency_status_key";
++    private static final String EMERGENCY_NUMBER_KEY= "emergency_number_key";
++    private static final String EMERGENCY_HELP_KEY = "emergency_help_key";
++    private ListPreference mStatus;
++    private Preference mNumber;
++    private Preference mHelp;
++    private static final String EMERGENCY_STATUS_KEY_TAG = "persist.sys.emergency_tag";
++    private String mStatusValue;
+     @Override
+     public void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+-
+-        Log.d(TAG, "onCreate() :");
+         mContext = getActivity();
+         ContentResolver resolver = getActivity().getContentResolver();
++        
+         addPreferencesFromResource(R.xml.v_sos_settings);
+-
+-        mStatus = (Preference) findPreference(KEY_SOS_SETTINGS_STATUS);
+-        mMessage = (Preference) findPreference(KEY_SOS_SETTINGS_MESSAGE);
+-        mInterval = (Preference) findPreference(KEY_SOS_SETTINGS_INTERVAL);
+-        mContacts = (Preference) findPreference(KEY_SOS_SETTINGS_CONTACTS);
+-
+-        mStatus.setOnPreferenceClickListener(this);
+-        mMessage.setOnPreferenceClickListener(this);
+-        mInterval.setOnPreferenceClickListener(this);
+-        mContacts.setOnPreferenceClickListener(this);
+-        android.util.Log.i(TAG, "开启服务前");
++        
++        mStatus = (ListPreference) findPreference(EMERGENCY_STATUS_KEY); 
++        mNumber = findPreference(EMERGENCY_NUMBER_KEY);
++        mHelp = findPreference(EMERGENCY_HELP_KEY);
++       
++        mStatus.setOnPreferenceChangeListener(this);
++        mNumber.setOnPreferenceClickListener(this);
++        mHelp.setOnPreferenceClickListener(this);
+         Intent intent =new Intent();
+         intent.setClassName("com.v.sos", "com.v.sos.ServiceDemo");
+         mContext.startService(intent);
+@@ -92,15 +91,10 @@ public class SosSettings extends SettingsPreferenceFragment implements Preferenc
+     @Override
+     public void onResume() {
+         super.onResume();
+-
+-        selectMode = SystemProperties.getInt(Utils.PERSIST_SOS_SETTINGS_INTERVAL,0);
+-        if (selectMode == 1) {
+-            mInterval.setSummary(R.string.interval_10minute);
+-        } else if (selectMode == 2) {
+-            mInterval.setSummary(R.string.interval_20minute);
+-        } else {
+-            mInterval.setSummary(R.string.interval_once);
+-        }
++        mStatusValue = SystemProperties.get(EMERGENCY_STATUS_KEY_TAG, "1");
++        android.util.Log.i("lichengnan", "mStatusValue = " + mStatusValue);
++        mStatus.setValue(mStatusValue);
++        mStatus.setSummary(mStatusValue.equals("1") ? "On" : "Off");
+     }
+ 
+     @Override
+@@ -115,10 +109,6 @@ public class SosSettings extends SettingsPreferenceFragment implements Preferenc
+     @Override
+     public void onActivityCreated(Bundle savedInstanceState) {
+         super.onActivityCreated(savedInstanceState);
+-        Log.d(TAG, "onActivityCreated() :");
+-
+-        final SettingsActivity activity = (SettingsActivity) getActivity();
+-
+     }
+ 
+     @Override
+@@ -127,28 +117,30 @@ public class SosSettings extends SettingsPreferenceFragment implements Preferenc
+     }
+ 
+     @Override
+-        public boolean onPreferenceClick(Preference preference) {
+-            if (preference == mStatus) {
+-                //紧急救援
+-                StatusDialog();
+-            } else if (preference == mMessage) {
+-                //短消息编写
+-                extras = new Bundle(); 
+-                extras.putBoolean(MessageSettings.EXTRA_SHOW_MESSAGENAME, true);
+-
+-                ((SettingsActivity) getActivity()).startPreferencePanel(MessageSettings.class.getName(),
+-                        extras, R.string.sos_settings_message_title, null, null, 0);
+-            }else if (preference==mInterval){
+-                //发送短信频率
+-                IntervalDialog();
+-            }else if(preference==mContacts){
+-                //选择联系人
+-                Intent intent = new Intent(getActivity(),ContactsSettings.class);
+-                startActivity(intent);
+-            }
+-            return true;
++    public boolean onPreferenceChange(Preference preference, Object newValue) {
++        android.util.Log.i("lichengnan", "onPreferenceChange");
++        if (preference == mStatus) {
++            SystemProperties.set(EMERGENCY_STATUS_KEY_TAG, (String)newValue);
++            mStatus.setSummary(((String)newValue).equals("1") ? "On" : "Off");
+         }
+-     
++
++        String n = SystemProperties.get(EMERGENCY_STATUS_KEY_TAG, "-1");
++        android.util.Log.i("lichengnan", "equals? = " + n.equals("1"));
++        return true;
++    }
++    
++    @Override
++    public boolean onPreferenceClick(Preference pref) {
++        final SettingsActivity activity = (SettingsActivity) getActivity();
++        if (pref.getKey().equals(EMERGENCY_NUMBER_KEY)) {
++            activity.startPreferencePanel(NumberFragment.class.getName(), null,
++                    R.string.emergency_number_title, null, SosSettings.this, 0);
++        }else if (pref.getKey().equals(EMERGENCY_HELP_KEY)) {
++            activity.startPreferencePanel(HelpFragment.class.getName(), null,
++                    R.string.emergency_help_title, null, SosSettings.this, 0);
++        }
++        return false;
++    }
+     //紧急救援，开关
+     //默认是关闭，值为1
+     //打开(on) 0

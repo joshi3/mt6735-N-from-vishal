@@ -1,0 +1,18 @@
+diff --git a/src/com/android/settings/WallpaperTypeSettings.java b/src/com/android/settings/WallpaperTypeSettings.java
+index d7ae5ef..e11ee78 100644
+--- a/src/com/android/settings/WallpaperTypeSettings.java
++++ b/src/com/android/settings/WallpaperTypeSettings.java
+@@ -75,6 +75,13 @@ public class WallpaperTypeSettings extends SettingsPreferenceFragment implements
+             pref.setTitle(label);
+             pref.setIcon(info.loadIcon(pm));
+             parent.addPreference(pref);
++/* Vanzo:liukun on: Fri, 03 Mar 2017 19:38:13 +0800
++ * TODO: replace this line with your comment
++ */
++            if(info.activityInfo.packageName.equals("com.android.wallpaper.livepicker")){
++                parent.removePreference(pref); 
++            }
++// End of Vanzo:liukun
+         }
+     }
+ 

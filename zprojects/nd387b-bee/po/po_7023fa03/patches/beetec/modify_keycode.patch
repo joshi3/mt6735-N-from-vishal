@@ -1,0 +1,13 @@
+diff --git a/packages/FactoryMode/src/com/mediatek/factorymode/KeyCode.java b/packages/FactoryMode/src/com/mediatek/factorymode/KeyCode.java
+index 37bce77..2369503 100644
+--- a/packages/FactoryMode/src/com/mediatek/factorymode/KeyCode.java
++++ b/packages/FactoryMode/src/com/mediatek/factorymode/KeyCode.java
+@@ -256,7 +256,7 @@ public class KeyCode extends Activity implements OnClickListener {
+ /* Vanzo:liushuai on: Fri, 28 Aug 2015 16:27:43 +0800
+  * Unable to press the center button
+  */
+-        if (adapter.getCount() > 0) {
++        if (adapter.getCount() > 4) {
+             mBtOk.setEnabled(true);
+         }
+ // End of Vanzo:liushuai

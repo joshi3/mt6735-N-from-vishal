@@ -1,0 +1,86 @@
+diff --git a/drivers/input/fingerprint/blestech_tee/bf_tee_spi.c b/drivers/input/fingerprint/blestech_tee/bf_tee_spi.c
+index 0a63a70..59ea3b8 100644
+--- a/drivers/input/fingerprint/blestech_tee/bf_tee_spi.c
++++ b/drivers/input/fingerprint/blestech_tee/bf_tee_spi.c
+@@ -805,6 +805,7 @@ static int bf_create_inputdev(void)
+ 	}
+ 	return 0;
+ }
++extern int get_fp_vendor(void);
+ 
+ static int  bf_probe (struct spi_device *spi)
+ {
+@@ -910,6 +911,15 @@ static struct spi_driver bf_driver = {
+ static int bf_spi_init(void)
+ {
+ 	int status = 0;
++	int blestech_id =0;
++
++   	blestech_id = get_fp_vendor();
++    	BF_LOG("%s blestech_id= %d !\n", __func__,blestech_id);
++    	if(blestech_id != 0x3)
++    	{
++	    BF_LOG("%s() blestech_id= %d !\n", __func__,blestech_id);
++       	    return -1;
++    	}
+ 
+ 	status = spi_register_driver(&bf_driver);
+ 	if (status < 0)
+diff --git a/drivers/input/fingerprint/elan_tee/elan_fp_mtk_tee.c b/drivers/input/fingerprint/elan_tee/elan_fp_mtk_tee.c
+index 4122f14..36caec6 100644
+--- a/drivers/input/fingerprint/elan_tee/elan_fp_mtk_tee.c
++++ b/drivers/input/fingerprint/elan_tee/elan_fp_mtk_tee.c
+@@ -65,6 +65,8 @@ static int display_notify_option = 0;
+ static struct notifier_block fb_notif;
+ #endif
+ 
++extern int get_fp_vendor(void);
++
+ struct elan_data {
+     struct spi_device       *spi;
+     struct input_dev        *input_dev;
+@@ -735,8 +737,16 @@ static struct spi_board_info elan_spi_board_info[] = {
+ static int __init elan_init(void)
+ {
+     int ret = 0;
++    int elan_id = 0;
+     ELAN_DEBUG("%s() Start\n", __func__);
+-	//spi_register_board_info(elan_spi_board_info, ARRAY_SIZE(elan_spi_board_info));
++    elan_id = get_fp_vendor();
++    ELAN_DEBUG("%s elan_id= %d !\n", __func__,elan_id);
++    if(elan_id != 0x4)
++    {
++        ELAN_DEBUG("%s() elan_id= %d !\n", __func__,elan_id);
++	return -1;
++    }
++    //spi_register_board_info(elan_spi_board_info, ARRAY_SIZE(elan_spi_board_info));
+     ret = spi_register_driver(&elan_driver);
+     if (ret < 0)
+         ELAN_DEBUG("%s FAIL !\n", __func__);
+diff --git a/drivers/spi/mediatek/mt6735/spi.c b/drivers/spi/mediatek/mt6735/spi.c
+index fa99a47..3bbd5c9 100644
+--- a/drivers/spi/mediatek/mt6735/spi.c
++++ b/drivers/spi/mediatek/mt6735/spi.c
+@@ -1389,7 +1389,8 @@ static int __init mt_spi_probe(struct platform_device *pdev)
+ 
+ #endif
+ 	/*hardware can only connect 1 slave.if you want to multiple, using gpio CS */
+-	master->num_chipselect = 2;
++	master->num_chipselect = 4;
++    master->dev.of_node = pdev->dev.of_node; //blestech add
+ 
+ 	master->mode_bits = (SPI_CPOL | SPI_CPHA);
+ 	master->bus_num = pdev->id;
+diff --git a/drivers/spi/spi.c b/drivers/spi/spi.c
+index 34fc546..798d1d2 100644
+--- a/drivers/spi/spi.c
++++ b/drivers/spi/spi.c
+@@ -1512,7 +1512,7 @@ struct spi_master *spi_alloc_master(struct device *dev, unsigned size)
+ 
+ 	device_initialize(&master->dev);
+ 	master->bus_num = -1;
+-	master->num_chipselect = 1;
++	master->num_chipselect = 4;
+ 	master->dev.class = &spi_master_class;
+ 	master->dev.parent = get_device(dev);
+ 	spi_master_set_devdata(master, &master[1]);

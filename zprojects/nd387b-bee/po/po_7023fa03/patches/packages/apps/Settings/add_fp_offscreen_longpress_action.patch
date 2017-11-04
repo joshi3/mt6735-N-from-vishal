@@ -1,0 +1,682 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 055154f..72cefce 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -119,6 +119,18 @@
+                 android:value="true" />
+         </activity>
+ 
++<!-- Vanzo:libing on: Wed, 17 Aug 2016 14:49:44 +0800
++add for fp start app
++-->
++        <activity
++            android:name="com.android.settings.fingerprint.FPAllAppsListActivity"
++            android:label="@string/smartwake_settings_select_app_title" >
++            <intent-filter>
++                <action android:name="android.intent.action.MAIN" />
++            </intent-filter>
++        </activity>
++<!-- End of Vanzo:libing -->
++
+         <!-- Alias for launcher activity only, as this belongs to each profile. -->
+         <activity-alias android:name="Settings"
+                 android:taskAffinity="com.android.settings"
+diff --git a/res/values-zh-rCN/strings_custom_qa.xml b/res/values-zh-rCN/strings_custom_qa.xml
+new file mode 100644
+index 0000000..9bbdbf7
+--- /dev/null
++++ b/res/values-zh-rCN/strings_custom_qa.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<resources>
++    <string name="quick_actions_dialog_title">选择应用</string>
++    <string name="quick_actions_fp_summary_prefix">快速打开 : </string>
++    <string name="control_torch">手电筒控制</string>
++    <string name="control_torch_summary">灭屏状态下, 指纹长按可以开启/关闭手电筒. 如果关闭此功能，长按将会被用来快速启动应用.</string>
++</resources>
+diff --git a/res/values-zh-rTW/strings_custom_qa.xml b/res/values-zh-rTW/strings_custom_qa.xml
+new file mode 100644
+index 0000000..a10de1d
+--- /dev/null
++++ b/res/values-zh-rTW/strings_custom_qa.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<resources>
++    <string name="quick_actions_dialog_title">選擇應用</string>
++    <string name="quick_actions_fp_summary_prefix">快速打開: </string>
++    <string name="control_torch">手電筒控制</string>
++    <string name="control_torch_summary">滅屏狀態下, 指紋長按可以開啟/關閉手電筒. 如果關閉此功能，長按將會被用來快速啟動應用.</string>
++</resources>
+diff --git a/res/values/strings_custom_qa.xml b/res/values/strings_custom_qa.xml
+new file mode 100644
+index 0000000..fade1be
+--- /dev/null
++++ b/res/values/strings_custom_qa.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<resources>
++    <string name="quick_actions_dialog_title">Quick actions</string>
++    <string name="quick_actions_fp_summary_prefix">Quick to open : </string>
++    <string name="control_torch">Torch Control</string>
++    <string name="control_torch_summary">When screen is off, Long press to open/close Torch by your finger. If you disable this function, long press action will be assigned to quick open apps.</string>
++</resources>
+diff --git a/src/com/android/settings/fingerprint/FPAllAppsListActivity.java b/src/com/android/settings/fingerprint/FPAllAppsListActivity.java
+new file mode 100644
+index 0000000..ac21420
+--- /dev/null
++++ b/src/com/android/settings/fingerprint/FPAllAppsListActivity.java
+@@ -0,0 +1,127 @@
++package com.android.settings.fingerprint;
++
++import java.util.ArrayList;
++import java.util.List;
++import android.app.Activity;
++import android.content.Context;
++import android.content.Intent;
++import android.content.SharedPreferences;
++import android.content.pm.ResolveInfo;
++import android.os.Bundle;
++import android.text.Editable;
++import android.text.TextUtils;
++import android.text.TextWatcher;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.widget.AdapterView;
++import android.widget.AdapterView.OnItemClickListener;
++import android.widget.ListView;
++import android.os.SystemProperties;
++import com.android.settings.R;
++import com.v.common.AppInfo;
++import com.v.common.SearchEditText;
++
++public class FPAllAppsListActivity extends Activity implements OnItemClickListener {
++    public static ListView mAppsInfosListView = null;
++    private SearchEditText mSearchEditText = null;
++    private FPAppsListAdapter mListAdapterNull = null;
++    public static FPAppsListAdapter mListAdapter = null;
++    private LayoutInflater mInflater = null;
++    private static List<AppInfo> mAppsInfosList = null;
++    private static List<AppInfo> mFilterAppsList = null;
++    private List<ResolveInfo> mAllIntentApps = null;
++    //private static int mGesture = 0;
++    private int fpid = 0;
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        Intent intent = getIntent();
++        //mGesture = intent.getIntExtra("gesture", 0);
++        fpid = intent.getIntExtra("fpid", 0);
++        setContentView(R.layout.v_apps_list_main);
++        mAppsInfosListView = (ListView) findViewById(R.id.appinfo_list);
++        mAppsInfosListView.setOnItemClickListener(this);
++        mSearchEditText = (SearchEditText) findViewById(R.id.filter_edit);
++        mSearchEditText.addTextChangedListener(new TextWatcher() {
++
++            @Override
++            public void onTextChanged(CharSequence s, int start, int before, int count) {
++                filterData(s.toString());
++            }
++
++            @Override
++            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
++
++            }
++
++            @Override
++            public void afterTextChanged(Editable s) {
++
++            }
++        });
++        mInflater = LayoutInflater.from(getApplicationContext());
++        mListAdapterNull = new FPAppsListAdapter(getApplicationContext(), fpid);
++        mAppsInfosList = mListAdapterNull.getDownLoadAppInfoList();
++        mFilterAppsList = mAppsInfosList;
++        mListAdapter = new FPAppsListAdapter(getApplication(), mAppsInfosList, mInflater, fpid);
++        mAppsInfosListView.setAdapter(mListAdapter);
++        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
++        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
++        mAllIntentApps = getPackageManager().queryIntentActivities(mainIntent, 0);
++    }
++
++    private void filterData(String filterStr) {
++        mFilterAppsList = new ArrayList<AppInfo>();
++        if (TextUtils.isEmpty(filterStr)) {
++            mFilterAppsList = mAppsInfosList;
++        } else {
++            mFilterAppsList.clear();
++            for (AppInfo sortModel : mAppsInfosList) {
++                String name = sortModel.getAppName();
++                if (name.toLowerCase().indexOf(filterStr.toString().toLowerCase()) != -1) {
++                    mFilterAppsList.add(sortModel);
++                }
++            }
++        }
++        mListAdapter.updateListView(mFilterAppsList);
++    }
++
++    @Override
++    public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
++        android.util.Log.i("libing", "itemclick position=" + position);
++        for (int i = 0; i < mAllIntentApps.size(); i++) {
++            String appName = mFilterAppsList.get(position).getAppName();
++
++            String packageName = mAllIntentApps.get(i).activityInfo.packageName;
++            String activityName = mAllIntentApps.get(i).activityInfo.name;
++            if ((mFilterAppsList.get(position).getPackageName()
++                        .equals(packageName)) && (mFilterAppsList.get(position).getMainActivityName().equals(activityName))) {
++
++                android.util.Log.i("libing", "packageName=" + packageName + "    activityName=" + activityName + " appName " + appName);
++
++                //SharedPreferences pref = getSharedPreferences("fpid_appinfo", Context.MODE_WORLD_WRITABLE);
++                SharedPreferences pref = getSharedPreferences("fpid_appinfo", Context.MODE_MULTI_PROCESS);
++                // 创建SharedPreferences.Editor对象，用于存储数据修改
++                SharedPreferences.Editor editor = pref.edit();
++                // 存储数据信息
++                editor.putString(fpid + "_appcmpinfo", packageName + ":" + activityName);
++                editor.putString(fpid + "_appname", appName);
++                //editor.putBoolean("default", true);
++                // 提交数据修改
++                editor.commit();
++                android.util.Log.d("libing", "commit sp done");
++
++                //Intent resultIntent = new Intent();
++                Intent resultIntent = getIntent();
++                resultIntent.putExtra("app_name", appName);
++                resultIntent.putExtra("result_fpid", fpid);
++                setResult(301, resultIntent);
++                android.util.Log.d("libing", "set result done");
++                //startActivityForResult(allAppsIntent, GET_FP_APP_INFO);
++                finish();
++            }
++        }
++
++    }
++}
+diff --git a/src/com/android/settings/fingerprint/FPAppsListAdapter.java b/src/com/android/settings/fingerprint/FPAppsListAdapter.java
+new file mode 100644
+index 0000000..a1d04bc
+--- /dev/null
++++ b/src/com/android/settings/fingerprint/FPAppsListAdapter.java
+@@ -0,0 +1,196 @@
++package com.android.settings.fingerprint;
++
++import java.util.ArrayList;
++import java.util.List;
++import android.content.Context;
++import android.content.Intent;
++import android.content.SharedPreferences;
++import android.content.pm.PackageInfo;
++import android.content.pm.PackageManager;
++import android.content.pm.ResolveInfo;
++import android.graphics.drawable.Drawable;
++import android.util.Log;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++import android.widget.BaseAdapter;
++import android.widget.ImageView;
++import android.widget.TextView;
++import android.os.SystemProperties;
++import com.android.settings.R;
++import com.v.common.AppInfo;
++import com.v.common.SearchEditText;
++import android.content.pm.PackageManager.NameNotFoundException;
++import com.android.featureoption.FeatureOption;
++
++public class FPAppsListAdapter extends BaseAdapter {
++
++    private List<AppInfo> mAppsInfosList = null;
++    private Context mContext = null;
++    private SharedPreferences pref = null;
++    private LayoutInflater mInflater = null;
++    private int mFPApp = 0;
++
++/* Vanzo:libing on: Tue, 23 Aug 2016 14:30:33 +0800
++ * TODO: replace this line with your comment
++    public static final String FP_0_DEFAULT_APP_NAME_FLAG = "persist.sys.fp_0_name";
++    public static final String FP_0_DEFAULT_APP_NAME = FeatureOption.VANZO_FEATURE_SMARTWAKE_C_APPNAME;
++    public static final String FP_1_DEFAULT_APP_NAME_FLAG = "persist.sys.fp_1_name";
++    public static final String FP_1_DEFAULT_APP_NAME = FeatureOption.VANZO_FEATURE_SMARTWAKE_E_APPNAME;
++    public static final String FP_2_DEFAULT_APP_NAME_FLAG = "persist.sys.fp_2_name";
++    public static final String FP_2_DEFAULT_APP_NAME = FeatureOption.VANZO_FEATURE_SMARTWAKE_W_APPNAME;
++    public static final String FP_3_DEFAULT_APP_NAME_FLAG = "persist.sys.fp_3_name";
++    public static final String FP_3_DEFAULT_APP_NAME = FeatureOption.VANZO_FEATURE_SMARTWAKE_M_APPNAME;
++    public static final String FP_3RD_M_DEFAULT_APP_NAME = FeatureOption.VANZO_FEATURE_SMARTWAKE_3RD_M_APPNAME;
++    public static final String FP_4_DEFAULT_APP_NAME_FLAG = "persist.sys.fp_4_name";
++    public static final String FP_4_DEFAULT_APP_NAME = FeatureOption.VANZO_FEATURE_SMARTWAKE_O_APPNAME;
++ */
++// End of Vanzo:libing
++
++    public FPAppsListAdapter(Context context, int gesture) {
++        mContext = context;
++        mFPApp = gesture;
++    }
++
++    public FPAppsListAdapter(Context context, List<AppInfo> list, LayoutInflater inflater, int gesture) {
++        mContext = context;
++        mAppsInfosList = list;
++        mInflater = inflater;
++        mFPApp = gesture;
++    }
++
++    private boolean isApkExist(Context context, String packageName){
++        PackageManager pm = context.getPackageManager();
++        try {
++            pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
++        } catch (PackageManager.NameNotFoundException e) {
++            Log.w("libing", "Apk not found " + packageName);
++            return false;
++        }
++        Log.d("libing", "isApkExist = true");
++        return true;
++    }
++
++    @Override
++    public int getCount() {
++        return mAppsInfosList.size();
++    }
++
++    @Override
++    public Object getItem(int position) {
++        return mAppsInfosList.get(position);
++    }
++
++    @Override
++    public long getItemId(int position) {
++        return position;
++    }
++
++    @Override
++    public View getView(int position, View convertView, ViewGroup parent) {
++        ViewHolder viewHolder = null;
++        if (null == convertView) {
++            convertView = mInflater.inflate(R.layout.v_apps_list_item, null);
++            viewHolder = new ViewHolder();
++            viewHolder.iconView = (ImageView) convertView.findViewById(R.id.appicon);
++            viewHolder.appNameView = (TextView) convertView.findViewById(R.id.appname);
++            viewHolder.stateView = (ImageView) convertView.findViewById(R.id.state);
++            convertView.setTag(viewHolder);
++
++        } else {
++            viewHolder = (ViewHolder) convertView.getTag();
++        }
++
++        viewHolder.iconView.setBackgroundDrawable((Drawable) mAppsInfosList.get(position)
++                .getAppIcon());
++        viewHolder.appNameView.setText(mAppsInfosList.get(position).getAppName());
++        String packageName = null;
++        String activityName = null;
++/* Vanzo:libing on: Mon, 22 Aug 2016 17:16:16 +0800
++ * TODO: replace this line with your comment
++        if (mFPApp == FingerprintSettings.FP_APPS_0) {
++            packageName = SystemProperties.get(FP_0_DEFAULT_APP_NAME_FLAG, FP_0_DEFAULT_APP_NAME).split("&")[0];
++            activityName = SystemProperties.get(FP_0_DEFAULT_APP_NAME_FLAG, FP_0_DEFAULT_APP_NAME).split("&")[1];
++        } else if (mFPApp == FingerprintSettings.FP_APPS_1) {
++            packageName = SystemProperties.get(FP_1_DEFAULT_APP_NAME_FLAG, FP_1_DEFAULT_APP_NAME).split("&")[0];
++            activityName = SystemProperties.get(FP_1_DEFAULT_APP_NAME_FLAG, FP_1_DEFAULT_APP_NAME).split("&")[1];
++        } else if (mFPApp == FingerprintSettings.FP_APPS_2) {
++            packageName = SystemProperties.get(FP_2_DEFAULT_APP_NAME_FLAG, FP_2_DEFAULT_APP_NAME).split("&")[0];
++            activityName = SystemProperties.get(FP_2_DEFAULT_APP_NAME_FLAG, FP_2_DEFAULT_APP_NAME).split("&")[1];
++        } else if (mFPApp == FingerprintSettings.FP_APPS_3) {
++
++                packageName = SystemProperties.get(FP_3_DEFAULT_APP_NAME_FLAG, FP_3_DEFAULT_APP_NAME).split("&")[0];
++                activityName = SystemProperties.get(FP_3_DEFAULT_APP_NAME_FLAG, FP_3_DEFAULT_APP_NAME).split("&")[1];
++
++        } else if (mFPApp == FingerprintSettings.FP_APPS_4) {
++            packageName = SystemProperties.get(FP_4_DEFAULT_APP_NAME_FLAG, FP_4_DEFAULT_APP_NAME).split("&")[0];
++            activityName = SystemProperties.get(FP_4_DEFAULT_APP_NAME_FLAG, FP_4_DEFAULT_APP_NAME).split("&")[1];
++        }
++ */
++        String name = "null";
++
++        try {
++            Context context = mContext.createPackageContext("com.android.settings", Context.CONTEXT_IGNORE_SECURITY);
++            pref = context.getSharedPreferences("fpid_appinfo", Context.MODE_MULTI_PROCESS);
++
++            name = pref.getString(mFPApp + "_appcmpinfo", "null");
++            if (!name.equals("null")) {
++                packageName = name.split(":")[0];
++                activityName = name.split(":")[1];
++            } else {
++                packageName  = "null";
++                activityName =  "null";
++            }    
++        } catch (NameNotFoundException e) { 
++            android.util.Log.d("libing", "NameNotFoundException");
++        } finally {
++            //pref = null;
++        }
++        android.util.Log.d("libing", "packageName " + packageName + " activityName " + activityName);
++// End of Vanzo:libing
++        if ((mAppsInfosList.get(position).getPackageName().equals(packageName))
++                && (mAppsInfosList.get(position).getMainActivityName().equals(activityName))) {
++            viewHolder.stateView.setVisibility(View.VISIBLE);
++        } else {
++            viewHolder.stateView.setVisibility(View.GONE);
++        }
++        return convertView;
++    }
++
++    class ViewHolder {
++        ImageView iconView;
++        TextView appNameView;
++        ImageView stateView;
++    }
++
++    public void updateListView(List<AppInfo> list) {
++        this.mAppsInfosList = list;
++        notifyDataSetChanged();
++    }
++
++    public List<AppInfo> getDownLoadAppInfoList() {
++    
++        PackageManager pm = mContext.getPackageManager();
++        List<PackageInfo> packs = pm.getInstalledPackages(0);
++        List<AppInfo> appsInfosList = new ArrayList<AppInfo>(packs.size());
++        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
++        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
++        List<ResolveInfo> mAllIntentApps = mContext.getPackageManager().queryIntentActivities(
++                mainIntent, 0);
++        for (int i = 0; i < mAllIntentApps.size(); i++) {
++            AppInfo appInfo = new AppInfo();
++            appInfo.setAppIcon(mAllIntentApps.get(i).loadIcon(mContext.getPackageManager()));
++            appInfo.setAppName(mAllIntentApps.get(i).loadLabel(mContext.getPackageManager())
++                    .toString());
++            appInfo.setPackageName(mAllIntentApps.get(i).activityInfo.packageName);
++            appInfo.setMainActivityName(mAllIntentApps.get(i).activityInfo.name);
++            String info = mAllIntentApps.get(i).activityInfo.packageName + mAllIntentApps.get(i).activityInfo.name;
++            if (info.length() < 90) {
++                appsInfosList.add(appInfo);
++            } else {
++                android.util.Log.d("libing", "getDownLoadAppInfoList info " + info);
++            }
++        }
++        return appsInfosList;
++    }
++}
+diff --git a/src/com/android/settings/fingerprint/FingerprintSettings.java b/src/com/android/settings/fingerprint/FingerprintSettings.java
+index 50902f6..faa0674 100644
+--- a/src/com/android/settings/fingerprint/FingerprintSettings.java
++++ b/src/com/android/settings/fingerprint/FingerprintSettings.java
+@@ -84,6 +84,8 @@ import android.widget.Switch;
+ import com.android.settings.widget.SwitchBar;
+ import com.android.settings.SettingsActivity;
+ import com.android.featureoption.FeatureOption;
++import android.content.SharedPreferences;
++import android.content.pm.PackageManager.NameNotFoundException;
+ // End of Vanzo:fenghaitao
+ /**
+  * Settings screen for fingerprints
+@@ -140,6 +142,14 @@ public class FingerprintSettings extends SubSettings {
+         setTitle(msg);
+     }
+ 
++/* Vanzo:libing on: Wed, 17 Aug 2016 16:20:35 +0800
++    public static final int FP_APPS_0 = 0;
++    public static final int FP_APPS_1 = 1;
++    public static final int FP_APPS_2 = 2;
++    public static final int FP_APPS_3 = 3;
++    public static final int FP_APPS_4 = 4;
++ */
++// End of Vanzo:libing
+     public static class FingerprintSettingsFragment extends SettingsPreferenceFragment
+ /* Vanzo:fenghaitao on: Fri, 03 Jun 2016 20:01:38 +0800
+  * add fp control fun
+@@ -166,6 +176,12 @@ public class FingerprintSettings extends SubSettings {
+         private static final int CONFIRM_REQUEST = 101;
+         private static final int CHOOSE_LOCK_GENERIC_REQUEST = 102;
+ 
++/* Vanzo:libing on: Thu, 18 Aug 2016 15:40:49 +0800
++ * for fp quick action
++ */
++        public static final int GET_FP_APP_INFO = 301;
++// End of Vanzo:libing
++
+         private static final int ADD_FINGERPRINT_REQUEST = 10;
+ 
+         protected static final boolean DEBUG = true;
+@@ -182,6 +198,7 @@ public class FingerprintSettings extends SubSettings {
+  * add fp control fun
+  */
+         //add checkbox fun
++        private CheckBoxPreference mCheckBoxTorch;
+         private CheckBoxPreference mCheckBoxGallery;
+         private CheckBoxPreference mCheckBoxCamera;
+         private CheckBoxPreference mCheckBoxMusic;
+@@ -192,6 +209,7 @@ public class FingerprintSettings extends SubSettings {
+         private SwitchBar mSwitchBar;
+         private static final String FINGER_FUN_SWITCH = "finger_fun_switch";
+         private static final String KEY_FINGERPRINT_SWITCH = "persist.sys.fp_switch";
++        private static final String FINGER_FUN_TORCH = "finger_fun_torch" ;
+         private static final String FINGER_FUN_GALLERY = "finger_fun_gallery" ;
+         private static final String FINGER_FUN_CAMERA = "finger_fun_camera" ;
+         private static final String FINGER_FUN_MUSIC = "finger_fun_music";
+@@ -200,6 +218,7 @@ public class FingerprintSettings extends SubSettings {
+         private static final String FINGER_FUN_APPLOCK = "finger_fun_applock";
+         private static final String FINGER_FUN_CHANGEPASS = "finger_fun_changepass";
+ 
++        private static final String KEY_FINGERPRINT_TORCH = "persist.sys.fp_torch";
+         private static final String KEY_FINGERPRINT_GALLERY = "persist.sys.fp_gallery";
+         private static final String KEY_FINGERPRINT_CAMERA = "persist.sys.fp_camera";
+         private static final String KEY_FINGERPRINT_MUSIC = "persist.sys.fp_music";
+@@ -424,6 +443,66 @@ public class FingerprintSettings extends SubSettings {
+             }
+         }
+ 
++/* Vanzo:libing on: Mon, 22 Aug 2016 15:07:06 +0800
++ * for fp quick action
++ */
++        private void updateFpStartAppSummary(int fpid) {
++            String prefName = genKey(fpid);
++            FingerprintPreference fpref = (FingerprintPreference) findPreference(prefName);
++
++            Context context = getActivity();
++            SharedPreferences pref = null;
++            String name = "null";
++
++            try {
++                context = context.createPackageContext("com.android.settings", Context.CONTEXT_IGNORE_SECURITY);
++                pref = context.getSharedPreferences("fpid_appinfo", Context.MODE_MULTI_PROCESS);
++
++                name = pref.getString(fpid + "_appname", "null");
++                if (!name.equals("null")) {
++                    // 根据fpid 找到FP 设置summary
++                    //sxxxx
++                    if (fpref !=  null) {
++                        fpref.setSummary(R.string.quick_actions_fp_summary_prefix + name);
++                    }
++
++                }
++            } catch (NameNotFoundException e) {
++                android.util.Log.d("libing", "NameNotFoundException");
++            } finally {
++                android.util.Log.d("libing", "finally");
++                context = null;
++                pref = null;
++                name = "null";
++            }
++        }
++
++        private String getFpStartNameByFpid(int fpid) {
++            Context context = getActivity();
++            SharedPreferences pref = null;
++            String name = "null";
++
++            try {
++                context = context.createPackageContext("com.android.settings", Context.CONTEXT_IGNORE_SECURITY);
++                pref = context.getSharedPreferences("fpid_appinfo", Context.MODE_MULTI_PROCESS);
++
++                name = pref.getString(fpid + "_appname", "null");
++                if (!name.equals("null")) {
++                    return name;
++                } else {
++                    return "null";
++                }
++            } catch (NameNotFoundException e) {
++                android.util.Log.d("libing", "NameNotFoundException");
++            } finally {
++                android.util.Log.d("libing", "finally");
++                context = null;
++                pref = null;
++                //name = "null";
++                return name.equals("null") ? "null" : name;
++            }
++        }
++// End of Vanzo:libing
+         /**
+          * Important!
+          *
+@@ -451,6 +530,14 @@ public class FingerprintSettings extends SubSettings {
+  * add fp control fun
+  */
+         private void addFingerprintControlFun(PreferenceScreen rootcontol){
++            mCheckBoxTorch = new CheckBoxPreference(rootcontol.getContext());
++            mCheckBoxTorch.setKey(FINGER_FUN_TORCH);
++            mCheckBoxTorch.setTitle(R.string.control_torch);
++            mCheckBoxTorch.setSummary(R.string.control_torch_summary);
++            mCheckBoxTorch.setPersistent(false);
++            mCheckBoxTorch.setOnPreferenceChangeListener(this);
++            rootcontol.addPreference(mCheckBoxTorch);
++
+             mCheckBoxCamera = new CheckBoxPreference(rootcontol.getContext());
+             mCheckBoxCamera.setKey(FINGER_FUN_CAMERA);
+             mCheckBoxCamera.setTitle(R.string.control_camera);
+@@ -524,6 +611,7 @@ public class FingerprintSettings extends SubSettings {
+             updateCheckboxPreference();
+         }
+         private void updateCheckboxPreference(){
++            mCheckBoxTorch.setChecked(SystemProperties.getInt(KEY_FINGERPRINT_TORCH, 0) == 1 ? true : false);
+             mCheckBoxCamera.setChecked(SystemProperties.getInt(KEY_FINGERPRINT_CAMERA, 0) == 1 ? true : false);
+             mCheckBoxGallery.setChecked(SystemProperties.getInt(KEY_FINGERPRINT_GALLERY, 0) == 1 ? true : false);
+             mCheckBoxMusic.setChecked(SystemProperties.getInt(KEY_FINGERPRINT_MUSIC, 0) == 1 ? true : false);
+@@ -543,9 +631,20 @@ public class FingerprintSettings extends SubSettings {
+                 pref.setKey(genKey(item.getFingerId()));
+                 pref.setTitle(item.getName());
+                 pref.setFingerprint(item);
++/* Vanzo:libing on: Tue, 23 Aug 2016 14:23:56 +0800
++ * for fp quick action
++ */
++                String name = getFpStartNameByFpid(item.getFingerId());
++                android.util.Log.d("libing", "addFingerprintItemPreferences to updateFpStartAppSummary fpid " + item.getFingerId());
++                if (!name.equals("null")) {
++                    pref.setSummary(getActivity().getResources().getString(R.string.quick_actions_fp_summary_prefix) + name);
++                }
++                //updateFpStartAppSummary(item.getFingerId());
++// End of Vanzo:libing
+                 pref.setPersistent(false);
+                 root.addPreference(pref);
+                 pref.setOnPreferenceChangeListener(this);
++                android.util.Log.d("libing", "Fingerprint item " + item + " key " + genKey(item.getFingerId()) + " title " + item.getName());
+             }
+             Preference addPreference = new Preference(root.getContext());
+             addPreference.setKey(KEY_FINGERPRINT_ADD);
+@@ -687,6 +786,8 @@ public class FingerprintSettings extends SubSettings {
+             boolean isChecked = String.valueOf(value).contains("true");
+             if(FINGER_FUN_CAMERA.equals(key)){
+                 SystemProperties.set(KEY_FINGERPRINT_CAMERA, isChecked ? "1" : "0");
++            }else if(FINGER_FUN_TORCH.equals(key)){
++                SystemProperties.set(KEY_FINGERPRINT_TORCH, isChecked ? "1" : "0");
+             }else if(FINGER_FUN_GALLERY.equals(key)){
+                 SystemProperties.set(KEY_FINGERPRINT_GALLERY, isChecked ? "1" : "0");
+             }else if(FINGER_FUN_MUSIC.equals(key)){
+@@ -729,6 +830,16 @@ public class FingerprintSettings extends SubSettings {
+                     activity.setResult(RESULT_TIMEOUT);
+                     activity.finish();
+                 }
++/* Vanzo:libing on: Tue, 23 Aug 2016 14:24:32 +0800
++ * for fp quick action
++ */
++            } else if (requestCode == GET_FP_APP_INFO) {
++                //rxxxxx
++                //更新fp summery
++                int fpid = data.getIntExtra("result_fpid", 0);
++                android.util.Log.d("libing", "onActivityResult requestCode GET_FP_APP_INFO fpid " + fpid);
++                updateFpStartAppSummary(fpid);
++// End of Vanzo:libing
+             }
+ 
+             if (mToken == null) {
+@@ -812,8 +923,39 @@ public class FingerprintSettings extends SubSettings {
+ 
+         private void deleteFingerPrint(Fingerprint fingerPrint) {
+             mFingerprintManager.remove(fingerPrint, mUserId, mRemoveCallback);
++            android.util.Log.d("libing", "deleteFPAppinfo fpid " + fingerPrint.getFingerId());
++            deleteFPAppinfo(fingerPrint.getFingerId());
++        }
++
++        private void deleteFPAppinfo(int fpid) {
++            Context context = getActivity();
++            SharedPreferences pref = null;
++            String name = "null";
++
++            try {
++                context = context.createPackageContext("com.android.settings", Context.CONTEXT_IGNORE_SECURITY);
++                android.util.Log.d("libing", "context 2222 " + context);
++
++                pref = context.getSharedPreferences("fpid_appinfo", Context.MODE_MULTI_PROCESS);
++                android.util.Log.d("libing", "pref " + pref);
++
++                SharedPreferences.Editor editor = pref.edit();
++                editor.remove(fpid + "_appcmpinfo");
++                editor.remove(fpid + "_appname");
++                editor.commit();
++                android.util.Log.d("libing", "deleteFPAppinfo fpid " + fpid + " done !");
++
++            } catch (NameNotFoundException e) {
++                android.util.Log.d("libing", "NameNotFoundException");
++            } finally {
++                android.util.Log.d("libing", "finally");
++                context = null;
++                pref = null;
++                name = "null";
++            }
+         }
+ 
++
+         private void renameFingerPrint(int fingerId, String newName) {
+             mFingerprintManager.rename(fingerId, mUserId, newName);
+             updatePreferences();
+@@ -878,6 +1020,20 @@ public class FingerprintSettings extends SubSettings {
+                                         onDeleteClick(dialog);
+                                     }
+                                 })
++/* Vanzo:libing on: Mon, 22 Aug 2016 21:31:11 +0800
++ * for fp quick action
++ */
++                        .setNeutralButton(
++                                R.string.quick_actions_dialog_title,
++                                //"Choose app",
++                                new DialogInterface.OnClickListener() {
++                                    @Override
++                                    public void onClick(DialogInterface dialog, int which) {
++                                    //TODO 选择应用 保存数据
++                                        onChooseClick(dialog);
++                                    }
++                                })
++// End of Vanzo:libing
+                         .create();
+                 alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                     @Override
+@@ -901,6 +1057,21 @@ public class FingerprintSettings extends SubSettings {
+                 return alertDialog;
+             }
+ 
++/* Vanzo:libing on: Wed, 17 Aug 2016 20:41:34 +0800
++ * for fp quick action
++ */
++            private void onChooseClick(DialogInterface dialog) {
++                Intent allAppsIntent = new Intent();
++                allAppsIntent.setClassName("com.android.settings", "com.android.settings.fingerprint.FPAllAppsListActivity");
++                //allAppsIntent.putExtra("gesture", FP_APPS_0);
++                allAppsIntent.putExtra("fpid", mFp.getFingerId());
++                allAppsIntent.putExtra("app_name", "app_name");
++                allAppsIntent.putExtra("app_package_name", "app_package_name");
++                allAppsIntent.putExtra("app_class_name", "app_class_name");
++                startActivityForResult(allAppsIntent, GET_FP_APP_INFO);
++                android.util.Log.d("libing", "fpid " + mFp.getFingerId() + " startActivityForResult GET_FP_APP_INFO");
++            }
++// End of Vanzo:libing
+             private void onDeleteClick(DialogInterface dialog) {
+                 if (DEBUG) Log.v(TAG, "Removing fpId=" + mFp.getFingerId());
+                 MetricsLogger.action(getContext(), MetricsEvent.ACTION_FINGERPRINT_DELETE,

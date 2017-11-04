@@ -1,0 +1,22 @@
+diff --git a/Telephony/res/xml/phone_account_settings.xml b/Telephony/res/xml/phone_account_settings.xml
+index 4ddff4d..2142155 100644
+--- a/Telephony/res/xml/phone_account_settings.xml
++++ b/Telephony/res/xml/phone_account_settings.xml
+@@ -28,7 +28,7 @@
+             android:persistent="false"
+             android:order="1" />
+ 
+-        <PreferenceScreen
++     <!--   <PreferenceScreen
+             android:title="@string/phone_accounts_all_calling_accounts"
+             android:summary="@string/phone_accounts_all_calling_accounts_summary"
+             android:persistent="false"
+@@ -37,7 +37,7 @@
+             <intent android:action="android.intent.action.MAIN"
+                 android:targetPackage="com.android.server.telecom"
+                 android:targetClass="com.android.server.telecom.settings.EnableAccountPreferenceActivity" />
+-        </PreferenceScreen>
++        </PreferenceScreen>  -->
+     </PreferenceCategory>
+ 
+     <PreferenceCategory
